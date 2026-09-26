@@ -86,14 +86,18 @@ function flat(children) {
   return children === undefined || children === null ? [] : [children].flat(Infinity).filter((c) => c !== undefined && c !== null && c !== false);
 }
 
+// Returns every node created beneath this element so a parent can adopt them all. The first version of
+// this walker took hosts[length-1] as "the" child, which silently attached one node per group and made
+// the scene-graph budget measurement meaningless.
 export function walk(el, path) {
-  if (typeof el !== "object" || el === null || Array.isArray(el)) {
-    if (Array.isArray(el)) el.forEach((c, i) => walk(c, path + "#" + i));
-    return;
-  }
-  const { type, props } = el;
+  if (el === undefined || el === null || el === false || el === true) return [];
+  if (Array.isArray(el)) return el.flatMap((c, i) => walk(c, path + "#" + i));
+  if (typeof el !== "object") return [];
+  const { type, props = {} } = el;
+
   if (typeof type === "function") {
-    const inst = instanceFor(path + "@" + (type.name || "anon"), type);
+    const name = type.name || "anon";
+    const inst = instanceFor(path + "@" + name, type);
     beginScope(inst);
     let out;
     try {
@@ -101,40 +105,43 @@ export function walk(el, path) {
     } finally {
       endScope();
     }
-    walk(out, path + "/" + (type.name || "anon"));
-    return;
+    return walk(out, path + "/" + name);
   }
+
+  if (type === "fragment") return flat(props.children).flatMap((c, i) => walk(c, path + "~" + i));
+
   const node = makeNode(type, props);
   applyProps(node, props);
-  const kids = flat(props.children).map((c, i) => {
-    const before = hosts.length;
-    walk(c, path + "<" + type + i);
-    return hosts.length > before ? hosts[hosts.length - 1] : null;
-  });
-  for (const kid of kids) {
-    if (!kid) continue;
-    note(kid);
+  for (const kid of flat(props.children).flatMap((c, i) => walk(c, path + "<" + type + i))) {
     if (kid.isMaterial) node.material = kid;
     else if (kid.isBufferGeometry || kid.isGeometry) node.geometry = kid;
-    else if (kid.isObject3D) node.add(kid);
+    else if (kid.isObject3D) {
+      kid.adopted = true;
+      node.add(kid);
+    }
   }
   assignRef(props.ref, node);
   hosts.push(node);
+  return [node];
 }
 
 const classFor = (tag) => {
   const Name = tag[0].toUpperCase() + tag.slice(1);
-  return THREE[Name] || (Name.endsWith("Light") ? THREE.Object3D : null);
+  return THREE[Name] || null;
 };
 
 function makeNode(tag, props) {
   const Cls = classFor(tag);
   const args = props.args || [];
-  if (!Cls) return Object.assign(new THREE.Object3D(), { tag, unknownTag: tag });
+  if (!Cls) {
+    const node = new THREE.Object3D();
+    node.tag = tag;
+    node.unknownTag = tag;
+    return node;
+  }
   try {
     const node = new Cls(...args);
     node.tag = tag;
-    if (!node.isObject3D) node.isPrimitiveNode = true;
     return node;
   } catch (e) {
     throw new Error(tag + " constructor failed with " + args.length + " args: " + e.message);
@@ -147,19 +154,18 @@ function note(value) {
   return value;
 }
 
-export function applyProps(node, props) {
-  if (node.isMaterial) note(node);
-  if (node.isBufferGeometry) note(node);
+function applyProps(node, props) {
+  note(node);
   for (const [k, v] of Object.entries(props)) {
-    note(v);
     if (k === "children" || k === "args" || k === "ref" || k === "key") continue;
     if (v === undefined || v === null || typeof v === "function" || typeof v === "boolean") continue;
+    note(v);
     if (Array.isArray(v)) {
       if (typeof node[k]?.set === "function") node[k].set(...v);
       continue;
     }
-    // Textures, materials and geometries are all plain objects here; assigning them is the whole point
-    // of the audit, so nothing is skipped except React's own plumbing and event handlers.
+    // Textures, materials and geometries are all plain objects here; assigning them is the whole point of
+    // the audit, so nothing is skipped except React's own plumbing and event handlers.
     try {
       node[k] = v;
     } catch {
@@ -176,15 +182,49 @@ export function runEffects() {
   }
 }
 
+export let tree = [];
 export function renderTree(element) {
   for (pass = 0; pass < 6; pass++) {
     dirty = false;
     hosts.length = 0;
-    walk(element, "r");
+    tree = walk(element, "r");
     runEffects();
     if (!dirty) break;
   }
-  return { passes: pass + 1, hosts: hosts.length };
+  return { passes: pass + 1, hosts: hosts.length, roots: tree.length };
+}
+
+export function budgetAt(visibleOnly) {
+  const problems = [];
+  const roots = (tree.length ? tree : hosts.filter((x) => x.isObject3D)).filter((x) => x.isObject3D);
+  let tris = 0;
+  let draws = 0;
+  let programs = new Set();
+  const walkNode = (n) => {
+    if (n.visible === false) return;
+    if (n.isMesh || n.isPoints || n.isLine) {
+      const g = n.geometry;
+      const mult = n.isInstancedMesh ? n.count : 1;
+      if (g?.index) tris += (g.index.count / 3) * mult;
+      else if (g?.attributes?.position) tris += (g.attributes.position.count / 3) * mult;
+      // n.isPoints is undefined on a Mesh, so it must be tested with !, not === false.
+      if (n.isPoints) {
+        draws += 1;
+        programs.add(n.material?.type || "none");
+      } else if (n.material) {
+        // An InstancedMesh is a single draw call no matter how many instances it holds - that is the
+        // whole reason rocks and labels are instanced.
+        draws += 1;
+        programs.add(n.material.type + (n.material.isShaderMaterial ? ":" + (n.material.fragmentShader || "").length : ""));
+      } else if (!n.isGroup) {
+        problems.push(n.tag);
+      }
+    }
+    (n.children || []).forEach(walkNode);
+  };
+  roots.forEach(walkNode);
+  void visibleOnly;
+  return { draws, tris: Math.round(tris), programs: programs.size, roots: roots.length, noMaterial: [...new Set(problems)] };
 }
 
 export function setScroll(offset) {

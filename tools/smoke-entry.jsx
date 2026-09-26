@@ -79,6 +79,18 @@ export async function run() {
 
   out.hosts = hub.hosts.map((h) => h.tag);
 
+  // The plan's ceilings: 40 draws soft / 60 hard, 120k triangles, 10 programs. Measured per act because
+  // only one act is visible at a time and the harness holds a real scene graph.
+  for (const probe of [["solar", 0.02], ["lunar", 0.5], ["ground", 0.98]]) {
+    hub.setScroll(probe[1]);
+    for (let k = 0; k < hub.frames.length; k++) hub.frames[k].cb(fakeState, dt);
+    const b = hub.budgetAt();
+    out.notes.push(probe[0] + " act: " + b.draws + " draws, " + (b.tris / 1000).toFixed(1) + "k tris, " + b.programs + " programs" + (b.noMaterial.length ? ", drawables with no material: " + b.noMaterial.join("/") : ""));
+    if (b.draws > 60) out.errors.push(probe[0] + " act exceeds the 60 draw-call hard ceiling: " + b.draws);
+    if (b.tris > 120000) out.errors.push(probe[0] + " act exceeds the 120k triangle ceiling: " + b.tris);
+    if (b.programs > 10) out.errors.push(probe[0] + " act exceeds the 10 program ceiling: " + b.programs);
+  }
+
   const audit = auditMaterials(seenMaterials, hub.hosts);
   out.audit = audit;
   for (const p of audit.problems) out.errors.push("material audit: " + p);
