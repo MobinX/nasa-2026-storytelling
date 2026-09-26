@@ -1,0 +1,13 @@
+import * as hub from "./hub.js";
+export const useState = hub.useState;
+export const useRef = hub.useRef;
+export const useMemo = hub.useMemo;
+export const useEffect = hub.useEffect;
+export const useCallback = hub.useCallback;
+export const useContext = hub.useContext;
+export const createContext = () => ({ Provider: ({ children }) => children, _currentValue: null });
+export const Fragment = "fragment";
+export const createElement = (type, props, ...children) => ({ type, props: { ...(props || {}), ...(children.length ? { children: props && props.children ? [props.children, ...children] : children } : {}) } });
+const jsx = (type, props) => ({ type, props: props || {} });
+export { jsx as jsx, jsx as jsxs };
+export default { createElement, useState, useRef, useMemo, useEffect, createContext, useContext, Fragment };

@@ -31,6 +31,7 @@ yarn-error.log*
 # vercel
 .vercel
 
+.smoke/
 # next-pwa
 /public/workbox-*.js
 /public/sw.js

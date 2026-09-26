@@ -16,7 +16,7 @@ const LOOK = { dx: 0, dy: 0 };
 const LAT_MAX = 6.5;
 const FWD_MAX = 4.0;
 const FWD_BACK = 1.5;
-const LOOK_SENS = 0.0032;
+const LOOK_SENS = 0.0055;   // 0.32 deg per pixel: a 300px thumb drag turns about a right angle
 const MOVE_SPEED = 2.35;
 const MAX_PITCH = 0.62;
 
@@ -59,9 +59,13 @@ export default function CameraRig({ heights }) {
         st.forward = 0;
         st.lateral = 0;
       }
+      // The accumulators must be cleared here, by the single consumer, or every frame re-applies the
+      // whole history and drag-look compounds quadratically.
       consumeLook(LOOK);
       st.yaw += LOOK.dx * LOOK_SENS;
       st.pitch = MathUtils.clamp(st.pitch + LOOK.dy * LOOK_SENS, -MAX_PITCH, MAX_PITCH);
+      LOOK.dx = 0;
+      LOOK.dy = 0;
 
       const mx = journey.walkActive ? input.move.x : 0;
       const my = journey.walkActive ? input.move.y : 0;
