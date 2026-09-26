@@ -31,3 +31,163 @@ body {
   color: black;
   -webkit-font-smoothing: antialiased;
 }
+
+/* The body stays fixed on purpose: a document that scrolls lets Android collapse the URL bar
+   mid-gesture, which changes the measured viewport height and therefore scrollThreshold. */
+.hud {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  font-family: ui-monospace, sfmono-regular, menlo, monospace;
+}
+
+.readout {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-size: 10px;
+  line-height: 1.5;
+  color: #6fe3c0;
+  text-shadow: 0 1px 0 #000;
+}
+
+.readout div {
+  display: flex;
+}
+
+.readout span {
+  min-width: 56px;
+  opacity: 0.5;
+}
+
+.readout b {
+  font-weight: 500;
+}
+
+.readout .fine {
+  opacity: 0.4;
+}
+
+.readout-dead {
+  color: #ff7a6b;
+}
+
+.hint {
+  position: absolute;
+  right: 0;
+  bottom: 16px;
+  left: 0;
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  text-align: center;
+  text-transform: uppercase;
+  color: #7fd7bd;
+  opacity: 0.7;
+}
+
+.hud .caption {
+  position: absolute;
+  top: 74px;
+  right: 14px;
+  left: 14px;
+  text-align: center;
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #dff3ec;
+  opacity: 0;
+  transition: opacity 0.6s;
+  text-shadow: 0 1px 6px #000;
+}
+
+.hud .caption span {
+  padding: 6px 10px;
+}
+
+.hud .caption-up {
+  opacity: 0.9;
+}
+
+.pads {
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+
+.pads-on {
+  opacity: 1;
+}
+
+.pads-on .stick,
+.pads-on .look {
+  pointer-events: auto;
+}
+
+.stick {
+  position: absolute;
+  bottom: 26px;
+  left: 22px;
+  width: 118px;
+  height: 118px;
+  border: 1px solid rgba(160, 230, 210, 0.35);
+  border-radius: 50%;
+  touch-action: none;
+  pointer-events: none;
+}
+
+.stick i {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  border-radius: 50%;
+  background: rgba(150, 225, 205, 0.22);
+}
+
+.look {
+  position: absolute;
+  top: 24%;
+  right: 0;
+  width: 48%;
+  height: 54%;
+  touch-action: pan-y;
+  pointer-events: none;
+}
+
+.look em {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  font-size: 9px;
+  font-style: normal;
+  letter-spacing: 0.12em;
+  color: rgba(190, 235, 220, 0.4);
+}
+
+.hint[data-hidden="true"] {
+  opacity: 0;
+}
+
+#boot {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  font: 11px ui-monospace, monospace;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #6fe3c0;
+  background: #000;
+  z-index: 40;
+}
+
+.credit {
+  position: absolute;
+  right: 8px;
+  bottom: 6px;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  color: rgba(190, 235, 220, 0.34);
+}

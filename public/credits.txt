@@ -1,0 +1,6 @@
+Planet and Moon texture maps in public/textures are derived from NASA/USGS source data
+(LRO WAC, MESSENGER, Galileo, Cassini, Voyager) and were downloaded from Solar System Scope.
+
+Solar System Scope textures — https://www.solarsystemscope.com/textures/ — licensed CC BY 4.0
+https://creativecommons.org/licenses/by/4.0/
+Credit line used in-app: "Textures by Solar System Scope".
