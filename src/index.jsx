@@ -2,7 +2,8 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./styles.css";
 import { preloadMaps } from "./lib/textures.js";
-import { buildTerrain, deriveNormalMap } from "./lib/terrain.js";
+import { buildTerrain, deriveNormalMap, levelTerrain } from "./lib/terrain.js";
+import { CUT_LOCAL } from "./journey/pose.js";
 import { journey } from "./state/journey.js";
 
 const boot = document.getElementById("boot");
@@ -19,6 +20,7 @@ async function start() {
     await preloadMaps(4, (p) => say("loading surface maps " + Math.round(p * 100) + "%"));
     say("shaping the terrain");
     const terrain = buildTerrain({ seg: 96 });
+    levelTerrain(terrain, CUT_LOCAL[0], CUT_LOCAL[2]);
     terrain.normalMap = deriveNormalMap(terrain.heights, 512);
     journey.bootMs = performance.now() - t0;
     if (boot) boot.remove();

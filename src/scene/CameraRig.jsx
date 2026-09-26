@@ -2,20 +2,15 @@ import { useRef } from "react";
 import { Euler, Matrix4, MathUtils, Vector3 } from "three";
 import { useFrame } from "@react-three/fiber";
 import { useScroll } from "@react-three/drei";
-import { poseAt, scratchPose, walkDistance, SITE } from "../journey/pose.js";
+import { poseAt, scratchPose } from "../journey/pose.js";
 import { clamp01, groundWeight } from "../journey/timeline.js";
-import { heightAt } from "../lib/terrain.js";
-import { gait } from "../lib/gait.js";
 import { consumeLook, input } from "../state/input.js";
+import { groundPose, scratchGround } from "../journey/ground.js";
 import { journey } from "../state/journey.js";
 
 const UP = new Vector3(0, 1, 0);
 const _m = new Matrix4();
 const _e = new Euler(0, 0, 0, "YXZ");
-const _fwd = new Vector3();
-const _right = new Vector3();
-const _dir = new Vector3();
-const _local = new Vector3();
 const LOOK = { dx: 0, dy: 0 };
 
 const LAT_MAX = 6.5;
@@ -34,6 +29,7 @@ const damp = (x, y, lambda, dt) => MathUtils.lerp(x, y, 1 - Math.exp(-lambda * d
 export default function CameraRig({ heights }) {
   const scroll = useScroll();
   const pose = scratchPose();
+  const ground = useRef(scratchGround());
   const s = useRef({ forward: 0, lateral: 0, appliedF: 0, appliedL: 0, yaw: 0, pitch: 0, seeded: false });
 
   useFrame(({ camera }, delta) => {
@@ -74,29 +70,14 @@ export default function CameraRig({ heights }) {
       st.appliedF = damp(st.appliedF, st.forward * w, 5, d);
       st.appliedL = damp(st.appliedL, st.lateral * w, 5, d);
 
-      _fwd.copy(pose.sample.tangent);
-      _fwd.y = 0;
-      if (_fwd.lengthSq() < 1e-8) _fwd.set(0, 0, 1);
-      _fwd.normalize();
-      _right.crossVectors(UP, _fwd);
-      _local.copy(pose.local).addScaledVector(_fwd, st.appliedF).addScaledVector(_right, st.appliedL);
-
-      const walked = walkDistance(o) + st.appliedF;
-      const moving = Math.min(1, Math.hypot(mx, my)) * w;
-      const g = gait(walked, moving);
-      _local.y = pose.local.y + heightAt(heights, _local.x, _local.z) + g.y;
-      camera.position.copy(_local).applyQuaternion(SITE.quaternion).add(SITE.pos);
-
-      _dir.copy(pose.target).sub(pose.position).normalize();
-      const yawAuth = Math.atan2(-_dir.x, -_dir.z);
-      const pitchAuth = Math.asin(MathUtils.clamp(_dir.y, -1, 1));
-      _e.set(pitchAuth + st.pitch, yawAuth + st.yaw, g.roll, "YXZ");
+      const gp = groundPose(o, { appliedF: st.appliedF, appliedL: st.appliedL, moving: Math.min(1, Math.hypot(mx, my)), w, yaw: st.yaw, pitch: st.pitch }, heights, pose, ground.current);
+      camera.position.copy(gp.world);
+      _e.set(gp.pitch, gp.yaw, gp.roll, "YXZ");
       camera.quaternion.setFromEuler(_e);
-
-      journey.camLocal.x = _local.x;
-      journey.camLocal.z = _local.z;
-      journey.yaw = yawAuth + st.yaw;
-      journey.walked = walked;
+      journey.camLocal.x = gp.local.x;
+      journey.camLocal.z = gp.local.z;
+      journey.yaw = gp.yaw;
+      journey.walked = gp.walked;
     }
 
     let dirty = false;

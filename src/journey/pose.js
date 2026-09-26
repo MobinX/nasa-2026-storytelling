@@ -43,7 +43,8 @@ const SOLAR_LEGS = [
 // at 0.25u subtends 63deg, and the 12u sphere seen from 12.5u covers everything.
 const surf = (alt, along) => SITE.pos.clone().addScaledVector(SITE.n, alt).addScaledVector(SITE.fwd, along);
 const EYE_Y = 1.7;
-const CUT = [0, 0.35, -15.4];
+export const CUT_LOCAL = [0, 0.35, -15.4];
+const CUT = CUT_LOCAL;
 const CUT_LOOK = [0, -3.95, -12.4];
 
 const LUNAR_LEGS = [

@@ -118,3 +118,14 @@ export function siteFrame(lat, lon, radius) {
   const basis = new THREE.Matrix4().makeBasis(east, n, fwd);
   return { n, east, fwd, basis, pos: n.clone().multiplyScalar(radius), quaternion: new THREE.Quaternion().setFromRotationMatrix(basis) };
 }
+
+// Level the field at the spot the orbit act hands off, so the eye height the descent authored is the eye
+// height above real ground. Without this the cut inherits whatever crater swell happens to be there.
+export function levelTerrain(terrain, x = 0, z = 0) {
+  const off = heightAt(terrain.heights, x, z);
+  const p = terrain.geo.attributes.position;
+  for (let i = 0; i < p.count; i++) p.setY(i, p.getY(i) - off);
+  p.needsUpdate = true;
+  for (let i = 0; i < terrain.heights.grid.length; i++) terrain.heights.grid[i] -= off;
+  return off;
+}

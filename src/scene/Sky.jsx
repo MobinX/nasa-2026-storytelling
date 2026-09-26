@@ -6,18 +6,26 @@ import { TIERS } from "../lib/quality.js";
 
 const STARS = 2400;
 const BAND = new THREE.Vector3(0.3, 0.85, 0.42).normalize();
+// Two axes spanning the plane perpendicular to the band pole: a great-circle girdle, not a cap.
+const P1 = new THREE.Vector3(0, 1, 0).cross(BAND).normalize();
+const P2 = new THREE.Vector3().crossVectors(BAND, P1).normalize();
 
 function starField() {
   const pos = new Float32Array(STARS * 3);
   const data = new Float32Array(STARS * 2);
   const v = new THREE.Vector3();
   for (let i = 0; i < STARS; i++) {
-    const cos = Math.random() * 2 - 1;
-    const sin = Math.sqrt(1 - cos * cos);
-    const a = Math.random() * Math.PI * 2;
-    v.set(sin * Math.cos(a), cos, sin * Math.sin(a));
-    const band = i % STARS < STARS * 0.34;
-    if (band) v.applyAxisAngle(BAND, (Math.random() - 0.5) * 0.34).normalize();
+    const band = i < STARS * 0.34;
+    if (band) {
+      const a = Math.random() * Math.PI * 2;
+      const off = (Math.random() + Math.random() - 1) * 0.19;
+      v.copy(P1).multiplyScalar(Math.cos(a)).addScaledVector(P2, Math.sin(a)).addScaledVector(BAND, off).normalize();
+    } else {
+      const cos = Math.random() * 2 - 1;
+      const sin = Math.sqrt(1 - cos * cos);
+      const a = Math.random() * Math.PI * 2;
+      v.set(sin * Math.cos(a), cos, sin * Math.sin(a));
+    }
     pos[i * 3] = v.x;
     pos[i * 3 + 1] = v.y;
     pos[i * 3 + 2] = v.z;

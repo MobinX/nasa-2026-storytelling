@@ -33,8 +33,10 @@ const fit = (img, w, h) => {
 
 export const maps = {};
 
-export async function preloadMaps(gl, onProgress) {
-  const aniso = Math.min(4, gl.capabilities.getMaxAnisotropy());
+// Takes the anisotropy ceiling directly: the maps have to be decoded before a WebGL context exists, so
+// the renderer's getMaxAnisotropy() is not available yet.
+export async function preloadMaps(maxAnisotropy = 4, onProgress) {
+  const aniso = Math.max(0, Math.min(4, maxAnisotropy));
   let done = 0;
   for (const j of JOBS) {
     const img = await decode(j.url);

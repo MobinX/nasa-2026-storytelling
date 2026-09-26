@@ -25,8 +25,8 @@ const onCreated = ({ gl, viewport, setDpr, setFrameloop }) => {
   const ctx = gl.getContext();
   const dbg = ctx.getExtension("WEBGL_debug_renderer_info");
   if (dbg) journey.caps.renderer = String(ctx.getParameter(dbg.UNMASKED_RENDERER_WEBGL)).slice(0, 44);
-  const forced = Number(new URLSearchParams(window.location.search).get("tier"));
-  journey.tier = Number.isFinite(forced) && forced >= 0 ? Math.min(3, forced) : probeTier(gl);
+  const forced = new URLSearchParams(window.location.search).get("tier");
+  journey.tier = forced === null ? probeTier(gl) : Math.max(0, Math.min(3, Number(forced) || 0));
   journey.maxTier = journey.tier;
   setDpr(TIERS[journey.tier].dpr);
   // R3F 9 has no visibilitychange handling and a phone in a Termux session throttles thermally within
