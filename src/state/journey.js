@@ -21,4 +21,7 @@ export const journey = {
   gl: { calls: 0, tris: 0, programs: 0, textures: 0 },
   caps: { maxTextureSize: 0, maxAnisotropy: 0, renderer: "", webgl2: true },
   bootMs: 0,
+  software: false,
+  warmedMs: 0,
+  scrollEl: null,
 };

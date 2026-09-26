@@ -191,3 +191,30 @@ body {
   letter-spacing: 0.08em;
   color: rgba(190, 235, 220, 0.34);
 }
+
+.seam {
+  position: absolute;
+  right: 10px;
+  bottom: 34px;
+  left: 10px;
+  width: calc(100% - 20px);
+  pointer-events: auto;
+  accent-color: #6fe3c0;
+}
+
+.poster {
+  position: absolute;
+  top: 40%;
+  right: 24px;
+  left: 24px;
+  display: grid;
+  gap: 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #dff3ec;
+  text-align: center;
+}
+
+.poster span {
+  opacity: 0.6;
+}

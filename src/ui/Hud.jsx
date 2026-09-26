@@ -10,6 +10,28 @@ const FLICK_MIN_DELTA = 0.012;
 
 // Fixed DOM siblings of <Canvas>: the HUD must never re-render the Canvas, and the pads sit above the
 // scroller so they can claim gestures. pointer-events stays off until the walk act unlocks them.
+const SEAM_SLIDER = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("seam");
+
+// ?seam= parks the journey anywhere along the scroll with a real thumb: the only honest way to inspect a
+// cut on a phone, since it is a single frame in a hundred.
+function SeamSlider() {
+  return (
+    <input
+      className='seam'
+      type='range'
+      min='0'
+      max='1000'
+      defaultValue={700}
+      onInput={(e) => {
+        const el = journey.scrollEl;
+        if (!el) return;
+        const max = el.scrollHeight - el.clientHeight;
+        el.scrollTop = 1 + (Number(e.target.value) / 1000) * Math.max(0, max - 1);
+      }}
+    />
+  );
+}
+
 export default function Hud() {
   const [, setTick] = useState(0);
   const stick = useRef(null);
@@ -53,6 +75,7 @@ export default function Hud() {
     ["maxTex", journey.caps.maxTextureSize],
     ["gpu", journey.caps.renderer || "?"],
     ["boot", journey.bootMs.toFixed(0) + "ms"],
+    ["warm", journey.warmedMs.toFixed(0) + "ms"],
   ];
   const act = ACTS.find((a) => a.id === journey.actId) || ACTS[0];
   const walk = journey.walkActive;
@@ -72,6 +95,13 @@ export default function Hud() {
         </div>
       </div>
       <div className='credit'>textures by Solar System Scope (CC BY 4.0)</div>
+      {journey.software && (
+        <div className='poster'>
+          <b>This browser is rendering in software.</b>
+          <span>Scroll still moves the camera, but the scene is paused so the phone does not overheat. Try Chrome with hardware acceleration enabled.</span>
+        </div>
+      )}
+      {SEAM_SLIDER && <SeamSlider />}
       <div className='hint' data-hidden={journey.offset > 0.02}>
         scroll to travel
       </div>

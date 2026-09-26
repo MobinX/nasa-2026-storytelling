@@ -23,6 +23,37 @@ const ScrollGuard = () => {
     const connected = events.connected === scroll.el;
     if (!connected) events.connect?.(scroll.el);
     journey.connected = connected;
+    journey.scrollEl = scroll.el;
+  });
+  return null;
+};
+
+// three's compile() walks with traverseVisible, so the acts that are hidden at boot never link their
+// programs - and a mobile shader link costs 50-300ms, which lands exactly on the orbit-to-surface cut.
+// Flipping everything visible and compiling inside a useFrame runs before this frame's gl.render, so the
+// mixed frame is never drawn.
+const ShaderWarmup = () => {
+  const gl = useThree((s) => s.gl);
+  const scene = useThree((s) => s.scene);
+  const camera = useThree((s) => s.camera);
+  const done = useRef(false);
+  useFrame(() => {
+    if (done.current) return;
+    done.current = true;
+    const t0 = performance.now();
+    const hidden = [];
+    scene.traverse((o) => {
+      if (o.visible === false) {
+        o.visible = true;
+        hidden.push(o);
+      }
+    });
+    try {
+      gl.compile(scene, camera);
+    } finally {
+      for (const o of hidden) o.visible = false;
+    }
+    journey.warmedMs = performance.now() - t0;
   });
   return null;
 };
@@ -117,6 +148,7 @@ export default function Experience({ terrain }) {
   return (
     <>
       <ScrollGuard />
+      <ShaderWarmup />
       <FrameMeter />
       <Tiers />
       <SpaceWatcher onChange={setSpace} />

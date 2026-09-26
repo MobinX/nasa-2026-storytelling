@@ -7,6 +7,11 @@ export const TIERS = [
   { dpr: 1.25, stars: 2400, labels: true, rocks: 220, grid: 96, aniso: 8, normalMap: true, glow: 2 },
 ];
 
+export function isSoftwareRenderer(gl) {
+  const dbg = gl.getContext().getExtension("WEBGL_debug_renderer_info");
+  return /swiftshader|llvmpipe|software|basic render/i.test(dbg ? String(gl.getContext().getParameter(dbg.UNMASKED_RENDERER_WEBGL)) : "");
+}
+
 export function probeTier(gl) {
   const caps = gl.capabilities;
   const dbg = gl.getContext().getExtension("WEBGL_debug_renderer_info");

@@ -4,7 +4,7 @@ import { ScrollControls } from "@react-three/drei";
 import Experience from "./scene/Experience.jsx";
 import Hud from "./ui/Hud.jsx";
 import { journey } from "./state/journey.js";
-import { probeTier, TIERS } from "./lib/quality.js";
+import { isSoftwareRenderer, probeTier, TIERS } from "./lib/quality.js";
 import { PAGES, DISTANCE, DAMPING, CAMERA } from "./journey/timeline.js";
 
 // Module scope for every config literal: R3F compares these and re-applies them, and a <Canvas>
@@ -27,6 +27,8 @@ const onCreated = ({ gl, viewport, setDpr, setFrameloop }) => {
   if (dbg) journey.caps.renderer = String(ctx.getParameter(dbg.UNMASKED_RENDERER_WEBGL)).slice(0, 44);
   const forced = new URLSearchParams(window.location.search).get("tier");
   journey.tier = forced === null ? probeTier(gl) : Math.max(0, Math.min(3, Number(forced) || 0));
+  journey.software = isSoftwareRenderer(gl);
+  if (journey.software && !forced) setFrameloop("never");
   journey.maxTier = journey.tier;
   setDpr(TIERS[journey.tier].dpr);
   // R3F 9 has no visibilitychange handling and a phone in a Termux session throttles thermally within
