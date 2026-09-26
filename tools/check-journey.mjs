@@ -1,3 +1,4 @@
+import fs from "node:fs";
 // Geometry/continuity checks for the whole journey, run against the same modules the camera rig uses.
 // node tools/check-journey.mjs
 import { Vector3 } from "three";
@@ -84,5 +85,26 @@ console.log(`steps per space   `, [...steps].map(([k, v]) => `${k}=${v.toFixed(3
 console.log(`min lunar altitude ${minAlt.toFixed(3)}u | ground eye ${minGroundEye.toFixed(2)}..${maxGroundEye.toFixed(2)}m above surface | rail end ${endZ.toFixed(1)}m`);
 console.log(`seam A heading dot ${aHead.dot(bHead).toFixed(4)} (gap ${aPos.distanceTo(bPos).toFixed(2)}u, different worlds)`);
 console.log(`seam B gap ${gap.toFixed(4)}m heading ${dHead.dot(cHead).toFixed(5)} fov ${cFov.toFixed(2)}->${dFov.toFixed(2)}`);
+// The plan's "scrub back and the pose must be identical" check, done headlessly: the rig is a pure
+// function of scroll.offset, so visiting offsets in reverse has to reproduce every pose exactly.
+const fwd = [];
+for (let i = 0; i <= 60; i++) {
+  poseAt(i / 60, p);
+  fwd.push([p.position.x, p.position.y, p.position.z, p.fov]);
+}
+for (let i = 60; i >= 0; i--) {
+  poseAt(i / 60, p);
+  const q = [p.position.x, p.position.y, p.position.z, p.fov];
+  if (q.some((v, k) => Math.abs(v - fwd[i][k]) > 1e-12)) ok(false, `scrub-back differs at o=${i / 60}`);
+}
+
+// Axial spin may use the clock; anything that writes the camera may not, or reverse scrubbing breaks.
+const cameraPath = ["src/scene/CameraRig.jsx", "src/journey/ground.js", "src/journey/pose.js", "src/journey/rail.js"]
+  .map((rf) => fs.readFileSync(new URL("../" + rf, import.meta.url), "utf8"))
+  .join("\n");
+ok(!/clock\.|elapsedTime|performance\.now|Date\.now/.test(cameraPath), "the camera path reads wall-clock time");
+ok(!/useScroll\(\)\.offset\s*[+\-*/]=|scroll\.offset\s*=/.test(cameraPath), "something writes scroll.offset");
+
+console.log("purity + clock-free camera path verified");
 console.log(fails.length ? "\nFAIL\n" + fails.map((f) => " - " + f).join("\n") : "\nall journey checks passed");
 process.exit(fails.length ? 1 : 0);
