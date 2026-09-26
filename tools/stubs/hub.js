@@ -3,6 +3,8 @@ import * as THREE from "three";
 // Minimal hook dispatcher + element walker so the real component tree can be executed headlessly:
 // three objects are genuine, refs are assigned, and every useFrame callback is actually run.
 export const hosts = [];
+export const seenMaterials = new Set();
+export const seenGeometries = new Set();
 export const frames = [];
 export const effects = [];
 export const scrollState = {
@@ -111,6 +113,7 @@ export function walk(el, path) {
   });
   for (const kid of kids) {
     if (!kid) continue;
+    note(kid);
     if (kid.isMaterial) node.material = kid;
     else if (kid.isBufferGeometry || kid.isGeometry) node.geometry = kid;
     else if (kid.isObject3D) node.add(kid);
@@ -138,15 +141,25 @@ function makeNode(tag, props) {
   }
 }
 
-function applyProps(node, props) {
+function note(value) {
+  if (value && value.isMaterial) seenMaterials.add(value);
+  if (value && (value.isBufferGeometry || value.isGeometry)) seenGeometries.add(value);
+  return value;
+}
+
+export function applyProps(node, props) {
+  if (node.isMaterial) note(node);
+  if (node.isBufferGeometry) note(node);
   for (const [k, v] of Object.entries(props)) {
+    note(v);
     if (k === "children" || k === "args" || k === "ref" || k === "key") continue;
     if (v === undefined || v === null || typeof v === "function" || typeof v === "boolean") continue;
     if (Array.isArray(v)) {
       if (typeof node[k]?.set === "function") node[k].set(...v);
       continue;
     }
-    if (typeof v === "object" && !(v.isObject3D || v.isMaterial || v.isBufferGeometry) && typeof node[k]?.copy !== "function" && k !== "material" && k !== "geometry") continue;
+    // Textures, materials and geometries are all plain objects here; assigning them is the whole point
+    // of the audit, so nothing is skipped except React's own plumbing and event handlers.
     try {
       node[k] = v;
     } catch {

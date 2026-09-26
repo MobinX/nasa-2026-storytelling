@@ -7,6 +7,8 @@ import { buildTerrain, levelTerrain, deriveNormalMap, heightAt } from "../src/li
 import { CUT_LOCAL } from "../src/journey/pose.js";
 import { input } from "../src/state/input.js";
 import { journey } from "../src/state/journey.js";
+import { auditMaterials } from "./lib-shader-audit.mjs";
+import { seenMaterials, hosts } from "./stubs/hub.js";
 
 export async function run() {
   const out = { errors: [], notes: [] };
@@ -76,5 +78,19 @@ export async function run() {
   if (!Number.isFinite(journey.walked)) out.errors.push("walk distance went non-finite");
 
   out.hosts = hub.hosts.map((h) => h.tag);
+
+  const audit = auditMaterials(seenMaterials, hub.hosts);
+  out.audit = audit;
+  for (const p of audit.problems) out.errors.push("material audit: " + p);
+  out.notes.push(audit.shaders + " ShaderMaterials, " + audit.materials + " materials, " + audit.hosts + " nodes audited");
+
+  // If the maps never reach the materials the bodies render as flat coloured balls, which is the kind of
+  // thing that looks like a design choice rather than a bug, so assert it.
+  const textured = [...seenMaterials].filter((m) => m.map && m.map.isTexture);
+  out.notes.push(textured.length + " materials carry a texture map");
+  if (textured.length < 10) out.errors.push("only " + textured.length + " textured materials; expected the 8 planets + moon dot + moon sphere + Earth");
+  const sized = [...seenMaterials].filter((m) => m.map?.image).map((m) => m.map.image.width + "x" + m.map.image.height);
+  out.notes.push("map sizes " + [...new Set(sized)].sort().join(" "));
+  audit.notes.forEach((n) => out.notes.push("note: " + n));
   return out;
 }
