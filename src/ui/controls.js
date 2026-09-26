@@ -44,7 +44,8 @@ export function attachControls(stickEl, lookEl) {
   on(stickEl, "pointercancel", endStick);
 
   let lookId = null, lx = 0, ly = 0, fingers = 0;
-  // Listeners stay passive: a non-passive pointerdown that preventDefaults is precisely how you kill
+  // Passive everywhere on this pad: a non-passive pointer listener is enough to make Android wait on the
+  // gesture decision, and calling preventDefault would kill momentum scrolling outright.
   // momentum scrolling on Android.
   on(lookEl, "pointerdown", (e) => {
     if (!input.enabled) return;
@@ -54,7 +55,7 @@ export function attachControls(stickEl, lookEl) {
     lx = e.clientX;
     ly = e.clientY;
     input.active = true;
-  });
+  }, { passive: true });
   on(lookEl, "pointermove", (e) => {
     if (e.pointerId !== lookId || !input.enabled) return;
     const dx = e.clientX - lx, dy = e.clientY - ly;
@@ -63,7 +64,7 @@ export function attachControls(stickEl, lookEl) {
     if (fingers > 1) input.look.dy += dy;
     lx = e.clientX;
     ly = e.clientY;
-  });
+  }, { passive: true });
   const endLook = (e) => {
     if (e.pointerId === lookId) {
       lookId = null;
@@ -71,8 +72,8 @@ export function attachControls(stickEl, lookEl) {
       fingers = Math.max(0, fingers - 1);
     }
   };
-  on(lookEl, "pointerup", endLook);
-  on(lookEl, "pointercancel", endLook);
+  on(lookEl, "pointerup", endLook, { passive: true });
+  on(lookEl, "pointercancel", endLook, { passive: true });
 
   const keys = new Set();
   const readKeys = () => {
@@ -115,7 +116,7 @@ export function attachControls(stickEl, lookEl) {
     if (!input.enabled || e.pointerType === "touch") return;
     if (!document.pointerLockElement) lookEl.requestPointerLock?.();
   };
-  on(lookEl, "pointerdown", lockClick);
+  on(lookEl, "pointerdown", lockClick, { passive: true });
 
   return () => {
     off.forEach((f) => f());

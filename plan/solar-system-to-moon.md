@@ -83,7 +83,7 @@ Scroll back up ⇒ `groundWeight → 0` ⇒ player contribution is **structurall
 Gesture split uses the browser's own disambiguation instead of racing it: **vertical drag = page scroll = forward progress; horizontal drag = yaw; two-finger vertical = pitch.**
 
 - Left thumb pad (`position:fixed` DOM sibling, `touch-action:none`, `pointer-events:auto` only while `w > 0`): 118 px disc, `setPointerCapture`, radius 52 px → `input.move.{x,y}`. `pointercancel` treated **identically** to `pointerup` (a capture-storm, not an error path).
-- Right look pad: **`touch-action:pan-y`** so vertical pans scroll the page while horizontal drags reach JS; listeners are **`passive`** (a non-passive `pointerdown` that calls `preventDefault` is exactly how you kill momentum scrolling). When the browser claims the pan it fires `pointercancel` → release look.
+- Right look pad: **`touch-action:pan-y`** so vertical pans scroll the page while horizontal drags reach JS; every handler on this pad is registered **`{ passive: true }`** — the render smoke asserts it, because it initially was not, and asserts that no handler calls `preventDefault` (a non-passive pointer listener alone is enough to make Android wait on the gesture decision). When the browser claims the pan it fires `pointercancel` → release look, which the same test drives end to end against the real handlers.
 - Desktop: WASD/arrows + `requestPointerLock` (locked mouse feeds both axes; wheel still scrolls the page = still progress).
 - Store = `src/state/input.js`, a module-level mutable singleton. Sources **only add** to `look.dx/dy` and **only write** `move`; the rig is the **single reader/consumer** inside one `useFrame` (`move` is a level, `look` is a consumed accumulator — that asymmetry is what prevents sticky strafe *and* lost mouse ticks). **Nothing calls `setState` per frame.**
 - Gait: `y = 0.060·max(0,sin φ)^0.8 + 0.004·sin 2φ`, φ locked to **distance walked** (never `elapsedTime`) — fast rise, floaty apex at 0.165 g reads "lunar"; >12 cm reads "trampoline". 1.62 m/s² → 0.9 Hz lope.
@@ -120,7 +120,7 @@ for f in 2k_sun.jpg 2k_mercury.jpg 2k_venus_surface.jpg 2k_earth_daymap.jpg 2k_m
   curl -fsSL --retry 3 -o "$f" "https://www.solarsystemscope.com/textures/download/$f"
 done   # 5.7 MB total; never touch 8k_* (134 MB decode)
 ```
-The 2k set is packed into one 2048×512 planet atlas and the per-body decode tiers by a throwaway build-time script or at decode time via `ImageBitmapLoader` `resizeWidth/resizeHeight` (one loader instance per distinct size — three/R3F memoize loaders *per class*, so mutating one shared instance gives every texture the first load's options). Add `public/credits.txt` — Solar System Scope maps are **CC-BY 4.0** ("Textures by Solar System Scope"), three.js/three-globe MIT; a one-line on-screen credit in the outro caption. No new npm dependencies.
+Every decoded map must be bound to a material (asserted in `tools/render-smoke.mjs`); the sun sphere uses `2k_sun.jpg` unlit with `toneMapped={false}`. The 2k set is packed per-body at decode time and the per-body decode tiers by a throwaway build-time script or at decode time via `ImageBitmapLoader` `resizeWidth/resizeHeight` (one loader instance per distinct size — three/R3F memoize loaders *per class*, so mutating one shared instance gives every texture the first load's options). Add `public/credits.txt` — Solar System Scope maps are **CC-BY 4.0** ("Textures by Solar System Scope"), three.js/three-globe MIT; a one-line on-screen credit in the outro caption. No new npm dependencies.
 
 ## Files
 

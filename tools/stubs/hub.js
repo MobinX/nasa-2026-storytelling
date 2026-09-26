@@ -134,9 +134,23 @@ function makeNode(tag, props) {
   const Cls = classFor(tag);
   const args = props.args || [];
   if (!Cls) {
+    // A host tag three does not know (div, span, i, em) is DOM, not scene graph: give it just enough of
+    // an element for the input layer to bind against, and record what it binds with.
     const node = new THREE.Object3D();
     node.tag = tag;
-    node.unknownTag = tag;
+    node.isDomNode = true;
+    node.__listeners = {};
+    node.addEventListener = (t, fn, opts) => (node.__listeners[t] ||= []).push({ fn, opts });
+    node.removeEventListener = (t, fn) => {
+      const l = node.__listeners[t] || [];
+      const i = l.findIndex((e) => e.fn === fn);
+      if (i >= 0) l.splice(i, 1);
+    };
+    node.setPointerCapture = () => (node.captured = true);
+    node.releasePointerCapture = () => (node.captured = false);
+    node.requestPointerLock = () => (node.lockRequested = true);
+    node.getBoundingClientRect = () => ({ left: 0, top: 0, width: 118, height: 118 });
+    node.className = props.className || "";
     return node;
   }
   try {
@@ -147,6 +161,24 @@ function makeNode(tag, props) {
     throw new Error(tag + " constructor failed with " + args.length + " args: " + e.message);
   }
 }
+
+export const listenersOf = (node) => (node.__listeners ||= {});
+
+export function emit(target, type, ev = {}) {
+  let prevented = false;
+  const event = { type, target, preventDefault: () => (prevented = true), stopPropagation: () => {}, pointerId: 1, pointerType: "touch", clientX: 0, clientY: 0, buttons: 1, ...ev };
+  for (const entry of (target.__listeners || {})[type] || []) entry.fn.call(target, event);
+  return { event, prevented, opts: ((target.__listeners || {})[type] || []).map((e) => e.opts) };
+}
+
+export function emitWindow(type, ev = {}) {
+  let prevented = false;
+  const event = { type, preventDefault: () => (prevented = true), stopPropagation: () => {}, ...ev };
+  for (const entry of windowListeners[type] || []) entry.fn(event);
+  return { event, prevented };
+}
+
+export const windowListeners = {};
 
 function note(value) {
   if (value && value.isMaterial) seenMaterials.add(value);

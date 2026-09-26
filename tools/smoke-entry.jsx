@@ -91,6 +91,48 @@ export async function run() {
     if (b.programs > 10) out.errors.push(probe[0] + " act exceeds the 10 program ceiling: " + b.programs);
   }
 
+  // Drive the real input handlers: the walk controls are the one part of the app no other check touches,
+  // and the whole gesture split rests on the look pad never calling preventDefault (that is what would
+  // silently kill page scrolling on Android).
+  const stick = hub.hosts.find((h) => h.className === "stick");
+  const look = hub.hosts.find((h) => h.className === "look");
+  if (!stick || !look) out.errors.push("thumb or look pad not mounted");
+  else {
+    const lookTypes = Object.keys(look.__listeners);
+    for (const t of lookTypes) {
+      const opts = (look.__listeners[t] || []).map((l) => l.opts);
+      const passive = opts.some((o) => o === true || o?.passive === true);
+      const blocking = opts.some((o) => o === undefined || o === false || (o && o.passive === false));
+      if (!passive || blocking) out.errors.push("look pad " + t + " is not registered passive (Android waits on the gesture decision)");
+    }
+    input.enabled = true;
+    hub.emit(stick, "pointerdown", { clientX: 59, clientY: 59 });
+    hub.emit(stick, "pointermove", { clientX: 59, clientY: 20 });
+    if (!(input.move.y > 0.4)) out.errors.push("stick up-drag gave move.y=" + input.move.y.toFixed(2));
+    const stickCancel = hub.emit(stick, "pointercancel", { clientX: 59, clientY: 20 });
+    if (input.move.y !== 0) out.errors.push("pointercancel did not release the stick");
+    void stickCancel;
+    input.look.dx = 0;
+    const down = hub.emit(look, "pointerdown", { clientX: 10, clientY: 10 });
+    const move = hub.emit(look, "pointermove", { clientX: 40, clientY: 10 });
+    if (input.look.dx <= 0) out.errors.push("horizontal drag produced no look delta");
+    if (down.prevented || move.prevented) out.errors.push("look pad preventDefault-ed a pointer event, which kills page scroll");
+    hub.emit(look, "pointercancel", { clientX: 40, clientY: 10 });
+    input.enabled = false;
+    input.move.x = 0;
+    input.move.y = 0;
+    input.look.dx = 0;
+    out.notes.push("look pad listeners: " + Object.keys(look.__listeners).join("/") + "; stick and drag verified, no preventDefault on the scroll path");
+  }
+
+  // Every decoded map has to reach a material, or it is dead payload downloaded on a phone connection.
+  const used = new Set();
+  for (const m of seenMaterials) for (const slot of ["map", "alphaMap", "roughnessMap", "normalMap", "emissiveMap", "metalnessMap", "aoMap"]) if (m[slot]) used.add(m[slot]);
+  const decoded = Object.entries(maps).filter(([, v]) => v);
+  const unused = decoded.filter(([, t]) => !used.has(t) && ![...seenMaterials].some((m) => [...Object.values(m)].includes(t)));
+  out.notes.push(decoded.length + " maps decoded, " + used.size + " bound to materials" + (unused.length ? ", unused: " + unused.map(([k]) => k).join(",") : ""));
+  if (unused.length) out.errors.push("decoded but never used: " + unused.map(([k]) => k).join(", "));
+
   const audit = auditMaterials(seenMaterials, hub.hosts);
   out.audit = audit;
   for (const p of audit.problems) out.errors.push("material audit: " + p);

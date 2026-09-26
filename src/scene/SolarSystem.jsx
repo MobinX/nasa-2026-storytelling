@@ -38,7 +38,7 @@ export default function SolarSystem() {
       <group>
         <mesh rotation={[0, 0, 0]}>
           <sphereGeometry args={[SUN_U, 24, 16]} />
-          <meshBasicMaterial color='#fff3d9' toneMapped={false} />
+          <meshBasicMaterial color='#ffdf9e' map={maps.sun} toneMapped={false} />
         </mesh>
         {glows.map((m, i) => (
           <mesh key={i} material={m} renderOrder={10}>
