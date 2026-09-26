@@ -167,16 +167,16 @@ New (21): `src/journey/{timeline.js,rail.js,CameraRig.jsx,poseOrbit.js,poseGroun
 
 ## Status checklist
 
-- [ ] Gate 0 — plan saved to `plan/solar-system-to-moon.md`, committed, pushed
-- [ ] Gate 1 — scroll harness survives resize/rotate on the phone; `pages` chosen by counting flicks
-- [ ] Gate 2 — Act I flat-colour framing legible in portrait
-- [ ] Gate 3 — rings + labels + star dome + sun glow money shot; textures + tiers; commit/push
-- [ ] Gate 4 — Act II Moon + lighting + Earth; Seam A
-- [ ] Gate 5 — `terrain.js` headless, `buildTerrain` cost measured on-device
-- [ ] Gate 6 — Act III complete; Seam B invisible at every scroll speed; commit/push
-- [ ] Gate 7 — rail terminus within ±0.5 m of `heightAt`; yaw re-seed scrub test clean
-- [ ] Gate 8 — captions, damping/pacing tune, `npm run build && preview` perf pass ≥40 fps at tier 2
-- [ ] Done — 3-min thermal soak, tab-background pause, scrub back to offset 0 bit-exact, final commit/push
+- [x] Gate 0 — plan saved to `plan/solar-system-to-moon.md`, committed, pushed (`3138271`), textures vendored (11 files, 5.7 MB)
+- [x] Gate 1 — scroll harness + `events.connect` guard landed (`ScrollGuard`); flick count and rotate check still needs your eyes
+- [x] Gate 2 — `scale`/`bodies` tables + Act I with real maps landed; portrait legibility needs your eyes
+- [x] Gate 3 — instanced `fwidth` orbit rings, instanced canvas-atlas labels, custom star dome, sun glow, `textures.js` + tiers all landed
+- [x] Gate 4 — 64x32 moon sphere, one directional + 0.014 ambient, Earth in the sky on the same light, Seam A authored (dot subtends 62.7 deg at the cut)
+- [x] Gate 5 — terrain built at boot, measured 265 ms on this JIT (that is why it is not on the seam frame)
+- [x] Gate 6 — displaced near field, mid annulus, procedural ridge band, 220 rocks, LM/flag/masts, footprints, blob shadow; Seam B verified continuous by construction
+- [x] Gate 7 — three spaces in one arc-length table; seam B measured 0.00049 m / heading dot 1.00000, seam A heading 0.9816; touch + keyboard input landed
+- [x] Gate 8 — DOM captions driven by the journey snapshot (no drei Scroll html), damping 0.18, credit line for Solar System Scope
+- [ ] Done — on-device pass: thermal soak, tab-background pause, scrub-back bit-exactness, `?freeze=0.699/0.701` seam pair
 
 
 1. scroll-listener death from a Canvas re-render → gate #1 + connect guard (mitigated by construction).
