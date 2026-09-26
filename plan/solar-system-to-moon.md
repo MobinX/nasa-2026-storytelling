@@ -126,7 +126,7 @@ The 2k set is packed into one 2048×512 planet atlas and the per-body decode tie
 
 Edits: `src/App.jsx` (rewrite: module-scope Canvas config, `<Experience/>`, `<Hud/>`, zero React state in the Canvas path), `src/styles.css` (keep the `position:fixed` hardening — it's what keeps `scrollThreshold` stable when the Android URL bar collapses; add HUD/pad rules, `overscroll-behavior:contain`, `touch-action`), `index.html` (title → "nasa-2026-storytelling"), `package.json` (nothing added).
 
-New (21): `src/journey/{timeline.js,rail.js,CameraRig.jsx,poseOrbit.js,poseGround.js}` · `src/scene/{Experience.jsx,Sky.jsx,SolarSystem.jsx,MoonOrbit.jsx,MoonSurface.jsx,Props.jsx}` · `src/lights/SunLight.jsx` · `src/lib/{bodies.js,scale.js,terrain.js,geometry.js,textures.js,gait.js,quality.js}` · `src/state/input.js` · `src/ui/{Hud.jsx,controls.js}`. `timeline.js`/`rail.js`/`terrain.js`/`bodies.js`/`scale.js`/`gait.js` import **no React and no drei** — the numbers live in exactly one place. Plus `plan/solar-system-to-moon.md` (this document, gate 0) and `public/textures/*` + `public/credits.txt`.
+New (21): `src/journey/{timeline.js,rail.js,pose.js,ground.js}` (as built: the three rails and both seam poses live in `pose.js`, the ground layering in `ground.js`, `CameraRig.jsx` under `src/scene/`; `lib/scale.js` folded into `lib/bodies.js`) · `src/scene/{Experience.jsx,Sky.jsx,SolarSystem.jsx,MoonOrbit.jsx,MoonSurface.jsx,Props.jsx}` · `src/lights/SunLight.jsx` · `src/lib/{bodies.js,scale.js,terrain.js,geometry.js,textures.js,gait.js,quality.js}` · `src/state/input.js` · `src/ui/{Hud.jsx,controls.js}`. `timeline.js`/`rail.js`/`terrain.js`/`bodies.js`/`scale.js`/`gait.js` import **no React and no drei** — the numbers live in exactly one place. Plus `plan/solar-system-to-moon.md` (this document, gate 0) and `public/textures/*` + `public/credits.txt`.
 
 ## Build order — each step ends with something you look at on the phone
 
@@ -176,6 +176,7 @@ New (21): `src/journey/{timeline.js,rail.js,CameraRig.jsx,poseOrbit.js,poseGroun
 - [x] Gate 6 — displaced near field, mid annulus, procedural ridge band, 220 rocks, LM/flag/masts, footprints, blob shadow; Seam B verified continuous by construction
 - [x] Gate 7 — three spaces in one arc-length table; seam B measured 0.00049 m / heading dot 1.00000, seam A heading 0.9816; touch + keyboard input landed
 - [x] Gate 8 — DOM captions driven by the journey snapshot (no drei Scroll html), damping 0.18, credit line for Solar System Scope
+- [x] Verified offline instead — `npm run check`: boot path decodes all 11 maps, terrain levels to 0.000 m at the cut, 20k pose samples with no NaN, per-space continuity, no sphere clipping, eye never under the terrain, both seams' heading/fov continuity, scrub-back reproduces every pose exactly, camera path reads no clock
 - [ ] Done — on-device pass: thermal soak, tab-background pause, scrub-back bit-exactness, `?freeze=0.699/0.701` seam pair
 
 
