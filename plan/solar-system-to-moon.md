@@ -120,7 +120,7 @@ for f in 2k_sun.jpg 2k_mercury.jpg 2k_venus_surface.jpg 2k_earth_daymap.jpg 2k_m
   curl -fsSL --retry 3 -o "$f" "https://www.solarsystemscope.com/textures/download/$f"
 done   # 5.7 MB total; never touch 8k_* (134 MB decode)
 ```
-Every decoded map must be bound to a material (asserted in `tools/render-smoke.mjs`); the sun sphere uses `2k_sun.jpg` unlit with `toneMapped={false}`. The 2k set is packed per-body at decode time and the per-body decode tiers by a throwaway build-time script or at decode time via `ImageBitmapLoader` `resizeWidth/resizeHeight` (one loader instance per distinct size — three/R3F memoize loaders *per class*, so mutating one shared instance gives every texture the first load's options). Add `public/credits.txt` — Solar System Scope maps are **CC-BY 4.0** ("Textures by Solar System Scope"), three.js/three-globe MIT; a one-line on-screen credit in the outro caption. No new npm dependencies.
+All 11 maps are decoded once at boot and downsampled to a per-body size by drawing onto a smaller canvas (`src/lib/textures.js`): 512×256 for the six distant planets, 1024×512 for Earth and Mars, 2048×1024 for the Moon, shared by the orbit sphere and the ground crop, ≈16 MB decoded. `CanvasTexture` rather than `ImageBitmapLoader`, because three's `flipY` handling on the normal upload path is what the seam's texture continuity depends on. Every decoded map must be bound to a material — asserted in `tools/render-smoke.mjs`, which is how the unused sun map got noticed; the sun sphere now uses `2k_sun.jpg` unlit with `toneMapped={false}`. `public/credits.txt` records the licence: Solar System Scope maps are **CC BY 4.0** (credit line: Textures by Solar System Scope), shown in the HUD. No new npm dependencies.
 
 ## Files
 
