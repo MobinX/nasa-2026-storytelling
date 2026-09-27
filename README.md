@@ -19,7 +19,7 @@ npm run build && npm run preview --host   # :4173 — measure performance here, 
 npm run check             # six headless suites: auditor self-test, dialogue, boot, journey, UVs, frame
 ```
 
-Add `?debug`-style params: `?plain` hides the diagnostics readout, `?tier=0..3` forces a quality tier,
+Add `?debug`-style params: `?plain` hides the diagnostics readout, `?tier=0..3` forces a quality tier (the budget is pinned to the top tier at boot and nothing degrades it live),
 `?freeze=0.699` parks the camera on a seam frame so either side of a cut can be screenshotted.
 
 There are no controls. Scroll is the only input: it drives the rail forward, and the head turn along the
@@ -51,8 +51,8 @@ Other choices worth knowing: orbit rings are one instanced draw with an analytic
 shader (`THREE.LineLoop` is 1 px and hard-aliased; drei `<Line>` rebuilds its geometry on every phone
 rotation); labels are one instanced canvas atlas, because troika `<Text>` fetches a font from a CDN and
 reallocates its SDF atlas mid-scroll; the star dome is custom because drei `<Stars>` ties point size to
-world distance and centres on the origin, which would be inside the terrain in Act III; `antialias` and
-`shadows` are off in favour of dpr 1.25 and a multiply-blended blob; the terrain is displaced once on the
+world distance and centres on the origin, which would be inside the terrain in Act III; `shadows` are off in
+favour of a multiply-blended blob, while `antialias` is on and the render sits at dpr 2.0; the terrain is displaced once on the
 CPU because the height field is also needed for foot placement.
 
 There is deliberately no `OrbitControls` (it writes `touch-action: none` onto the scroller and kills phone
@@ -75,4 +75,4 @@ The plan and gate checklist this was built from is in `plan/solar-system-to-moon
 after `npm install`, CLI shebangs need `#!/usr/bin/env node` rewritten to Termux's absolute env path or
 `vite` exits 126.
 
-Still open: on-device frame-rate and thermal soak, and a look at the two cuts at real scroll speeds.
+Still open: on-device frame-rate and thermal soak — nothing degrades the picture automatically any more, so a hot device has no fallback short of `?tier=` — and a look at the two cuts at real scroll speeds.

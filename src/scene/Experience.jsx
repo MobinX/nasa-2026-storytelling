@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { PerformanceMonitor, useScroll } from "@react-three/drei";
+import { useScroll } from "@react-three/drei";
 import { journey } from "../state/journey.js";
-import { TIERS } from "../lib/quality.js";
 import { actAt, clamp01, groundWeight } from "../journey/timeline.js";
 import { spaceAt, SUN_DIR } from "../journey/pose.js";
 import CameraRig from "./CameraRig.jsx";
@@ -96,40 +95,6 @@ const SpaceWatcher = ({ onChange }) => {
   return null;
 };
 
-// Escalate and degrade by mutating dpr and per-object visibility only; remounting would re-link shaders,
-// which costs 50-300ms on mobile drivers. maxTier latches after two declines so a hot phone does not
-// oscillate against its own thermal curve.
-const Tiers = () => {
-  const setDpr = useThree((s) => s.setDpr);
-  const state = useRef({ declines: 0, inclines: 0 });
-  const set = (t) => {
-    journey.tier = Math.max(0, Math.min(TIERS.length - 1, t));
-    setDpr(TIERS[journey.tier].dpr);
-    journey.dpr = TIERS[journey.tier].dpr;
-  };
-  return (
-    <PerformanceMonitor
-      iterations={8}
-      ms={500}
-      threshold={0.7}
-      bounds={() => [24, 45]}
-      onDecline={() => {
-        const st = state.current;
-        st.declines++;
-        set(journey.tier - 1);
-        if (st.declines >= 2) journey.maxTier = Math.min(journey.maxTier, journey.tier);
-        st.inclines = 0;
-      }}
-      onIncline={() => {
-        const st = state.current;
-        st.inclines++;
-        if (st.inclines >= 3 && journey.tier < journey.maxTier) set(journey.tier + 1);
-      }}
-      onFallback={() => set(0)}
-    />
-  );
-};
-
 // ?freeze=0.699 parks the journey on a seam frame so the two sides can be screenshotted and compared.
 const ScrollFreeze = () => {
   const scroll = useScroll();
@@ -150,7 +115,6 @@ export default function Experience({ terrain }) {
       <ScrollGuard />
       <ShaderWarmup />
       <FrameMeter />
-      <Tiers />
       <SpaceWatcher onChange={setSpace} />
       <ScrollFreeze />
       <CameraRig heights={terrain.heights} />

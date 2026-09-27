@@ -71,7 +71,7 @@ export default function Hud() {
     ["tris", (journey.gl.tris / 1000).toFixed(1) + "k"],
     ["progs", journey.gl.programs],
     ["texs", journey.gl.textures],
-    ["tier", journey.tier + "/" + journey.maxTier],
+    ["tier", journey.tier],
     ["dpr", journey.dpr],
     ["maxTex", journey.caps.maxTextureSize],
     ["gpu", journey.caps.renderer || "?"],

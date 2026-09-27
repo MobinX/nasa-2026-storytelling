@@ -37,7 +37,7 @@ export default function SolarSystem() {
       <Labels holders={holders} />
       <group>
         <mesh rotation={[0, 0, 0]}>
-          <sphereGeometry args={[SUN_U, 24, 16]} />
+          <sphereGeometry args={[SUN_U, 48, 32]} />
           <meshBasicMaterial color='#ffdf9e' map={maps.sun} toneMapped={false} />
         </mesh>
         {glows.map((m, i) => (
@@ -63,7 +63,7 @@ export default function SolarSystem() {
 
           {b === EARTH && (
             <mesh position={[Math.cos(MOON_THETA) * MOON_ORBIT_U, 0, Math.sin(MOON_THETA) * MOON_ORBIT_U]}>
-              <sphereGeometry args={[MOON_DOT_U, 16, 10]} />
+              <sphereGeometry args={[MOON_DOT_U, 32, 20]} />
               <meshBasicMaterial color='#c9c9cd' map={maps.moon} toneMapped={false} />
             </mesh>
           )}

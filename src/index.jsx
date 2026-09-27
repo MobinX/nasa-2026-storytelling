@@ -18,7 +18,7 @@ const say = (msg) => {
 async function start() {
   const t0 = performance.now();
   try {
-    await preloadMaps(4, (p) => say("loading surface maps " + Math.round(p * 100) + "%"));
+    await preloadMaps(8, (p) => say("loading surface maps " + Math.round(p * 100) + "%"));
     say("shaping the terrain");
     const terrain = buildTerrain({ seg: 96, avoid: GROUND_CORRIDOR });
     levelTerrain(terrain, CUT_LOCAL[0], CUT_LOCAL[2]);

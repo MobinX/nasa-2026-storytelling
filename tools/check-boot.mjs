@@ -59,8 +59,8 @@ await preloadMaps(4, (p) => {
 });
 const keys = Object.keys(maps);
 console.log("maps:", keys.join(" "));
-const missing = ["mercury", "venus", "earth", "mars", "jupiter", "saturn", "uranus", "neptune", "moon", "saturnRing", "detail"].filter((k) => !maps[k]);
-console.log(missing.length ? "MISSING MAPS: " + missing.join(",") : "all 11 maps decoded, anisotropy=" + maps.moon.anisotropy + " colorSpace=" + maps.moon.colorSpace);
+const missing = ["sun", "mercury", "venus", "earth", "mars", "jupiter", "saturn", "uranus", "neptune", "moon", "saturnRing", "detail"].filter((k) => !maps[k]);
+console.log(missing.length ? "MISSING MAPS: " + missing.join(",") : "all 12 maps decoded, anisotropy=" + maps.moon.anisotropy + " colorSpace=" + maps.moon.colorSpace);
 
 const terrain = buildTerrain({ seg: 96, avoid: GROUND_CORRIDOR });
 const off = levelTerrain(terrain, CUT_LOCAL[0], CUT_LOCAL[2]);

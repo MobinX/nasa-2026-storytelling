@@ -3,14 +3,15 @@ import * as THREE from "three";
 // Only 2k source tiers exist, so per-body resolution is chosen here by drawing onto a smaller canvas.
 // CanvasTexture (not ImageBitmap) keeps three's flipY + colorSpace handling on the normal code path.
 const JOBS = [
-  { key: "mercury", url: "/textures/2k_mercury.jpg", w: 512, h: 256 },
-  { key: "venus", url: "/textures/2k_venus_surface.jpg", w: 512, h: 256 },
+  { key: "sun", url: "/textures/2k_sun.jpg", w: 1024, h: 512 },
+  { key: "mercury", url: "/textures/2k_mercury.jpg", w: 1024, h: 512 },
+  { key: "venus", url: "/textures/2k_venus_surface.jpg", w: 1024, h: 512 },
   { key: "earth", url: "/textures/2k_earth_daymap.jpg", w: 1024, h: 512 },
   { key: "mars", url: "/textures/2k_mars.jpg", w: 1024, h: 512 },
-  { key: "jupiter", url: "/textures/2k_jupiter.jpg", w: 512, h: 256 },
-  { key: "saturn", url: "/textures/2k_saturn.jpg", w: 512, h: 256 },
-  { key: "uranus", url: "/textures/2k_uranus.jpg", w: 512, h: 256 },
-  { key: "neptune", url: "/textures/2k_neptune.jpg", w: 512, h: 256 },
+  { key: "jupiter", url: "/textures/2k_jupiter.jpg", w: 1024, h: 512 },
+  { key: "saturn", url: "/textures/2k_saturn.jpg", w: 1024, h: 512 },
+  { key: "uranus", url: "/textures/2k_uranus.jpg", w: 1024, h: 512 },
+  { key: "neptune", url: "/textures/2k_neptune.jpg", w: 1024, h: 512 },
   { key: "moon", url: "/textures/2k_moon.jpg", w: 2048, h: 1024 },
   { key: "saturnRing", url: "/textures/2k_saturn_ring_alpha.png", w: 1024, h: 63 },
 ];
@@ -36,7 +37,7 @@ export const maps = {};
 // Takes the anisotropy ceiling directly: the maps have to be decoded before a WebGL context exists, so
 // the renderer's getMaxAnisotropy() is not available yet.
 export async function preloadMaps(maxAnisotropy = 4, onProgress) {
-  const aniso = Math.max(0, Math.min(4, maxAnisotropy));
+  const aniso = Math.max(0, Math.min(8, maxAnisotropy));
   let done = 0;
   for (const j of JOBS) {
     const img = await decode(j.url);
