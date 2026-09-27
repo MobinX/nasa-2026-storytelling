@@ -15,7 +15,7 @@ Everything must work in a **phone browser** (Android/Termux, portrait, touch-fir
 | | |
 |---|---|
 | Handoff | **Scroll drives everything, always** — including forward motion on the ground. No mode switch, no teleport, no "press to explore". |
-| Walk input | **Both**: touch = left-thumb joystick (strafe/lead) + right-side drag (look); desktop = WASD + pointer lock. |
+| Walk input | **Superseded** (see *Scroll-only walk* below): none. Scroll alone drives the rail, the head turn and the gait. |
 | Look | **Cinematic diagram**: correct planet order with orbit rings + name labels. |
 | Textures | **Real NASA-derived maps** (Solar System Scope's NASA/USGS/LRO-WAC-derived set), vendored locally — see Assets. |
 
@@ -29,6 +29,8 @@ Everything must work in a **phone browser** (Android/Termux, portrait, touch-fir
 - **One continuous dive is arithmetically impossible.** Orbit scale is `1 u ≈ 145 km` (Moon r = 12 u); ground scale is `1 u = 1 m`. Spanning both in one frustum needs near/far ≈ 1:10⁸ and float32 vertex precision collapses at the metres scale. So there **is** a cut — hidden by construction (see *The seam*).
 - `troika <Text>` silently fetches a font from `cdn.jsdelivr.net` when `font` is omitted and reallocates its SDF atlas mid-run → **not used.** Labels are one instanced `CanvasTexture` atlas (system font, 1 draw call, no network).
 - `dev` bundles all of drei into one 3.1 MB chunk → **dev-server fps is not a valid perf measurement**; use `npm run build && npm run preview`.
+- **The eye-height assertions are blind to the terrain under the walker.** `groundPose` writes `local.y = pose.local.y + heightAt(...) + gait.y` and the check subtracts `heightAt(...)`, so the terrain cancels exactly and only the authored column is tested. A 5.27 m hill over 33 m passed every assertion in the suite. Anything that must be clear of the walk is now generated against `GROUND_CORRIDOR` and asserted with `heightAt` on the far side of the comparison.
+- **A world-up camera is the wrong up on that site.** At 0.67°N 23.5°E the surface normal is ~89° from world +y, so yaw/pitch taken from a world-space view direction and rebuilt with a world-+y Euler render the horizon sideways. Only an on-screen check would have caught it, and there was none; the site normal is now the reference up for both surface acts, and the tilt is asserted.
 
 ## Architecture
 
@@ -59,34 +61,77 @@ Two mutually-exclusive scene graphs, **never co-rendered**:
 | Lunar orbit | 0.42–0.60 | ~1.5 low passes, then a shrinking spiral toward Mare Tranquillitatis |
 | Descent | 0.60–0.70 | frame fills entirely with regolith — **SEAM at 0.70** |
 | Reveal | 0.70–0.80 | y 0.35 → 1.70 m, pitch −70° → −5°: the horizon *arrives*, rocks resolve, the LM appears |
-| Walk | 0.80–1.00 | authored rail ~18 m + player offsets; gait locked to distance walked |
+| Walk | 0.80–1.00 | authored rail 44.85 m, no player offsets; gait locked to distance walked, amplitude from scroll velocity |
 
-`GROUND_IN = 0.70`, `GROUND_FULL = 0.75`; `groundWeight = smoothstep(o, 0.70, 0.75)` gates input pads and the rotation hand-off (`smoothstep` has zero derivative at both ends = no pop).
+`GROUND_IN = 0.70`, `GROUND_FULL = 0.75`; `groundWeight = smoothstep(o, 0.70, 0.75)` gates the gait and the rotation hand-off (`smoothstep` has zero derivative at both ends = no pop).
 
 Path = **per-act `CatmullRomCurve3`** (`centripetal`, tension 0.5) joined by one shared arc-length table so world speed is constant across joints; `getPointAt(u, scratchTarget)` with module-scope scratch vectors (zero per-frame allocation). A single long curve is rejected: `arcLengthDivisions = 200` for the whole path gives the landing ~2 samples. Authored dwell = route a *longer* path around the subject, not ease the parameter; only "beat" acts get `smootherstep` (zero 1st *and* 2nd derivative → no velocity pop against a constant-speed neighbour).
 
-### Ground layering (the hybrid you asked for)
+### Ground layering — **superseded**, see "Scroll-only walk" below
+
+The hybrid below was built and shipped: rail + a damped player offset on top, world-frame yaw/pitch. Two
+of its parts survive untouched (the rail sampling, and the rule that only input may be damped); the rest
+was deleted, and *why* it was deleted is in the next section.
 
 ```
 stored  {forward, lateral}          // input writes, hard-clamped: lateral ±6.5 m, forward −1.5…+4 m
 applied = damp(stored * groundWeight, lambda 5)      // ONLY permitted damp: it smooths input, not scroll
-base    = sampleRail(GROUND_RAIL, range01(o, 0.70, 1.00) + applied.forward/railLength)
-camera.position = base + FWD*applied.forward + RIGHT*applied.lateral
-                    + (heightAt(x,z) + 1.70 + gaitBob()) * groundWeight
 ```
-Orientation: **absolute world yaw/pitch (YXZ), not `qBase × qLook`** (a rail whose heading moves with `offset` would rotate the horizon under a stationary user). Seed from the rail **forward vector** (`yaw = atan2(fwd.x, fwd.z)`, `pitch = asin(-fwd.y/|fwd|)`) — *not* `setFromQuaternion`, which flips 180° once dive pitch passes ±90°. Before seeding, set `qGround := qOrbit` so nothing pre-rotates at `w ≈ 1e-6`. Hysteresis: seed above `w > 0.5`, keep until `w < 0.02`, clear only when `|stored| < ε`; rotate `stored` by Δyaw on re-entry rather than discard it (otherwise a 0.86→0.83→0.86 scrub re-interprets the offset in a new frame = visible lateral teleport). Soft auto-align toward the rail heading, gated off for ~0.6 s after any look input, with a 3° deadband.
 
-Scroll back up ⇒ `groundWeight → 0` ⇒ player contribution is **structurally** zero (no branch to get wrong), plus a slow `damp(stored → 0)` while `w === 0` so a re-descent starts clean. `clamp01(scroll.offset)` at the single read site — overscroll can push it outside [0,1] and a hand-rolled act picker then indexes `−1` → `NaN` camera → black screen.
+## Input — **superseded**: there is no input layer
 
-## Input
+The gesture split, the thumb pad, the look pad, WASD and pointer lock were all removed. What is left of
+that section's content:
 
-Gesture split uses the browser's own disambiguation instead of racing it: **vertical drag = page scroll = forward progress; horizontal drag = yaw; two-finger vertical = pitch.**
+- **Gait**: `y = 0.060·max(0,sin φ)^0.8 + 0.004·sin 2φ`, φ locked to **distance walked** (never
+  `elapsedTime`) — fast rise, floaty apex at 0.165 g reads "lunar"; >12 cm reads "trampoline". 1.62 m/s²
+  → 0.9 Hz lope. Unchanged, and still the reason the phase is a distance and not a time.
+- The passive-listener rule outlived the listeners. A single non-passive pointer handler on the scroller is
+  enough to make Android wait on the gesture decision, and `touch-action: pan-y` plus
+  `overscroll-behavior: contain` on the scroller is now the only thing protecting the scroll path, so
+  `render-smoke` asserts the absence of gesture handlers over **every** DOM node and asserts the scroller
+  style, rather than testing pads that no longer exist.
 
-- Left thumb pad (`position:fixed` DOM sibling, `touch-action:none`, `pointer-events:auto` only while `w > 0`): 118 px disc, `setPointerCapture`, radius 52 px → `input.move.{x,y}`. `pointercancel` treated **identically** to `pointerup` (a capture-storm, not an error path).
-- Right look pad: **`touch-action:pan-y`** so vertical pans scroll the page while horizontal drags reach JS; every handler on this pad is registered **`{ passive: true }`** — the render smoke asserts it, because it initially was not, and asserts that no handler calls `preventDefault` (a non-passive pointer listener alone is enough to make Android wait on the gesture decision). When the browser claims the pan it fires `pointercancel` → release look, which the same test drives end to end against the real handlers.
-- Desktop: WASD/arrows + `requestPointerLock` (locked mouse feeds both axes; wheel still scrolls the page = still progress).
-- Store = `src/state/input.js`, a module-level mutable singleton. Sources **only add** to `look.dx/dy` and **only write** `move`; the rig is the **single reader/consumer** inside one `useFrame` (`move` is a level, `look` is a consumed accumulator — that asymmetry is what prevents sticky strafe *and* lost mouse ticks). **Nothing calls `setState` per frame.**
-- Gait: `y = 0.060·max(0,sin φ)^0.8 + 0.004·sin 2φ`, φ locked to **distance walked** (never `elapsedTime`) — fast rise, floaty apex at 0.165 g reads "lunar"; >12 cm reads "trampoline". 1.62 m/s² → 0.9 Hz lope.
+## Scroll-only walk (the change that deleted the above)
+
+Scroll is the only input. The rail is the only path, which turned three things that used to be tolerable
+into defects, all of them measured rather than reasoned about:
+
+1. **The gait would have died silently.** `gait(distance, moving)` took `moving` only from
+   `input.move`. With input gone it is permanently 0, so the bob, roll lean and sway flatten with no error
+   anywhere. It now comes from `scroll.delta`, which drei already maintains as a damped velocity
+   (`easing.damp(state, "delta", |last − offset|, 0.18, dt)`), normalised by the frame delta so a 120 Hz
+   phone does not see half the bob. Band-passed, not ramped: the rail covers 44.85 m in 0.30 of offset, so
+   a one-page-per-second flick drives it at ~15 m/s, and with the physical stride that is a 9 Hz vibration.
+   Amplitude therefore goes 0 → 1 over 0.15–0.9 m/s and back to 0 over 6–18 m/s, so a hard flick reads as a
+   glide. `stepEvent` stays at the true 0.81 m, so footprint spacing never lies.
+2. **The walk climbed a hill and the horizon never arrived.** `CRATERS` (seed 20260926) put a 62 m,
+   5.0 m-deep crater centre at local (0.7, −13.8): the landing cut is at the *bottom* of it and the corridor
+   climbs out over its rim — **5.27 m of climb, 21.9° peak slope**, ground 15 m ahead at +14.1° where a flat
+   mare gives −6.5°. `npm run check` **cannot see this**: `check-journey` computes `local.y − heightAt(...)`
+   and `ground.js` computes `local.y = pose.local.y + heightAt(...) + gait.y`, so the terrain cancels
+   exactly and those assertions only ever test the authored y column. `buildCraters(avoid)` now rejects any
+   crater whose rim (r × 1.25) reaches the sampled rail — 3 of 38 — giving **0.33 m of climb, 0.8° max
+   slope, −6.0° ahead**. The rng draws happen before the rejection and unconditionally, so every surviving
+   crater stays byte-identical.
+3. **Rocks were on the only path.** 5 of 220 sat within 1.2 m of the rail (closest 0.28 m). A player used to
+   step around them. `lib/rocks.js` now clamps each intruder radially outward to the nearest clear bearing
+   instead of deleting it: deleting would hollow out a rock-free swale, and zeroing the slot would leave an
+   identity matrix drawing a 1 m icosahedron at the landing site — which the instance-capacity audit cannot
+   catch, because capacity stays 220 either way.
+
+**And a pre-existing bug this surfaced:** the ground camera built its orientation from *world* yaw/pitch
+with a world-+y Euler, but the site normal at 0.67°N 23.5°E is ~89° away from world +y. The horizon was
+rendered **91°–179° off level** (upside-down through the reveal) and nothing could have caught it except a
+phone, which this project has never been viewed on. The ground act is now expressed in the site frame and
+composed with `SITE.quaternion`; the lunar act's `lookAt` up is `SITE.n` so seam B hands off roll as well
+as heading — `check-journey` now asserts the cut rolls 0.00°, not just that its heading dot is 1.00000.
+
+The ending is asserted, not eyeballed: both subjects fully inside a 400×800 frustum (|ndc| ≤ 0.98), 6–20°
+of bearing separation, the flag taller in arc than the LM (the foreground read), and no terrain above either
+sight line. Portrait is the binding constraint — at fov 57 and aspect 0.5, hfov is only 30.4°, so a 3.9 m LM
+at 15.7 m already eats 14.1° of it. That assertion is what moved the LM from its first draft at (5.9, 44.5),
+which put its near corner at 17.1°, to (5.0, 44.5).
 
 ## Scene content
 
@@ -126,7 +171,7 @@ All 11 maps are decoded once at boot and downsampled to a per-body size by drawi
 
 Edits: `src/App.jsx` (rewrite: module-scope Canvas config, `<Experience/>`, `<Hud/>`, zero React state in the Canvas path), `src/styles.css` (keep the `position:fixed` hardening — it's what keeps `scrollThreshold` stable when the Android URL bar collapses; add HUD/pad rules, `overscroll-behavior:contain`, `touch-action`), `index.html` (title → "nasa-2026-storytelling"), `package.json` (nothing added).
 
-New (21): `src/journey/{timeline.js,rail.js,pose.js,ground.js}` (as built: the three rails and both seam poses live in `pose.js`, the ground layering in `ground.js`, `CameraRig.jsx` under `src/scene/`; `lib/scale.js` folded into `lib/bodies.js`) · `src/scene/{Experience.jsx,Sky.jsx,SolarSystem.jsx,MoonOrbit.jsx,MoonSurface.jsx,Props.jsx}` · `src/lights/SunLight.jsx` · `src/lib/{bodies.js,scale.js,terrain.js,geometry.js,textures.js,gait.js,quality.js}` · `src/state/input.js` · `src/ui/{Hud.jsx,controls.js}`. `timeline.js`/`rail.js`/`terrain.js`/`bodies.js`/`scale.js`/`gait.js` import **no React and no drei** — the numbers live in exactly one place. Plus `plan/solar-system-to-moon.md` (this document, gate 0) and `public/textures/*` + `public/credits.txt`.
+New (21): `src/journey/{timeline.js,rail.js,pose.js,ground.js}` (as built: the three rails and both seam poses live in `pose.js`, the ground layering in `ground.js`, `CameraRig.jsx` under `src/scene/`; `lib/scale.js` folded into `lib/bodies.js`) · `src/scene/{Experience.jsx,Sky.jsx,SolarSystem.jsx,MoonOrbit.jsx,MoonSurface.jsx,Props.jsx}` · `src/lights/SunLight.jsx` · `src/lib/{bodies.js,scale.js,terrain.js,geometry.js,textures.js,gait.js,quality.js}` · `src/ui/Hud.jsx`. Deleted by the scroll-only walk: `src/state/input.js`, `src/ui/controls.js`. Added by it: `src/journey/corridor.js`, `src/lib/{path-clearance.js,rocks.js}`. `timeline.js`/`rail.js`/`terrain.js`/`bodies.js`/`scale.js`/`gait.js` import **no React and no drei** — the numbers live in exactly one place. Plus `plan/solar-system-to-moon.md` (this document, gate 0) and `public/textures/*` + `public/credits.txt`.
 
 ## Build order — each step ends with something you look at on the phone
 
@@ -136,18 +181,17 @@ New (21): `src/journey/{timeline.js,rail.js,pose.js,ground.js}` (as built: the t
 4. Act II sphere + lighting + Earth, then **Seam A** (Moon dot → sphere).
 5. `terrain.js` headless (mount it at 45° sun, screenshot crater rims, check `buildTerrain` cost on-device — 9 409 verts × 36 craters is 5–25 ms on a desktop JIT and plausibly 100–200 ms on Termux, so it must build **behind the loading screen at boot**, never at the seam).
 6. Act III: terrain → far ridge → rocks → props → walker/gait → footprints/blob → **Seam B** (sphere → ground) with a `?seam=` debug slider on two empty rigs + one flat quad, viewed on the phone *before* the real rails are wired.
-7. Camera-rig scrub test: rail drawn as a line + wireframe spheres, screenshot every act boundary, assert the ground-seam pose lands within ±0.5 m of `heightAt`. Then yaw re-seed sandbox (rotating-heading rail, scrub past `GROUND_IN` with no input and watch the horizon).
+7. Camera-rig scrub test: rail drawn as a line + wireframe spheres, screenshot every act boundary, assert the ground-seam pose lands within ±0.5 m of `heightAt`. Then yaw re-seed sandbox (rotating-heading rail, scrub past `GROUND_IN` with no input and watch the horizon). *Superseded:* with no input the rig is pure, so the scrub-back assertion now covers `groundPose` itself, and the horizon orientation is asserted directly as a tilt of the site normal.
 8. Act titles/captions in the DOM HUD (fixed overlay driven by `offset` in the existing rAF loop — **not** `<Scroll html>`, which has the stale-transform-after-orientation bug and a travel rate that only matches the scrollbar when `distance === 1`), damping/pacing tune, perf pass on a real device.
 
 ## Verification (end-to-end, on the phone)
 
 - `npm run build && npm run preview --host` → open `http://192.168.0.164:4173/` (dev-server numbers are meaningless — drei is one 3.1 MB pre-bundled chunk).
-- `npm run check` runs five headless suites (`tools/self-test-auditor.mjs` first, so the shader/material auditor is proven against injected faults before anything trusts it): `tools/check-boot.mjs` (the real boot path: 11 maps decoded, terrain built and levelled), `tools/check-journey.mjs` (20k pose samples: continuity, clearances, both seams, scrub determinism, no clock on the camera path) and `tools/check-texture-continuity.mjs` (the sphere/plane UV conventions above, read from real geometry) and `tools/render-smoke.mjs` (mounts the actual component tree with react and @react-three aliased to a hook dispatcher, constructs every real geometry and material, then drives the 14 useFrame subscribers across 300 scroll offsets plus a simulated stick and drag).
+- `npm run check` runs five headless suites (`tools/self-test-auditor.mjs` first, so the shader/material auditor is proven against injected faults before anything trusts it): `tools/check-boot.mjs` (the real boot path: 11 maps decoded, terrain built and levelled), `tools/check-journey.mjs` (20k pose samples: continuity, clearances, both seams, scrub determinism, no clock on the camera path) and `tools/check-texture-continuity.mjs` (the sphere/plane UV conventions above, read from real geometry) and `tools/render-smoke.mjs` (mounts the actual component tree with react and @react-three aliased to a hook dispatcher, constructs every real geometry and material, then drives the 15 useFrame subscribers across 300 scroll offsets, asserts the rig reproduces `groundPose` to the nanometre, that the gait bobs while scrolling and is dead still when parked, and that no DOM node anywhere holds a gesture handler).
 - The HUD debug panel (dev-only, `?debug=1`) is the instrument, since DevTools may not be attached: fps, frame ms, `renderer.info` draw calls/triangles/programs/textures, current act, `offset`, tier, GPU string.
 - Flick the whole journey start→finish, then scrub **back** to the top: pose must be identical at matching offsets (pure-function check — any drift means something reads `clock`).
 - Seam check: `?freeze=0.699` / `?freeze=0.701`, screenshot both on the phone, overlay-diff at 20 % opacity; must be a continuous field of regolith with the same light direction.
-- Walk check: hold the left pad and strafe (clamps at ±6.5 m, soft wall-lean not dead input), drag right (yaw only, and a vertical drag on that pad must **still scroll the page**), two-finger vertical (pitch), then scroll up past 0.70 → camera must be bit-exact on the orbit rail with zero player contribution.
-- Desktop check: open the LAN URL on a laptop — WASD + pointer lock + wheel all work.
+- Walk check: flick start → finish → back, and the pose must be identical on the return. The horizon must be visible and stay put through the whole walk (it was 91° off level before the site-frame fix, which only a screen can confirm). The LM must resolve as an object rather than a dot as you close 60 → 15 m, with the flag reading in front of it. The bob must look like a lope at a natural scrolling pace and settle to still the moment you stop.
 - Soak: leave the walk act running 3 minutes to watch thermal decline, and background the tab to confirm `frameloop` pauses.
 - Definition of done: 6 acts scrub cleanly both directions on the phone; the seam is not visible at any scroll speed; the ground act shows black sky + stars + sun disc + Earth + LM and a walkable, footprint-marked surface; no console errors; ≥40 fps sustained at tier 2 with graceful degradation below it.
 
@@ -175,7 +219,7 @@ New (21): `src/journey/{timeline.js,rail.js,pose.js,ground.js}` (as built: the t
 - [x] Gate 4 — 64x32 moon sphere, one directional + 0.014 ambient, Earth in the sky on the same light, Seam A authored (dot subtends 62.7 deg at the cut)
 - [x] Gate 5 — terrain built at boot, measured 265 ms on this JIT (that is why it is not on the seam frame)
 - [x] Gate 6 — displaced near field, mid annulus, procedural ridge band, 220 rocks, LM/flag/masts, footprints, blob shadow; Seam B verified continuous by construction
-- [x] Gate 7 — three spaces in one arc-length table; seam B measured 0.00049 m / heading dot 1.00000, seam A heading 0.9816; touch + keyboard input landed
+- [x] Gate 7 — three spaces in one arc-length table; seam B measured 0.0000 m / heading dot 1.00000 / roll 0.00°, seam A heading 0.9816; the touch + keyboard input layer was later deleted in favour of scroll only
 - [x] Gate 8 — DOM captions driven by the journey snapshot (no drei Scroll html), damping 0.18, credit line for Solar System Scope
 - [x] Verified offline instead — `npm run check`: boot path decodes all 11 maps, terrain levels to 0.000 m at the cut, 20k pose samples with no NaN, per-space continuity, no sphere clipping, eye never under the terrain, both seams' heading/fov continuity, scrub-back reproduces every pose exactly, camera path reads no clock
 - [ ] Done — on-device pass: thermal soak, tab-background pause, scrub-back bit-exactness, `?freeze=0.699/0.701` seam pair

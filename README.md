@@ -3,7 +3,9 @@
 A single scroll-driven React Three Fiber scene. It opens on a readable diagram of the solar system, and
 scrolling flies the camera through the inner planets, into the Moon, out to low lunar orbit, down through
 the terminator and onto the surface at 0.67°N 23.5°E — Mare Tranquillitatis. Scrolling keeps driving
-forward motion on the ground; a thumb stick and drag look steer.
+forward motion on the ground all the way to the lunar module: the astronaut auto-walks the authored route,
+closing from 60 m to 15 m on the LM and ending with the flag in the foreground. There is nothing to
+steer with.
 
 Built to run in a phone browser (it is developed on a Termux/Android box and viewed over the LAN), so the
 render budget, gesture handling and texture memory are all sized for that, not for a desktop GPU.
@@ -20,14 +22,15 @@ npm run check             # headless boot path + 20k-sample journey verifier
 Add `?debug`-style params: `?plain` hides the diagnostics readout, `?tier=0..3` forces a quality tier,
 `?freeze=0.699` parks the camera on a seam frame so either side of a cut can be screenshotted.
 
-Controls: scroll or flick always advances the journey. On the ground: left thumb stick to strafe and lead,
-drag the right half to look, two fingers for pitch; on a desktop, WASD/arrows plus click for pointer lock.
+There are no controls. Scroll is the only input: it drives the rail forward, and the head turn along the
+way is authored rather than aimed. The gait bob is driven by scroll velocity, so a fast flick reads as a
+glide and a deliberate one as a lope, and stopping stops the walking.
 
 ## How it is put together
 
 `scroll.offset` in [0,1] is the only timeline input and camera pose is a pure function of it, so scrubbing
 backwards is exact. drei's internal scroll damping is the entire smoothing budget — nothing derived from
-the offset is damped again, except the player's own stick/WASD offsets.
+the offset is damped again. The gait amplitude is the one thing derived from scroll velocity, and it is a shaping curve, not a filter.
 
 Three scene graphs, never co-rendered, because one continuous zoom is arithmetically impossible: a unit
 goes from ~145 km (Moon sphere, r = 12) to 1 m (the walking field), which needs a near/far ratio of ~10⁸
@@ -35,8 +38,8 @@ and destroys float32 vertex precision. So position is **cut** at two boundaries 
 which is unitless — is handed off. Both cuts land on frames that are 100 % regolith, the star field and
 sun disc live in a camera-following rig that is identical either side, and the sun direction is re-expressed
 into the landing-site frame so the terminator matches. `tools/check-journey.mjs` asserts the orbit→ground
-cut is 0.0000 m apart with a heading error under 1e-5 rad, and that the terrain is levelled so the
-hand-off eye height lands exactly where the descent authored it.
+cut is 0.0000 m apart with a heading error under 1e-5 rad and no roll at all, and that the terrain is
+levelled so the hand-off eye height lands exactly where the descent authored it.
 
 Other choices worth knowing: orbit rings are one instanced draw with an analytic `fwidth` antialiased ring
 shader (`THREE.LineLoop` is 1 px and hard-aliased; drei `<Line>` rebuilds its geometry on every phone
