@@ -2,7 +2,7 @@ import fs from "node:fs";
 // Geometry/continuity checks for the whole journey, run against the same modules the camera rig uses.
 // node tools/check-journey.mjs
 import { Euler, Matrix4, PerspectiveCamera, Quaternion, Vector3 } from "three";
-import { poseAt, scratchPose, SPACES, SITE, CUT_LOCAL, LM_LOCAL, FLAG_LOCAL, LM_BOX, FLAG_BOX } from "../src/journey/pose.js";
+import { poseAt, scratchPose, SPACES, SITE, CUT_LOCAL, LM_LOCAL, FLAG_LOCAL, LM_BOX, FLAG_BOX, COMPANION_LOCAL, COMPANION_BOX } from "../src/journey/pose.js";
 import { groundPose, scratchGround } from "../src/journey/ground.js";
 import { buildTerrain, buildCraters, levelTerrain, heightAt } from "../src/lib/terrain.js";
 import { GROUND_CORRIDOR } from "../src/journey/corridor.js";
@@ -190,14 +190,21 @@ eye.v.copy(gp.local);
 eye.q.setFromEuler(new Euler(gp.pitch, gp.yaw, gp.roll, "YXZ"));
 const lm = subject(LM_LOCAL, LM_BOX);
 const fl = subject(FLAG_LOCAL, FLAG_BOX);
-for (const [name, x] of [["LM", lm], ["flag", fl]]) {
+const cp = subject(COMPANION_LOCAL, COMPANION_BOX);
+for (const [name, x] of [["LM", lm], ["flag", fl], ["companion", cp]]) {
   ok(x.ax <= 0.98 && x.ay <= 0.98, `${name} leaves the portrait frame: ndc ${x.ax.toFixed(2)},${x.ay.toFixed(2)}`);
   ok(x.blocked === 0, `${name} is behind a ridge: ${x.blocked} samples of terrain above its base, peaking at ${x.peak.toFixed(1)}deg`);
 }
+// Three subjects in a 30.4-degree-wide frame is the whole difficulty of this ending, and it is only
+// solvable in azimuth if the crew member is allowed to overlap the LM in depth - which is the point.
+const cpSep = Math.min(Math.abs(cp.az - lm.az), Math.abs(cp.az - fl.az));
+ok(cpSep > 2.5, `the companion is within ${cpSep.toFixed(1)}deg of centre azimuth of both the LM and the flag; he would be hidden`);
+ok(cp.arc > 9 && cp.arc < 28, `the companion spans ${cp.arc.toFixed(1)}deg at ${cp.range.toFixed(1)}m - too small to read as a person, or filling the frame`);
+ok(cp.range > 4 && cp.range < 14, `the companion is ${cp.range.toFixed(1)}m away; the conversation does not work at that distance`);
 const sep = Math.abs(lm.az - fl.az);
 ok(sep > 6 && sep < 20, `LM/flag bearing separation ${sep.toFixed(1)}deg: below 6 they overlap, above 20 one leaves frame`);
 ok(fl.arc > lm.arc, `the flag spans ${fl.arc.toFixed(1)}deg and the LM ${lm.arc.toFixed(1)}deg - the foreground subject must read larger`);
-console.log(`ending: LM ${lm.range.toFixed(1)}m at ${lm.az.toFixed(1)}deg (${lm.arc.toFixed(1)}deg tall, ndc ${lm.ax.toFixed(2)}/${lm.ay.toFixed(2)}), flag ${fl.range.toFixed(1)}m at ${fl.az.toFixed(1)}deg (${fl.arc.toFixed(1)}deg tall, ndc ${fl.ax.toFixed(2)}/${fl.ay.toFixed(2)}), separation ${sep.toFixed(1)}deg, horizon ${tilt.toFixed(1)}deg off level`);
+console.log(`ending: companion ${cp.range.toFixed(1)}m at ${cp.az.toFixed(1)}deg (${cp.arc.toFixed(1)}deg tall, ndc ${cp.ax.toFixed(2)}/${cp.ay.toFixed(2)}), LM ${lm.range.toFixed(1)}m at ${lm.az.toFixed(1)}deg (${lm.arc.toFixed(1)}deg tall, ndc ${lm.ax.toFixed(2)}/${lm.ay.toFixed(2)}), flag ${fl.range.toFixed(1)}m at ${fl.az.toFixed(1)}deg (${fl.arc.toFixed(1)}deg tall, ndc ${fl.ax.toFixed(2)}/${fl.ay.toFixed(2)}), separation ${sep.toFixed(1)}deg, horizon ${tilt.toFixed(1)}deg off level`);
 
 poseAt(SEAM_B + 1e-4, p); groundPose(SEAM_B + 1e-4, terrain.heights, p, gp);
 const startRange = Math.hypot(LM_LOCAL[0] - gp.local.x, LM_LOCAL[2] - gp.local.z);

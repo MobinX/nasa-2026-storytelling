@@ -11,6 +11,8 @@ export const journey = {
   tier: 2,
   maxTier: 3,
   walkActive: false,
+  encounter: 0,
+  companion: { x: 0.5, y: 0.5, on: false },
   actId: "system",
   spaceId: "solar",
   connected: false,

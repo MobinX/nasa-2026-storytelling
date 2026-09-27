@@ -33,6 +33,9 @@ export default function CameraRig({ heights }) {
     const o = clamp01(scroll.offset);
     poseAt(o, pose);
     journey.walkActive = pose.space.local && groundWeight(o) > 0.5;
+    // The crew member starts talking when the walk has actually finished. Gated at 0.97 rather than 1 so
+    // an overscroll bounce at the bottom of the page cannot flicker the whole dialogue panel.
+    journey.encounter = smoothstep(o, 0.97, 0.985);
 
     if (!pose.space.local) {
       camera.position.copy(pose.position);

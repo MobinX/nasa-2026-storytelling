@@ -83,6 +83,12 @@ const LUNAR_LEGS = [
 export const LM_LOCAL = [5, 0, 44.5];
 export const FLAG_LOCAL = [3.0, 0, 34.0];
 export const PANEL_LOCAL = [-4.2, 0, 12];
+// The crew member waiting by the LM. Chosen so he reads at the end of the walk rather than merely being
+// in frame: 8 m out, between the flag and the LM in azimuth, in front of the descent stage the way the
+// real photographs put an astronaut in front of it. tools/check-journey.mjs asserts all three subjects fit
+// at once, which is not free - portrait is only 30.4 degrees wide at fov 57.
+export const COMPANION_LOCAL = [3.5, 0, 37];
+export const COMPANION_BOX = { half: 0.45, top: 1.95 };
 export const MASTS_LOCAL = [[20, 62], [-16, 71]];
 
 // The checks frame the subjects with a box marginally larger than the merged geometry in Props.jsx, so a

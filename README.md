@@ -16,7 +16,7 @@ render budget, gesture handling and texture memory are all sized for that, not f
 npm install
 npm run dev --host        # http://<box-ip>:5173/
 npm run build && npm run preview --host   # :4173 — measure performance here, not in dev
-npm run check             # headless boot path + 20k-sample journey verifier
+npm run check             # six headless suites: auditor self-test, dialogue, boot, journey, UVs, frame
 ```
 
 Add `?debug`-style params: `?plain` hides the diagnostics readout, `?tier=0..3` forces a quality tier,
@@ -25,6 +25,12 @@ Add `?debug`-style params: `?plain` hides the diagnostics readout, `?tier=0..3` 
 There are no controls. Scroll is the only input: it drives the rail forward, and the head turn along the
 way is authored rather than aimed. The gait bob is driven by scroll velocity, so a fast flick reads as a
 glide and a deliberate one as a lope, and stopping stops the walking.
+
+When the walk finishes, a second astronaut waiting by the LM starts talking — a floating caption above
+his head, hands moving with the sentence, then four questions to choose from. Four rounds of that, then
+an end card and the scroll is yours again. Tapping a question interrupts whatever he is mid-way through
+saying, and every surface in that panel is `touch-action: pan-y` so a drag starting on it still scrolls
+the journey.
 
 ## How it is put together
 

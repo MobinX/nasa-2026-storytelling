@@ -9,6 +9,7 @@ import { SITE, SITE_UV, SUN_DIR } from "../journey/pose.js";
 import { journey } from "../state/journey.js";
 import { TIERS } from "../lib/quality.js";
 import Props, { Footprints, BlobShadow } from "./Props.jsx";
+import Companion from "./Companion.jsx";
 
 // Near field is CPU-displaced once at boot so heightAt() can be an O(1) lookup for the camera, the
 // rocks and the footprints. The albedo is a crop of the same equirect the camera has been flying into,
@@ -95,6 +96,7 @@ export default function MoonSurface({ terrain }) {
       <mesh geometry={ridge.g} material={ridge.m} position={[0, 6, 0]} renderOrder={1} />
       <instancedMesh ref={rocks} args={[rockGeo, near, ROCK_N]} frustumCulled={false} />
       <Props heights={heights} />
+      <Companion heights={heights} />
       <Footprints heights={heights} />
       <BlobShadow heights={heights} sunDirLocal={sunLocal} />
     </group>

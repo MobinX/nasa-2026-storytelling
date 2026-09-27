@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { journey } from "../state/journey.js";
 import { ACTS, PAGES } from "../journey/timeline.js";
+import { dialogueView, stepDialogue, advanceDialogue, askDialogue } from "./Dialogue.jsx";
 
 const DEBUG = typeof window !== "undefined" ? !new URLSearchParams(window.location.search).has("plain") : true;
 const PAINT_MS = 100;
+const TALK_MS = 45;
 const FLICK_GAP_MS = 320;
 const FLICK_MIN_DELTA = 0.012;
 
@@ -37,13 +39,17 @@ export default function Hud() {
 
   useEffect(() => {
     let raf = 0;
+    let last = 0;
     const loop = (t) => {
       const e = edge.current;
       const o = journey.offset;
+      const dt = last ? Math.min(0.25, (t - last) / 1000) : 0;
+      last = t;
+      const talking = stepDialogue(dt);
       if (o > e.offset + FLICK_MIN_DELTA && t - e.time > FLICK_GAP_MS) journey.flicks++;
       if (o !== e.offset) e.time = t;
       e.offset = o;
-      if (t - e.paint > PAINT_MS) {
+      if (t - e.paint > (talking ? TALK_MS : PAINT_MS)) {
         e.paint = t;
         setTick((n) => (n + 1) & 1023);
       }
@@ -74,6 +80,7 @@ export default function Hud() {
   ];
   const act = ACTS.find((a) => a.id === journey.actId) || ACTS[0];
   const walk = journey.walkActive;
+  const talk = dialogueView();
   const caption = act.id === "system" ? "The Solar System" : act.id === "walk" ? "Sea of Tranquillity — 0.67°N 23.5°E" : act.caption;
 
   return (
@@ -81,6 +88,30 @@ export default function Hud() {
       <div className={"caption" + (walk ? " caption-up" : "")}>
         <span>{caption}</span>
       </div>
+      {talk && talk.card ? (
+        <div className='endcard'>
+          <b>{talk.card.title}</b>
+          <span>{talk.card.hint}</span>
+        </div>
+      ) : null}
+      {talk && !talk.hidden && talk.phase === "line" ? (
+        <button type='button' className='bubble' style={{ left: talk.x, top: talk.y }} onClick={advanceDialogue}>
+          {talk.text}
+          <i />
+        </button>
+      ) : null}
+      {talk && talk.chips.length ? (
+        <div className='chips'>
+          <em>
+            round {talk.round} · {talk.title} · {talk.asked}/16 answered
+          </em>
+          {talk.chips.map((q) => (
+            <button key={q.id} type='button' onClick={() => askDialogue(q.id)}>
+              {q.q}
+            </button>
+          ))}
+        </div>
+      ) : null}
       <div className='credit'>textures by Solar System Scope (CC BY 4.0)</div>
       {journey.software && (
         <div className='poster'>

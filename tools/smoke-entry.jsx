@@ -159,6 +159,21 @@ export async function run() {
   if (!/overscrollBehavior:\s*"contain"/.test(appSrc)) out.errors.push("App.jsx no longer contains overscroll, so the phone can pull-to-refresh mid-journey");
   out.notes.push(domNodes + " DOM nodes, none holding a gesture handler; scroller style intact");
 
+  // React's onClick never reaches this harness (applyProps drops function props), so the gesture audit can
+  // only see addEventListener. The dialogue panel's real hazard is different and quieter: a fixed element
+  // with pointer-events:auto and no touch-action swallows any drag starting on it, and the journey IS a
+  // drag. That is only checkable in the source, so check it there.
+  const css = await import("node:fs").then((fs) => fs.readFileSync(new URL("../src/styles.css", import.meta.url), "utf8"));
+  const talkBlocks = [...css.matchAll(/\.(bubble|chips|chips button)\s*\{([\s\S]*?)\}/g)];
+  const wanted = { bubble: true, chips: true, "chips button": true };
+  out.notes.push(talkBlocks.length + " dialogue surfaces found in styles.css");
+  if (talkBlocks.length !== Object.keys(wanted).length) out.errors.push("expected 3 dialogue surfaces in styles.css, found " + talkBlocks.length);
+  for (const [, cls, body] of talkBlocks) {
+    if (!/touch-action:\s*pan-y/.test(body)) out.errors.push("." + cls.trim() + " has no touch-action: pan-y, so a drag starting on it cannot scroll the journey");
+    const interactive = /pointer-events:\s*auto/.test(body) || (cls.trim() === "chips button" && true);
+    if (interactive && !/touch-action:\s*pan-y/.test(body)) out.errors.push("." + cls.trim() + " claims pointer-events without opting into pan-y");
+  }
+
   const used = new Set();
   for (const m of seenMaterials) for (const slot of ["map", "alphaMap", "roughnessMap", "normalMap", "emissiveMap", "metalnessMap", "aoMap"]) if (m[slot]) used.add(m[slot]);
   const decoded = Object.entries(maps).filter(([, v]) => v);
