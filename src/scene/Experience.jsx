@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useScroll } from "@react-three/drei";
 import { journey } from "../state/journey.js";
-import { actAt, clamp01, groundWeight } from "../journey/timeline.js";
+import { actAt, clamp01 } from "../journey/timeline.js";
 import { spaceAt, SUN_DIR } from "../journey/pose.js";
 import CameraRig from "./CameraRig.jsx";
 import SolarSystem from "./SolarSystem.jsx";

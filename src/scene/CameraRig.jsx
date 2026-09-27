@@ -2,8 +2,8 @@ import { useRef } from "react";
 import { Euler, Matrix4, Quaternion, Vector3 } from "three";
 import { useFrame } from "@react-three/fiber";
 import { useScroll } from "@react-three/drei";
-import { SPACES, SITE, poseAt, scratchPose } from "../journey/pose.js";
-import { SEAM_B, clamp01, groundWeight, smoothstep } from "../journey/timeline.js";
+import { SITE, poseAt, scratchPose, walkRate } from "../journey/pose.js";
+import { WALK_IN, clamp01, smoothstep } from "../journey/timeline.js";
 import { groundPose, scratchGround } from "../journey/ground.js";
 import { journey } from "../state/journey.js";
 
@@ -12,12 +12,12 @@ const _m = new Matrix4();
 const _e = new Euler(0, 0, 0, "YXZ");
 const _q = new Quaternion();
 
-// Scroll speed to gait amplitude. The rail covers 45 m in 0.30 of the offset, so an ordinary one-screen
-// per second flick drives it at ~15 m/s; with the physical 1.62 m lunar stride that is a 9 Hz bob, which
-// reads as a vibration rather than a walk. Band-passed, not ramped: parked stays still, a deliberate
-// scroll gets the full lope, and a violent flick tapers back to a glide. Footprint spacing still comes
-// from stepEvent() at the true stride, so the tracks never lie about distance.
-const WALK_RATE = SPACES[2].rail.total / (1 - SEAM_B);
+// Scroll speed to gait amplitude. The speed is the rail's real one - metres per unit of offset times the
+// scroll rate - so the touchdown leg, which advances a quarter of the act against two tenths of a metre,
+// gets no bob at all and the walking legs get the full lope. With the physical 1.62 m lunar stride an
+// ordinary one-screen-per-second flick would run at ~9 Hz, which reads as a vibration rather than a walk,
+// so the band-pass tapers a violent flick back to a glide. Footprint spacing still comes from stepEvent()
+// at the true stride, so the tracks never lie about distance.
 const gaitAmplitude = (metresPerSecond) => smoothstep(metresPerSecond, 0.15, 0.9) * (1 - smoothstep(metresPerSecond, 6, 18));
 
 // The only writer of the camera, and now a pure function of scroll.offset: scrubbing backwards reproduces
@@ -32,7 +32,7 @@ export default function CameraRig({ heights }) {
     const d = Math.min(delta, 1 / 20);
     const o = clamp01(scroll.offset);
     poseAt(o, pose);
-    journey.walkActive = pose.space.local && groundWeight(o) > 0.5;
+    journey.walkActive = pose.space.local && o > WALK_IN;
     // The crew member starts talking when the walk has actually finished. Gated at 0.97 rather than 1 so
     // an overscroll bounce at the bottom of the page cannot flicker the whole dialogue panel.
     journey.encounter = smoothstep(o, 0.97, 0.985);
@@ -45,7 +45,7 @@ export default function CameraRig({ heights }) {
       _m.lookAt(pose.position, pose.target, pose.space.id === "lunar" ? SITE.n : UP);
       camera.quaternion.setFromRotationMatrix(_m);
     } else {
-      const gp = groundPose(o, heights, pose, ground.current, gaitAmplitude((scroll.delta / d) * WALK_RATE));
+      const gp = groundPose(o, heights, pose, ground.current, gaitAmplitude(walkRate(o) * (scroll.delta / d)));
       camera.position.copy(gp.world);
       _e.set(gp.pitch, gp.yaw, gp.roll, "YXZ");
       camera.quaternion.copy(_q.setFromEuler(_e).premultiply(SITE.quaternion));

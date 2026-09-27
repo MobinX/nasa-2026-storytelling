@@ -89,6 +89,10 @@ export default function MoonSurface({ terrain }) {
 
   return (
     <group ref={group} position={SITE.pos.toArray()} quaternion={SITE.quaternion.toArray()}>
+      {/* Regolith bounce: the only fill an airless body has. It comes up off the lit field, so it lifts the
+          shadow sides of the hardware and the dark half of the landing frame while leaving the terminator
+          where the sun puts it. Inside this group it exists exactly when the ground act does. */}
+      <directionalLight position={[0, -60, 0]} color="#5f5850" intensity={0.5} />
       <mesh geometry={geo} material={near} />
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.06, 0]} material={far}>
         <ringGeometry args={[NEAR_R * 0.99, MID_R, 96, 3]} />

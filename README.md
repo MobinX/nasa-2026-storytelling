@@ -1,11 +1,14 @@
 # Solar System → Moon → Lunar Walk
 
 A single scroll-driven React Three Fiber scene. It opens on a readable diagram of the solar system, and
-scrolling flies the camera through the inner planets, into the Moon, out to low lunar orbit, down through
-the terminator and onto the surface at 0.67°N 23.5°E — Mare Tranquillitatis. Scrolling keeps driving
-forward motion on the ground all the way to the lunar module: the astronaut auto-walks the authored route,
-closing from 60 m to 15 m on the LM and ending with the flag in the foreground. There is nothing to
-steer with.
+scrolling flies the camera through the inner planets, into the Moon, and straight down onto the surface at
+0.67°N 23.5°E — Mare Tranquillitatis. The lunar act is one pass down onto the landing site, never a lap of
+the Moon, and the last eight metres of it happen in the surface graph, where the ground has relief and a
+horizon: contact throws the view into a rumble, the camera stands up to find the mare and the hardware, and
+only then does the scroll start carrying you forward. On the ground it keeps driving the same way all the way
+to the lunar module: the astronaut auto-walks the authored route, closing from 48 m to 15 m on the LM and
+ending with the flag in the foreground. There is nothing to steer with. The whole journey is 15 screens of
+scroll, which is long on purpose — at 10 a single flick swept a tenth of the story and blew past the landing.
 
 Built to run in a phone browser (it is developed on a Termux/Android box and viewed over the LAN), so the
 render budget, gesture handling and texture memory are all sized for that, not for a desktop GPU.
@@ -36,16 +39,32 @@ the journey.
 
 `scroll.offset` in [0,1] is the only timeline input and camera pose is a pure function of it, so scrubbing
 backwards is exact. drei's internal scroll damping is the entire smoothing budget — nothing derived from
-the offset is damped again. The gait amplitude is the one thing derived from scroll velocity, and it is a shaping curve, not a filter.
+the offset is damped again. The touchdown rumble is a function of the offset, not of the clock, so contact
+can be re-lived by scrolling back up. The gait amplitude is the one thing derived from scroll velocity, and
+it is a shaping curve, not a filter; it reads the rail's real metres-per-second, so the parked contact leg
+that the rumble runs on gets no bob at all.
 
 Three scene graphs, never co-rendered, because one continuous zoom is arithmetically impossible: a unit
 goes from ~145 km (Moon sphere, r = 12) to 1 m (the walking field), which needs a near/far ratio of ~10⁸
 and destroys float32 vertex precision. So position is **cut** at two boundaries and only orientation —
-which is unitless — is handed off. Both cuts land on frames that are 100 % regolith, the star field and
+which is unitless — is handed off. Both cuts land on frames that are 100 % regolith: on the sphere side
+that means every frame of the descent aims down and stays inside the limb even at the portrait corners,
+which is also why the sphere act cannot show a horizon at all. The corollary is what sets the second cut
+apart: from 0.4u above the sphere, a frame that is only ground is an aim 35° off the vertical, and
+inheriting that as an eye height of 0.42 m means staring at 40 cm of albedo the texture crop cannot resolve
+at any scale — dark, featureless, and nothing for an impact to visibly shake. So seam B cuts position by
+seven metres as well, handing off eight metres above the field, and the last eight metres of the landing
+are flown in the surface graph where the terrain has relief, rocks and a horizon. The star field and the
 sun disc live in a camera-following rig that is identical either side, and the sun direction is re-expressed
-into the landing-site frame so the terminator matches. `tools/check-journey.mjs` asserts the orbit→ground
-cut is 0.0000 m apart with a heading error under 1e-5 rad and no roll at all, and that the terrain is
-levelled so the hand-off eye height lands exactly where the descent authored it.
+into the landing-site frame so the terminator matches. `tools/check-journey.mjs` asserts the hand-off
+matches on heading (dot > 0.999), fov and roll rather than on position, that neither side of it shows a
+horizon, that the descent never reverses its travel, and that the field is levelled where the landing starts.
+
+The ground act renders brighter than the sphere act, and not by the same light: the sun is 20° up, so a
+horizontal field only catches a third of it and a frame that is all ground and no sky read as under-exposed
+on the phone. `SunLight` lifts the directional for that act only, and `MoonSurface` carries one more
+directional light pointed upward from below the site — regolith bounce, the only fill an airless body has,
+which raises the shadow sides of the hardware without moving the terminator.
 
 Other choices worth knowing: orbit rings are one instanced draw with an analytic `fwidth` antialiased ring
 shader (`THREE.LineLoop` is 1 px and hard-aliased; drei `<Line>` rebuilds its geometry on every phone

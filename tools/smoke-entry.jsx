@@ -5,9 +5,9 @@ import * as hub from "./stubs/hub.js";
 import { fakeState } from "./stubs/hub-bridge.js";
 import { preloadMaps, maps } from "../src/lib/textures.js";
 import { buildTerrain, levelTerrain, deriveNormalMap, heightAt } from "../src/lib/terrain.js";
-import { CUT_LOCAL, LM_LOCAL, FLAG_LOCAL, SITE, poseAt, scratchPose, SPACES } from "../src/journey/pose.js";
+import { CUT_LOCAL, LM_LOCAL, FLAG_LOCAL, SITE, poseAt, scratchPose, walkRate } from "../src/journey/pose.js";
 import { groundPose, scratchGround } from "../src/journey/ground.js";
-import { SEAM_B } from "../src/journey/timeline.js";
+import { WALK_IN } from "../src/journey/timeline.js";
 import { GROUND_CORRIDOR } from "../src/journey/corridor.js";
 import { journey } from "../src/state/journey.js";
 import { auditMaterials } from "./lib-shader-audit.mjs";
@@ -96,9 +96,10 @@ export async function run() {
   }
   const parkedTravel = Math.max(...parked) - Math.min(...parked);
 
-  const railSpeed = SPACES[2].rail.total / (1 - SEAM_B);
-  const scrollDeltaFor = (mps) => (mps / railSpeed) * dt;
-  let o2 = 0.8;
+  // The rail does not move uniformly - the landing legs crawl and the walk legs run - so the scroll rate
+  // that means 2.2 m/s is read off the leg the test actually walks in, not off an average of the act.
+  let o2 = WALK_IN + 0.01;
+  const scrollDeltaFor = (mps) => (mps / walkRate(o2)) * dt;
   const moving = [];
   for (let i = 0; i < 240; i++) {
     hub.scrollState.delta = scrollDeltaFor(2.2);
