@@ -8,6 +8,7 @@ export const fakeState = {
     info: { render: { calls: 12, triangles: 4000 }, memory: { textures: 4 }, programs: [{}, {}] },
     capabilities: { maxTextureSize: 8192, getMaxAnisotropy: () => 8, isWebGL2: true },
     getContext: () => ({ getExtension: () => null }),
+    compile: () => new Set(),
     compileAsync: async () => ({}),
     setClearColor: () => {},
     toneMappingExposure: 1,
