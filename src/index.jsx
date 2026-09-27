@@ -4,6 +4,7 @@ import "./styles.css";
 import { preloadMaps } from "./lib/textures.js";
 import { buildTerrain, deriveNormalMap, levelTerrain } from "./lib/terrain.js";
 import { CUT_LOCAL } from "./journey/pose.js";
+import { GROUND_CORRIDOR } from "./journey/corridor.js";
 import { journey } from "./state/journey.js";
 
 const boot = document.getElementById("boot");
@@ -19,7 +20,7 @@ async function start() {
   try {
     await preloadMaps(4, (p) => say("loading surface maps " + Math.round(p * 100) + "%"));
     say("shaping the terrain");
-    const terrain = buildTerrain({ seg: 96 });
+    const terrain = buildTerrain({ seg: 96, avoid: GROUND_CORRIDOR });
     levelTerrain(terrain, CUT_LOCAL[0], CUT_LOCAL[2]);
     terrain.normalMap = deriveNormalMap(terrain.heights, 512);
     journey.bootMs = performance.now() - t0;

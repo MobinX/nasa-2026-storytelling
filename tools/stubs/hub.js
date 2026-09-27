@@ -146,10 +146,6 @@ function makeNode(tag, props) {
       const i = l.findIndex((e) => e.fn === fn);
       if (i >= 0) l.splice(i, 1);
     };
-    node.setPointerCapture = () => (node.captured = true);
-    node.releasePointerCapture = () => (node.captured = false);
-    node.requestPointerLock = () => (node.lockRequested = true);
-    node.getBoundingClientRect = () => ({ left: 0, top: 0, width: 118, height: 118 });
     node.className = props.className || "";
     return node;
   }

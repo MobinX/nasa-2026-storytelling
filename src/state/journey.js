@@ -10,7 +10,6 @@ export const journey = {
   dpr: 1,
   tier: 2,
   maxTier: 3,
-  groundWeight: 0,
   walkActive: false,
   actId: "system",
   spaceId: "solar",

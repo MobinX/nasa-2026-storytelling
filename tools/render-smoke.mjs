@@ -12,7 +12,7 @@ const ctx2d = () => {
   return { fillStyle: "#000", font: "", textAlign: "", textBaseline: "", clearRect: noop, fillRect: noop, fillText: noop, drawImage: noop, beginPath: noop, arc: noop, fill: noop, createLinearGradient: () => grad, createRadialGradient: () => grad, getImageData: (x, y, w, h) => ({ data: new Uint8ClampedArray(w * h * 4).fill(140) }) };
 };
 globalThis.document = {
-  createElement: (tag) => ({ tagName: tag, width: 0, height: 0, style: {}, getContext: () => ctx2d(), addEventListener: noop2, removeEventListener: noop2, getBoundingClientRect: () => ({ left: 0, top: 0, width: 120, height: 120 }), setPointerCapture: noop2, requestPointerLock: noop2 }),
+  createElement: (tag) => ({ tagName: tag, width: 0, height: 0, style: {}, getContext: () => ctx2d(), addEventListener: noop2, removeEventListener: noop2 }),
   getElementById: () => null,
   addEventListener: noop2,
   removeEventListener: noop2,

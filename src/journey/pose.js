@@ -77,6 +77,23 @@ const LUNAR_LEGS = [
 // Ground space: authored in LOCAL metres on the tangent plane, mapped to world by the site frame. The
 // first point and its look target are shared with the lunar descent above, so nothing has to be matched
 // after the fact.
+// Prop sites in LOCAL metres, declared next to the rail that has to walk up to them. With no steering
+// the rail is the only path there is, so the ending composition is asserted against these numbers in
+// tools/check-journey.mjs - an edit here that leaves frame fails the suite instead of the phone.
+export const LM_LOCAL = [5, 0, 44.5];
+export const FLAG_LOCAL = [3.0, 0, 34.0];
+export const PANEL_LOCAL = [-4.2, 0, 12];
+export const MASTS_LOCAL = [[20, 62], [-16, 71]];
+
+// The checks frame the subjects with a box marginally larger than the merged geometry in Props.jsx, so a
+// prop that grows later is caught by the assertion rather than silently slipping out of frame.
+export const LM_BOX = { half: 2.0, top: 4.0 };
+export const FLAG_BOX = { half: 0.55, top: 2.4 };
+
+// Six points, six look stops. Leg 0 ends at bearing 0 with [0, 1.2, 4] as its target, so leg 1 repeats
+// that stop exactly or the head would snap a degree sideways at the leg joint. From there the gaze drifts
+// 4 degrees east over the walk: enough to carry the LM at +7 degrees on the right and bring the flag in
+// on the left, and this slow turn is now the only camera rotation the ground act has.
 const GROUND_LEGS = [
   {
     pace: "ease",
@@ -86,8 +103,8 @@ const GROUND_LEGS = [
   },
   {
     pace: "linear",
-    points: [[0, EYE_Y, -1], [0.6, EYE_Y, 6], [-0.4, EYE_Y, 13], [0.3, EYE_Y, 20], [0, EYE_Y, 27]],
-    look: [[0, 1.2, 4], [0.9, 1.3, 12], [-0.3, 1.4, 20], [0.4, 1.5, 27], [0, 1.6, 35]],
+    points: [[0, EYE_Y, -1], [0.4, EYE_Y, 5], [-0.2, EYE_Y, 11], [0.9, EYE_Y, 17], [2, EYE_Y, 23], [3.2, EYE_Y, 29]],
+    look: [[0, 1.2, 4], [0.6, 1.3, 15], [0.2, 1.4, 22], [1.5, 1.45, 28], [2.7, 1.5, 34], [3.9, 1.55, 39]],
     fov: [57, 57],
   },
 ];

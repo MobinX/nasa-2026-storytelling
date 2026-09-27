@@ -1,15 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { journey } from "../state/journey.js";
 import { ACTS, PAGES } from "../journey/timeline.js";
-import { attachControls } from "./controls.js";
 
 const DEBUG = typeof window !== "undefined" ? !new URLSearchParams(window.location.search).has("plain") : true;
 const PAINT_MS = 100;
 const FLICK_GAP_MS = 320;
 const FLICK_MIN_DELTA = 0.012;
 
-// Fixed DOM siblings of <Canvas>: the HUD must never re-render the Canvas, and the pads sit above the
-// scroller so they can claim gestures. pointer-events stays off until the walk act unlocks them.
+// A fixed DOM sibling of <Canvas>: the HUD must never re-render the Canvas, so pointer-events stays off
+// everywhere except the one control that is genuinely a control.
 const SEAM_SLIDER = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("seam");
 
 // ?seam= parks the journey anywhere along the scroll with a real thumb: the only honest way to inspect a
@@ -34,11 +33,7 @@ function SeamSlider() {
 
 export default function Hud() {
   const [, setTick] = useState(0);
-  const stick = useRef(null);
-  const look = useRef(null);
   const edge = useRef({ time: 0, offset: 0, paint: 0 });
-
-  useEffect(() => attachControls(stick.current, look.current), []);
 
   useEffect(() => {
     let raf = 0;
@@ -85,14 +80,6 @@ export default function Hud() {
     <div className='hud'>
       <div className={"caption" + (walk ? " caption-up" : "")}>
         <span>{caption}</span>
-      </div>
-      <div className={"pads" + (walk ? " pads-on" : "")}>
-        <div className='stick' ref={stick}>
-          <i />
-        </div>
-        <div className='look' ref={look}>
-          <em>drag: look · 2 fingers: pitch</em>
-        </div>
       </div>
       <div className='credit'>textures by Solar System Scope (CC BY 4.0)</div>
       {journey.software && (

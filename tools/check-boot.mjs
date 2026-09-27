@@ -46,6 +46,7 @@ globalThis.Image = class {
 const { preloadMaps, maps } = await import("../src/lib/textures.js");
 const { buildTerrain, deriveNormalMap, levelTerrain, heightAt } = await import("../src/lib/terrain.js");
 const { CUT_LOCAL } = await import("../src/journey/pose.js");
+const { GROUND_CORRIDOR } = await import("../src/journey/corridor.js");
 const { groundPose, scratchGround } = await import("../src/journey/ground.js");
 const { poseAt, scratchPose } = await import("../src/journey/pose.js");
 const { clamp01, SEAM_B } = await import("../src/journey/timeline.js");
@@ -61,13 +62,13 @@ console.log("maps:", keys.join(" "));
 const missing = ["mercury", "venus", "earth", "mars", "jupiter", "saturn", "uranus", "neptune", "moon", "saturnRing", "detail"].filter((k) => !maps[k]);
 console.log(missing.length ? "MISSING MAPS: " + missing.join(",") : "all 11 maps decoded, anisotropy=" + maps.moon.anisotropy + " colorSpace=" + maps.moon.colorSpace);
 
-const terrain = buildTerrain({ seg: 96 });
+const terrain = buildTerrain({ seg: 96, avoid: GROUND_CORRIDOR });
 const off = levelTerrain(terrain, CUT_LOCAL[0], CUT_LOCAL[2]);
 terrain.normalMap = deriveNormalMap(terrain.heights, 512);
 const p = scratchPose();
 const gp = scratchGround();
 poseAt(SEAM_B + 1e-5, p);
-groundPose(SEAM_B + 1e-5, { appliedF: 0, appliedL: 0, moving: 0, w: 1, yaw: 0, pitch: 0 }, terrain.heights, p, gp);
+groundPose(SEAM_B + 1e-5, terrain.heights, p, gp, 0);
 console.log("levelled", off.toFixed(3) + "m at the cut; seam-frame eye", gp.local.y.toFixed(3) + "m; heightAt(cut) now", heightAt(terrain.heights, CUT_LOCAL[0], CUT_LOCAL[2]).toFixed(4));
 console.log("normalMap", terrain.normalMap.image.width + "px colorSpace=" + terrain.normalMap.colorSpace + " wrap=" + terrain.normalMap.wrapS);
 console.log("detail wrap=" + maps.detail.wrapS + " colorSpace=" + maps.detail.colorSpace, "| moon repeat", maps.moon.repeat.toArray().join("x"));

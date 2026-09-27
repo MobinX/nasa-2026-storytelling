@@ -5,13 +5,15 @@ import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js
 import { heightAt } from "../lib/terrain.js";
 import { stepEvent } from "../lib/gait.js";
 import { journey } from "../state/journey.js";
+import { LM_LOCAL, FLAG_LOCAL, PANEL_LOCAL, MASTS_LOCAL } from "../journey/pose.js";
 
 const box = (w, h, d, x, y, z) => (new THREE.BoxGeometry(w, h, d)).translate(x, y, z);
 const cyl = (r1, r2, h, x, y, z, seg = 10) => (new THREE.CylinderGeometry(r1, r2, h, seg, 1)).translate(x, y, z);
 const cone = (r, h, x, y, z) => (new THREE.ConeGeometry(r, h, 12)).translate(x, y, z);
 
-// No atmosphere means no aerial perspective, so range is carried by known-size objects alone: the LM at
-// 34 m, the flag at 5.5 m, a panel at 12 m, two masts at 60-70 m. Merged so each is one draw call.
+// No atmosphere means no aerial perspective, so range is carried by known-size objects alone. Every site
+// comes from journey/pose.js, because that is the same data the walk rail and the framing assertions use.
+// Merged so each prop is one draw call.
 function buildLander() {
   const grey = [cyl(1.4, 1.9, 1.5, 0, 1.55, 0, 8), box(0.9, 0.12, 0.9, 0, 0.06, 0), cyl(0.07, 0.07, 1.3, 0.6, 3.0, 0.6), cyl(0.07, 0.07, 1.3, -0.6, 3.0, -0.6), box(0.5, 0.5, 0.45, 0, 3.6, 0)];
   for (let i = 0; i < 4; i++) {
@@ -27,7 +29,7 @@ export default function Props({ heights }) {
   const y = (x, z) => heightAt(heights, x, z);
   return (
     <group>
-      <group position={[7.5, y(7.5, 34), 34]}>
+      <group position={[LM_LOCAL[0], y(LM_LOCAL[0], LM_LOCAL[2]), LM_LOCAL[2]]}>
         <mesh geometry={grey}>
           <meshStandardMaterial color='#9c9ca4' roughness={0.85} metalness={0.15} />
         </mesh>
@@ -35,16 +37,16 @@ export default function Props({ heights }) {
           <meshStandardMaterial color='#b9862f' roughness={0.45} metalness={0.7} />
         </mesh>
       </group>
-      <group position={[1.6, y(1.6, 5.5), 5.5]} rotation={[0, -0.5, 0]}>
+      <group position={[FLAG_LOCAL[0], y(FLAG_LOCAL[0], FLAG_LOCAL[2]), FLAG_LOCAL[2]]} rotation={[0, -0.5, 0]}>
         <mesh geometry={flag}>
           <meshStandardMaterial color='#c8c8cd' roughness={0.9} />
         </mesh>
       </group>
-      <mesh position={[-4.2, y(-4.2, 12) + 0.4, 12]} rotation={[0.5, 0.6, 0]}>
+      <mesh position={[PANEL_LOCAL[0], y(PANEL_LOCAL[0], PANEL_LOCAL[2]) + 0.4, PANEL_LOCAL[2]]} rotation={[0.5, 0.6, 0]}>
         <boxGeometry args={[1.7, 0.06, 1.1]} />
         <meshStandardMaterial color='#2b3550' roughness={0.35} metalness={0.4} />
       </mesh>
-      {[[20, 62], [-16, 71]].map(([x, z]) => (
+      {MASTS_LOCAL.map(([x, z]) => (
         <mesh key={x} position={[x, y(x, z) + 1.1, z]}>
           <cylinderGeometry args={[0.05, 0.05, 2.2, 6]} />
           <meshStandardMaterial color='#c2c2c7' roughness={0.9} />

@@ -2,7 +2,9 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { maps } from "../lib/textures.js";
-import { heightAt, NEAR_R, MID_R } from "../lib/terrain.js";
+import { NEAR_R, MID_R } from "../lib/terrain.js";
+import { GROUND_CORRIDOR } from "../journey/corridor.js";
+import { ROCK_N, scatterRocks } from "../lib/rocks.js";
 import { SITE, SITE_UV, SUN_DIR } from "../journey/pose.js";
 import { journey } from "../state/journey.js";
 import { TIERS } from "../lib/quality.js";
@@ -46,8 +48,6 @@ const RIDGE_FRAG = /* glsl */ `
     gl_FragColor = vec4(mix(vec3(0.04, 0.04, 0.05), vec3(0.42, 0.42, 0.45), k), k);
   }`;
 
-const ROCK_N = 220;
-
 export default function MoonSurface({ terrain }) {
   const group = useRef();
   const rocks = useRef();
@@ -75,25 +75,7 @@ export default function MoonSurface({ terrain }) {
 
   const rockGeo = useMemo(() => new THREE.IcosahedronGeometry(1, 1), []);
   useEffect(() => {
-    const r = seedRandom(7717);
-    const m = new THREE.Matrix4();
-    const q = new THREE.Quaternion();
-    const e = new THREE.Euler();
-    const p = new THREE.Vector3();
-    const s = new THREE.Vector3();
-    for (let i = 0; i < ROCK_N; i++) {
-      const band = i < 120 ? [8, 30] : i < 200 ? [30, 110] : [110, 235];
-      const d = band[0] + r() * (band[1] - band[0]);
-      const a = r() * Math.PI * 2;
-      const x = Math.cos(a) * d;
-      const z = Math.sin(a) * d;
-      const size = d < 30 ? 0.05 + r() * 0.2 : d < 110 ? 0.2 + r() * 0.6 : 1 + r() * 2.2;
-      p.set(x, heightAt(heights, x, z) + size * 0.32, z);
-      e.set(r() * 3.1, r() * 3.1, r() * 3.1);
-      s.set(size * (0.7 + r() * 0.6), size * (0.45 + r() * 0.4), size * (0.7 + r() * 0.6));
-      rocks.current.setMatrixAt(i, m.compose(p, q.setFromEuler(e), s));
-    }
-    rocks.current.instanceMatrix.needsUpdate = true;
+    scatterRocks(rocks.current, heights, GROUND_CORRIDOR, { count: ROCK_N });
   }, [heights]);
 
   useFrame(() => {
@@ -117,9 +99,4 @@ export default function MoonSurface({ terrain }) {
       <BlobShadow heights={heights} sunDirLocal={sunLocal} />
     </group>
   );
-}
-
-function seedRandom(seed) {
-  let s = seed >>> 0;
-  return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296);
 }

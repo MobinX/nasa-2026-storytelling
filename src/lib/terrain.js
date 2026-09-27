@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { reachesCorridor } from "./path-clearance.js";
 
 export const R_MOON_M = 1737400;
 export const NEAR_R = 240;
@@ -12,7 +13,9 @@ function rng(seed) {
   return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296);
 }
 
-export const CRATERS = (() => {
+// The corridor reach test uses 1.25 x the crater radius rather than 1.0 because the raised rim, not the
+// bowl, is what a walker sees: buildTerrain adds a rim bump at dr = 1.08 and it dies out by dr = 1.9.
+export function buildCraters(avoid) {
   const r = rng(20260926);
   const out = [];
   const add = (n, min, max, depth) => {
@@ -20,32 +23,38 @@ export const CRATERS = (() => {
       const a = r() * Math.PI * 2;
       const d = Math.sqrt(r()) * NEAR_R * 0.98;
       const rad = min + r() * (max - min);
-      out.push({ x: Math.cos(a) * d, z: Math.sin(a) * d, r: rad, depth: rad * depth });
+      const x = Math.cos(a) * d;
+      const z = Math.sin(a) * d;
+      // All three draws happen before the rejection and unconditionally: skipping one would shift every
+      // later crater, and the whole field is otherwise byte-identical to the authored seed.
+      if (avoid && reachesCorridor(x, z, rad * 1.25, avoid)) continue;
+      out.push({ x, z, r: rad, depth: rad * depth });
     }
   };
   add(3, 25, 60, 0.16);
   add(9, 6, 18, 0.18);
   add(26, 1.2, 4, 0.22);
   return out;
-})();
+}
 
 // Real LOLA/DEM is 500 m/pixel: 300x coarser than the camera height, so it contributes nothing here.
 // Local relief has to be synthetic; the NASA map is used for albedo and the mare/highland swells.
-export function buildTerrain({ seg = 96 } = {}) {
+export function buildTerrain({ seg = 96, avoid } = {}) {
   const t0 = performance.now();
   const geo = new THREE.PlaneGeometry(NEAR_R * 2, NEAR_R * 2, seg, seg);
   geo.rotateX(-Math.PI / 2);
   const p = geo.attributes.position;
   const grid = new Float32Array((seg + 1) * (seg + 1));
   const cell = (NEAR_R * 2) / seg;
+  const craters = buildCraters(avoid);
   for (let i = 0; i < p.count; i++) {
     const x = p.getX(i), z = p.getZ(i);
     const d = Math.hypot(x, z);
     let h = 0;
     h += Math.sin(x * 0.011) * Math.cos(z * 0.0093) * 2.4;
     h += Math.sin(x * 0.0031 + 1.7) * Math.cos(z * 0.0027 - 0.6) * 6.2;
-    for (let c = 0; c < CRATERS.length; c++) {
-      const k = CRATERS[c];
+    for (let c = 0; c < craters.length; c++) {
+      const k = craters[c];
       const dr = Math.hypot(x - k.x, z - k.z) / k.r;
       if (dr > 1.9) continue;
       if (dr < 1) h -= k.depth * Math.pow(Math.cos((dr * Math.PI) / 2), 1.4);
