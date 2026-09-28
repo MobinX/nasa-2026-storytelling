@@ -103,8 +103,8 @@ export function apply(objects) {
   return problems;
 }
 
-// Everything the boot has to hand to GLTFLoader before the first frame. Three of the lunar stops are the
-// same vehicle and two of the Martian ones are too, so this is a set: fetching the LM three times would be
-// three parses of the same bytes for one model on screen.
+// Everything the boot has to hand to GLTFLoader before the first frame. Ten stops, ten different machines,
+// so this is ten paths; it is a set rather than a list because tools/check-models.mjs refuses a shared file
+// and the boot must not ask for the same bytes twice if that ever changes.
 export const modelPaths = () => [...new Set(Object.values(STOPS).flat().map((s) => s.model).filter(Boolean))];
 export const allStops = () => Object.values(STOPS).flat();

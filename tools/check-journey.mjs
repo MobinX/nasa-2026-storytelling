@@ -314,10 +314,63 @@ const subject = (heights, site, box) => {
   };
 };
 
+const turns = {};
 for (const planet of ["moon", "mars", "solar"]) {
   const space = SPACE_BY_PLANET[planet];
   const world = space.world;
   const heights = planet === "solar" ? null : terrains[world.id].heights;
+  // The walk has to reach each machine without the visitor spinning to face it, because the head turn along
+  // the way is authored and not steerable. Measured as the angle between the bearing the last part of the
+  // walking leg arrives on and the bearing of the hardware from the park point: a turn is fine, a U-turn
+  // means the route walked away from the thing it was supposed to be taking you to.
+  // Measured in the site's own frame: a flight space hands back world coordinates in `local`, and the deep-
+  // space act is a flight space, so comparing those against a stop authored in site metres is how you end up
+  // reporting a 109-degree turn where the camera drifts straight at the machine.
+  const legLocal = (space, leg, u) => {
+    poseAt(space.from + ((leg + u) / space.legs.length) * (space.to - space.from), p);
+    const l = space.local ? p.local : localOf(p.position, space.world);
+    return { x: l.x, z: l.z };
+  };
+  for (const stop of SURFACE_STOPS[planet]) {
+    const a = legLocal(space, stop.walkLeg, 0.86);
+    const b = legLocal(space, stop.walkLeg, 0.995);
+    const arrive = Math.atan2(b.x - a.x, b.z - a.z) * DEG;
+    const bearing = Math.atan2(stop.obj[0] - stop.cam[0], stop.obj[2] - stop.cam[2]) * DEG;
+    let turn = bearing - arrive;
+    while (turn > 180) turn -= 360;
+    while (turn < -180) turn += 360;
+    ok(Math.abs(turn) < 62, `${planet} stop ${stop.index} is reached by turning ${turn.toFixed(0)}deg on the spot: the route arrives facing away from the hardware`);
+    turns[stop.id] = turn;
+  }
+  // Scattered, not queued. Authoring every vehicle "three degrees off the line of travel" - which is what
+  // this piece used to do - put ten machines in a file down the middle of one corridor, and put each of them
+  // directly in the path of the walk that followed it. Three numbers say whether that has come back: how far
+  // off the walking line the machine actually stands, whether the next one stands on the other side of it,
+  // and whether the four of them are far enough apart to be four different places in the same world.
+  if (planet !== "solar") {
+    const t = SURFACE_STOPS[planet].map((s) => turns[s.id]);
+    for (let i = 0; i < t.length; i++) {
+      ok(Math.abs(t[i]) > 18, `${planet} stop ${i} stands ${t[i].toFixed(0)}deg off the walking line: that is a corridor again, not a scatter`);
+      if (i) ok(t[i] * t[i - 1] < 0, `${planet} stop ${i} turns ${t[i].toFixed(0)}deg the same way as the one before it: the walk never crosses the route`);
+    }
+    for (const [i, a] of SURFACE_STOPS[planet].entries()) for (const b of SURFACE_STOPS[planet].slice(i + 1)) {
+      const d = Math.hypot(a.obj[0] - b.obj[0], a.obj[2] - b.obj[2]);
+      ok(d > a.half + b.half + 6, `${planet}: ${a.id} and ${b.id} are ${d.toFixed(1)}m apart, which is one site, not two parts of a world`);
+    }
+  }
+  // And the whole walking route has to stay out of every footprint, not just the park points: the rail
+  // passes within a metre of the machine the previous conversation was about otherwise.
+  const walkFrom = world.walkIn, walkTo = SURFACE_STOPS[planet].at(-1).lock;
+  for (let i = 0; i <= 300; i++) {
+    const o = walkFrom + (i / 300) * (walkTo - walkFrom);
+    poseAt(o, p);
+    for (const thing of SURFACE_STOPS[planet]) {
+      const rail = space.local ? p.local : localOf(p.position, world);
+      const d = Math.hypot(rail.x - thing.obj[0], rail.z - thing.obj[2]);
+      ok(d > thing.half + 1.5, `${planet}: the walk passes ${d.toFixed(1)}m from ${thing.id}, which is ${(thing.half * 2).toFixed(1)}m across`);
+    }
+  }
+
   for (const stop of SURFACE_STOPS[planet]) {
     const o = stop.lock + 1e-4;
     poseAt(o, p);
@@ -356,7 +409,7 @@ for (const planet of ["moon", "mars", "solar"]) {
     ok(crew.range > 3.5 && crew.range < 18, `${planet} stop ${stop.index}: the crew member is ${crew.range.toFixed(1)}m off; the conversation does not work at that distance`);
     ok(thing.range > crew.range * 0.5, `${planet} stop ${stop.index}: the object (${thing.range.toFixed(1)}m) is nearer than the crew (${crew.range.toFixed(1)}m) and would hide him`);
     ok(thing.range > 3 && thing.range < 32, `${planet} stop ${stop.index}: the hardware is ${thing.range.toFixed(1)}m away, which is neither beside you nor close enough to brief`);
-    console.log(`${planet} stop ${stop.index} ${stop.id}: held ${drift.toFixed(2)}m off route | object ${thing.range.toFixed(1)}m at ${thing.az.toFixed(1)}deg, ${thing.arc.toFixed(1)}deg tall | crew ${crew.range.toFixed(1)}m at ${crew.az.toFixed(1)}deg | fov ${p.fov.toFixed(0)} tilt ${tilt.toFixed(1)}`);
+    console.log(`${planet} stop ${stop.index} ${stop.id}: held ${drift.toFixed(2)}m off route, reached by a ${turns[stop.id].toFixed(0)}deg turn, object ${thing.range.toFixed(1)}m at ${thing.az.toFixed(1)}deg, ${thing.arc.toFixed(1)}deg tall | crew ${crew.range.toFixed(1)}m at ${crew.az.toFixed(1)}deg | fov ${p.fov.toFixed(0)} tilt ${tilt.toFixed(1)}`);
   }
   // Footprint clearance. Every stop parks the camera in front of its own vehicle, and the next stop's park
   // point must fall outside that vehicle's footprint - a 6.4 m lunar module on a 12 m route would otherwise

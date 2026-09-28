@@ -125,123 +125,123 @@
       }
     },
     {
-      "id": "moon-intrepid",
-      "name": "Apollo 12 Lunar Module Intrepid",
-      "3dmodel": "models/apollo-lunar-module.glb",
+      "id": "moon-lrv",
+      "name": "Apollo 15 Lunar Roving Vehicle, Rover 1",
+      "3dmodel": "models/lunar-rover.gltf",
       "introductoryTalk": [
-        "Intrepid. Apollo 12, and the first time anybody aimed a spacecraft at a parked one.",
-        "Two hundred metres past my shoulder sits Surveyor 3, which landed here in 1967. Conrad and Bean took parts off it.",
-        "Ask me about it. Four rounds, one question each."
+        "Rover 1. 210 kg of aluminium tubing and four wire-mesh wheels: the first vehicle anybody drove on another world.",
+        "Scott and Irwin drove it 27.8 km in three hours and two minutes, then parked it 160 m from the lander and walked away.",
+        "Four rounds, one question each. Ask."
       ],
       "QA": {
         "planet": "moon",
-        "location": "Oceanus Procellarum, near Surveyor crater · 3.0128°S 23.4220°W",
+        "location": "Hadley-Apennine, the VIP parking spot about 160 m from Falcon · 26.1324°N 3.6333°E",
         "rounds": [
           {
-            "title": "The precision landing",
+            "title": "Driving it",
             "questionOptionsForUser": [
-              "Why aim at an old probe?",
-              "How close did they get?",
-              "Who picked the site?",
-              "Was landing here harder?"
+              "Did it have a steering wheel?",
+              "How fast did it go?",
+              "What were the wheels made of?",
+              "How did they find their way back?"
             ],
             "answerForEachOption": [
               [
-                "To prove a spacecraft could be put down on a target, not just on a region. Without that, no sample return and no long traverse.",
-                "Surveyor had also taught them the soil here was strong enough to hold a leg."
+                "No. A T-shaped hand controller on the armrest between the seats: push it forward to go, pull back to stop.",
+                "All the way back it is the parking brake. No key, no gearbox: four Delco motors, a quarter horsepower each, geared 80 to one."
               ],
               [
-                "About 180 m. The landing ellipse was 6 km wide, so the crew flew the last part by eye and stopped next to it.",
-                "Four months earlier Apollo 11 had landed 5 km from its target."
+                "27.8 km in three hours and two minutes of driving, which is about nine kilometres an hour averaged over the stops.",
+                "The longest single traverse was 12.5 km, and the farthest they got from this machine on any day was 5.0 km."
               ],
               [
-                "Scientists did, over years of arguments and Lunar Orbiter photographs at up to 1 m per pixel.",
-                "Oceanus Procellarum, 370 km south of Copernicus, chosen because it was flat, lit, and already visited."
+                "Woven zinc-coated steel cable, 81.8 cm across and 23 cm wide, formed over aluminium discs with titanium chevrons.",
+                "Inside hung a 64.8 cm bump-stop frame, so a rock bent the mesh instead of the vehicle. GM called it the resilient wheel."
               ],
               [
-                "Harder in one way: they launched into a thunderstorm and the rocket triggered lightning 30 seconds after liftoff.",
-                "Both spacecraft busses blacked out and recovered, and the mission went on."
+                "A directional gyro and an odometer on the front bulkhead: what let two men drive 5 km out and come straight back.",
+                "The gyro drifted. Then they set heading on the Sun-shadow device, a disc you turned until the Sun's edge filled a slot."
               ]
             ]
           },
           {
-            "title": "Visiting Surveyor 3",
+            "title": "What it was carrying",
             "questionOptionsForUser": [
-              "What did they take off it?",
-              "What did the parts show?",
-              "Did anything grow on it?",
-              "Was it still standing?"
+              "What powered it?",
+              "Why does it fold in half?",
+              "Was there a camera on it?",
+              "How did it not cook its own motors?"
             ],
             "answerForEachOption": [
               [
-                "The television camera, a piece of the surface-sampler scoop, and cable. They cut them off with a handheld saw.",
-                "They put them in a sample box and brought them home - the only return trip to a machine, not a rock."
+                "Two 36-volt silver-zinc batteries, 121 ampere-hours each, non-rechargeable, in a bay under the floor panels.",
+                "They were sized to be flat at the end of the third traverse. This machine was spent hardware by design, agreed before launch."
               ],
               [
-                "Two and a half years of sunlight had bleached the white paint tan and embrittled the cable insulation.",
-                "The mirror had been sandblasted by dust. That is the wear model every later lunar design was built against."
+                "Because the Lunar Module's Quadrant 1 bay is a box about five feet square, and a rover only fits if it collapses.",
+                "Three sections on centre hinges, folded flat, then unfolded on the surface by pulling ropes on pulleys and braked reels."
               ],
               [
-                "A bacterium was cultured from the television camera and reported as having survived on the Moon, which was wrong.",
-                "It was Earth contamination from the clean room. The episode is why every later spacecraft is baked or filtered."
+                "A television camera on the nose, plugged into the rover's 36-volt outlet and steered from Earth by somebody in Arizona.",
+                "It was parked facing the lander to film the liftoff. The operator lost the ascent stage in the frame; Apollo 17 got it right."
               ],
               [
-                "Yes, upright, on a 14 degree slope in a shallow crater, with its own trench marks still sharp.",
-                "It had gone quiet in May 1967 and been visited in November 1969, and nobody had touched it in between."
+                "Wax. Heat capacitors under the deck boiled it, and upward-facing radiators threw the heat off into the sky.",
+                "While it was driven the radiators were blanketed with mylar, so the wax stayed molten and the gearboxes stayed in tolerance."
               ]
             ]
           },
           {
-            "title": "The station that outlived its funding",
+            "title": "Why it is still standing here",
             "questionOptionsForUser": [
-              "What was ALSEP?",
-              "How long did it run?",
-              "Why did they stop it?",
-              "Is it still out there?"
+              "Did it break down?",
+              "Why park it on that spot?",
+              "Was any of it a first?",
+              "Can you still see it from orbit?"
             ],
             "answerForEachOption": [
               [
-                "The Apollo Lunar Surface Experiments Package: a nuclear-powered station with six instruments strung out around it on cables.",
-                "This was the first of them, and the first station anyone left running on another world by remote control from Earth."
+                "Nothing on it failed. It drove at the end of the third traverse as well as it had at the start of the first, and it was left.",
+                "There was no reason to fly 210 kg back. It is the rare machine in this story abandoned while it still worked."
               ],
               [
-                "Eight years. It was designed for one.",
-                "It sent data through the two-week lunar night, which is why the Apollo 12 one was the one that worked."
+                "The crew called it the VIP site. They set the rover down facing the lander so its camera could watch the ascent stage go up.",
+                "LROC puts it 160 m east of the descent stage in one caption and southeast in another. Neither has moved in fifty years."
               ],
               [
-                "Money. In September 1977 NASA switched off the ALSEP network to pay for other programs.",
-                "The transmitters were still healthy. That is the honest version of abandonment."
+                "The first wheeled vehicle driven off Earth, the first 12 km traverse on another world, and a 2.4 m core drilled by the ALSEP.",
+                "And the first hammer-and-feather drop where there is no air. They landed together, which is what Galileo could only argue about."
               ],
               [
-                "All of it. The central station, the RTG fuel cask, the seismometer, the magnetometer, the cables coiled where they were laid.",
-                "Nobody maintains it and nothing rots. It is still waiting for a command that will not come."
+                "Lunar Reconnaissance Orbiter came over at 27 centimetres a pixel and published it on the fiftieth anniversary of the landing.",
+                "Lander, ALSEP, this rover, the dark track lines to the rille, and Scott's footprints annotated where he left them."
               ]
             ]
           },
           {
-            "title": "Leaving the way they came",
+            "title": "What they took and what they left",
             "questionOptionsForUser": [
-              "What happened to the ascent stage?",
-              "Why crash a spacecraft?",
-              "Did it make a crater?",
-              "What was lost on the way home?"
+              "What is on the frame?",
+              "What did they find at the rille?",
+              "Is there a memorial here?",
+              "Did they have to lie to get a sample?"
             ],
             "answerForEachOption": [
               [
-                "It was steered into the Moon the day after liftoff, on purpose, 60 km from the ALSEP seismometer.",
-                "Every J-mission did it. It was the only calibration source they had underground."
+                "A plate on the chassis: Man's First Wheels on the Moon, Delivered by Falcon, July 30, 1971.",
+                "Falcon is the lander 160 m off. Apollo 15 was the first mission to name its two vehicles separately."
               ],
               [
-                "To ring the ground like a hammer on a bell and read how the seismic wave came back.",
-                "It told them how deep the powdery layer sits above the solid Moon."
+                "Genesis Rock, sample 15415: pale anorthosite from the highland crust, at least 4.1 billion years old, taken at Station 4.",
+                "And Great Scott, a 9.6 kg boulder by the rille, too interesting to leave and too heavy to carry off casually."
               ],
               [
-                "No crater appeared, which surprised everybody who had expected one.",
-                "The energy went into crushing the regolith rather than throwing it. That single non-crater changed how the surface was modelled."
+                "An aluminium figure eight centimetres tall and a list of fourteen dead, American and Soviet, posed in front of the lander.",
+                "The sculptor made a hundred. Ninety-nine went to families. NASA had not approved the one that flew in a suit pocket."
               ],
               [
-                "The television camera, early in the mission: Bean pointed it at the Sun and burned the sensor out.",
-                "Apollo 12 came home with almost no live pictures of its own moonwalks. Some things are lost before the story ends."
+                "Yes. David Scott told the camera his seatbelt had caught, walked off, and came back with a rock nobody had asked for.",
+                "It was the first lunar sample with visible holes in it, and it is catalogued under the lie: Seatbelt Basalt."
               ]
             ]
           }
@@ -373,123 +373,123 @@
       }
     },
     {
-      "id": "moon-falcon",
-      "name": "Apollo 15 Lunar Module Falcon",
-      "3dmodel": "models/apollo-lunar-module.glb",
+      "id": "moon-alsep",
+      "name": "Apollo 16 ALSEP",
+      "3dmodel": "models/alsep.gltf",
       "introductoryTalk": [
-        "Falcon. Apollo 15, the first of the long missions, and the first spacecraft that brought a vehicle.",
-        "It came down beside Hadley Rille with a rover folded in its belly, and it went up leaving a three-inch metal astronaut.",
-        "Four rounds. Ask one at a time."
+        "Not a vehicle. A seismometer, a magnetometer, a solar-wind collector and a plutonium battery, left running for five years.",
+        "Apollo 16 turned it on at 19:38 UT on 21 April 1972. On 30 September 1977 Mission Control set it to standby and never woke it.",
+        "Four rounds, one question each. Ask."
       ],
       "QA": {
         "planet": "moon",
-        "location": "Hadley-Apennine, edge of Hadley Rille · 26.1324°N 3.6333°E",
+        "location": "Descartes Highlands, the Apollo 16 station · 8.9754°S 15.4981°E",
         "rounds": [
           {
-            "title": "The first of the big ones",
+            "title": "The battery",
             "questionOptionsForUser": [
-              "What made 15 different?",
-              "Why Hadley Rille?",
-              "How long did they stay?",
-              "What was the margin?"
+              "What powers a station on the Moon?",
+              "Why not solar panels?",
+              "Was the plutonium a hazard?",
+              "How far apart were the instruments?"
             ],
             "answerForEachOption": [
               [
-                "It was a J-mission: three days on the surface, three moonwalks, a full ALSEP, and a car.",
-                "The LM was stretched, the engine was upgraded, and the descent stage was carrying something it had never carried before."
+                "A SNAP-27: about 70 watts at 16 volts from a plutonium-238 fuel element. NASA compared it to a light bulb, and under.",
+                "It was built for two years. Every unit in the network ran between five and eight."
               ],
               [
-                "A rille is a channel cut by lava or a collapsed tube, and the Apennines threw ejecta across it.",
-                "They wanted old rock that had not been mixed, sitting next to a hole in the ground they could look into."
+                "Apollo 11 tried sunlight. Its seismometer worked only in daylight, and it died at 21 days.",
+                "The lunar night is fourteen days at minus 170. Nothing solar gets through it, so everything after carried radioisotope power."
               ],
               [
-                "Three moonwalks, seventeen and a half hours outside, and about three and a half hours of driving.",
-                "The last EVA was cut short by a schedule that had no slack in it. Scott still got his rille."
+                "The fuel element flew in a cask forged to survive a launch failure, a re-entry and an impact, and it was tested on all three.",
+                "It was set downwind so its vent gas could not coat the experiments. Apollo 12's crew felt the cask's heat through their gloves."
               ],
               [
-                "Falcon lifted off with less ascent margin than any earlier LM, because it was heavier and further from Earth.",
-                "The whole mission was planned against the number of seconds the ascent engine had to burn."
+                "Apollo 12's station went in about 90 m from its lander. The portable magnetometer stood on a tripod 15 m from the rover.",
+                "What LROC sees here is a station, a generator, a rover, and a line of geophones running west, each a dark mark in the soil."
               ]
             ]
           },
           {
-            "title": "The rover is here too",
+            "title": "What it measured",
             "questionOptionsForUser": [
-              "How far did the rover go?",
-              "Where is it now?",
-              "What did it carry?",
-              "Why did they need it?"
+              "Why put a seismometer on the Moon?",
+              "What was the mortar for?",
+              "Why are the magnetometer arms gold?",
+              "What happened to the heat flow experiment?"
             ],
             "answerForEachOption": [
               [
-                "28 km in three hours of driving, on a single battery, with two men riding in it.",
-                "It folded into a cubicle in the LM's side and was assembled on the surface by hand."
+                "The Moon is not quiet: shallow quakes from tidal stress, quakes from impacts, and deep moonquakes that repeat on a schedule.",
+                "Apollo 12's station heard the Apollo 13 lander crashed into the Moon 72 km away, and it rang like a bell for 55 minutes."
               ],
               [
-                "Parked where they left it, with its wheels in the regolith and its antenna still pointed the way it was stowed.",
-                "A plaque on its frame reads: Man's First Wheels on the Moon, Delivered by Falcon, July 30, 1971."
+                "The Active Seismic Experiment fired small charges from a mortar and hit the ground with a thumper, to read the layers below.",
+                "Three of four mortar charges went before the pitch sensor ran off scale, and 19 of 22 thumper shots. For a first try, enough."
               ],
               [
-                "A hand drill, a shovel, a raking tool, two camera bodies, a magnetometer and the sample bags.",
-                "And 350 kg of crew, which is why the LM had to be rebuilt to carry it down."
+                "Gold Kapton on the arms of a ring-core magnetometer, stood on a tripod away from the station's own metal.",
+                "It found no global field. That is why the solar wind arrives here unshielded, and why the soil at your feet is hungry for it."
               ],
               [
-                "Because on foot, with a suit and 15 minutes of work per stop, a mission explores a hundred metres.",
-                "With a rover it explores thirty kilometres and the geology becomes readable instead of sampleable."
+                "Two probes went in, one shallow and one drilled deep. John Young caught his foot on the cable and pulled the deep one out.",
+                "It was not broken. It was unplugged mid-traverse with other work to do, and the experiment was terminated rather than repaired."
               ]
             ]
           },
           {
-            "title": "What they left behind",
+            "title": "Switching it off",
             "questionOptionsForUser": [
-              "What is the Fallen Astronaut?",
-              "What else did they leave?",
-              "Did they leave anything careless?",
-              "Which is the most famous rock?"
+              "Why did it stop?",
+              "Was that a success?",
+              "Did anyone else listen?",
+              "Is any of it still alive?"
             ],
             "answerForEachOption": [
               [
-                "Three inches of aluminium, with the names of fourteen astronauts and cosmonauts who had died.",
-                "Scott set it up in a small crater beside a memorial plaque and photographed it, then they left."
+                "Money. NASA ended ALSEP support on 30 September 1977, in its own words, due primarily to budgetary considerations.",
+                "By then the power pack of at least one station could not run its transmitter and any experiment at the same time."
               ],
               [
-                "The ALSEP station, the rover, the flag, the ladder, the pallets, and about 300 kg of refuse.",
-                "Apollo 15 came home heavier than it went out, so the crew had to leave weight on the surface to get the samples off."
+                "Five stations ran against a one-year design life, and that network is still the only seismic array on another world.",
+                "Their transmitters were deliberately left on. JPL needed fixed points on a moving rock for geodesy and navigation."
               ],
               [
-                "A hundred four-cent postage stamps, carried without authority. Irwin handed them out as favors.",
-                "NASA found out, the astronauts were formally censured, and it cost Scott his command of the 1975 Apollo-Soyuz."
+                "Between 18 October and 28 November 1977, after the American missions were over, the Soviet RATAN-600 listened to all five.",
+                "They were still radiating because the navigation transmitters had never been shut down. Somebody in the Crimea used it."
               ],
               [
-                "The Genesis Rock: a pale anorthosite from the Apennine ejecta, 4.1 billion years old, the oldest piece of crust anyone has held.",
-                "It is in a museum in Houston, and the quarry it came from is still on the mountain above this lander."
+                "Nothing here is switched on and nothing here can be. The generator is a cold lump of plutonium fifty years past warranty.",
+                "It keeps its position to well under a metre, which is why the transmitters ran on long after the science stopped."
               ]
             ]
           },
           {
-            "title": "The experiment with a hammer",
+            "title": "This ground",
             "questionOptionsForUser": [
-              "What was the hammer and feather?",
-              "Did the ascent stage survive?",
-              "Did the seismometer hear it?",
-              "Does the site still look used?"
+              "Where are we standing?",
+              "Why did they come here?",
+              "Who else walked here?",
+              "Did anything get damaged?"
             ],
             "answerForEachOption": [
               [
-                "Galileo's argument, done out loud: in a vacuum a hammer and a falcon feather fall together.",
-                "Scott dropped them both and they hit the ground at the same instant, on television, 26 degrees north."
+                "Descartes Highlands, 8.9754 degrees south, 15.4981 degrees east, on the far south-east of the near side.",
+                "Between two young craters, North Ray a kilometre across and South Ray 680 m, which had dug the bedrock up for them."
               ],
               [
-                "No. It was crashed into the Moon deliberately, at a chosen point, after rendezvous.",
-                "Apollo 10's ascent stage is the only one still in orbit around anything; the rest were aimed at the ground."
+                "A geologist in Lunar Orbiter photographs found unusually bright ground here and argued it must be volcanic. Most agreed.",
+                "It was not. Descartes is impact breccia, blown up, fallen back and welded by collisions. That surprise is the mission."
               ],
               [
-                "Yes. The ALSEP seismometer recorded the impact as the sharpest signal it ever got, and used it to calibrate the Moon.",
-                "The impact site was found again from orbit in 2009: an 18-metre hole made by a machine on purpose."
+                "John Young and Charlie Duke, three days in April 1972, with Ken Mattingly overhead in Casper.",
+                "They took back 95.71 kg of this ground, the second-heaviest load ever flown off the Moon."
               ],
               [
-                "The tracks are all still there. Two rover wheel-lines, three sets of boot prints, and the dark scuff under the engine bell.",
-                "Nothing erases anything up here except another landing, and the nearest one is 700 km away."
+                "The rover. Young knocked its rear fender extension off at Station 8, and soil turned up on the instruments all mission.",
+                "Apollo 15's rover had no extensions at all. Complaints produced them, and the crews after him lost them again."
               ]
             ]
           }
@@ -497,123 +497,123 @@
       }
     },
     {
-      "id": "mars-spirit",
-      "name": "Spirit",
-      "3dmodel": "models/mer-rover.glb",
+      "id": "mars-sojourner",
+      "name": "Sojourner, at the Carl Sagan Memorial Station",
+      "3dmodel": "models/pathfinder-sojourner.gltf",
       "introductoryTalk": [
-        "Spirit. Mars Exploration Rover, landed in Gusev Crater on 4 January 2004 to look for a lake that may never have been.",
-        "Certified for 90 sols and one kilometre. It drove 7.7 km in six years, and is still parked where it stopped.",
-        "Ask me. Four rounds, one question each."
+        "Eleven and a half kilograms, the size of a milk crate, beside the lander it came down in. The smallest thing NASA ever drove.",
+        "It landed on 4 July 1997, rolled off a ramp on the second sol, and worked for eighty-three sols against a plan of eight.",
+        "Four rounds, one question each. Ask."
       ],
       "QA": {
         "planet": "mars",
-        "location": "Gusev Crater, Columbia Hills · 14.572°S 175.478°E",
+        "location": "Ares Vallis, Chryse Planitia · 19.33°N 33.55°W",
         "rounds": [
           {
-            "title": "The landing",
+            "title": "Coming down",
             "questionOptionsForUser": [
-              "How did it get down?",
-              "Where exactly is it?",
-              "Why Gusev?",
-              "What broke first?"
+              "How does anything land here?",
+              "Why airbags instead of legs?",
+              "What are those three ramps?",
+              "Why is the lander a memorial?"
             ],
             "answerForEachOption": [
               [
-                "Aeroshell, parachute, then a rocket-powered descent stage that cut itself loose above the rover.",
-                "Spirit fell the last few metres inside four airbags and bounced about a kilometre along the plain before it stopped."
+                "Its parachute opened at 370 metres a second, supersonic in thin air, and dragged it down to 68. Rockets did the rest.",
+                "Three gas generators filled the airbag skirt 355 m up, in under a second. Then it bounced and rolled until it stopped."
               ],
               [
-                "14.57 degrees south, 175.5 degrees east, in the floor of a 160-km crater that from orbit looks like a dried lakebed.",
-                "The landing site was later named Columbia Memorial Station, for the shuttle and its crew."
+                "Because this is a flood channel strewn with boulders, and a legged lander on a boulder ends up tipped over and blind.",
+                "Airbags do not care what they hit. Four winches on the petals pulled the bags back in against the lander once it was up."
               ],
               [
-                "Because crater floors on Mars drain inward, and if Mars had standing water, this is where the mud would be.",
-                "It turned out the crater had been filled by lava, not water. The mission found the water somewhere else anyway."
+                "They are not ramps, they are the solar arrays: three petals folded from vertical to horizontal, 87 minutes after landing.",
+                "The cells were on the inside of the petals, which is the same face as the top of the ramp. Dust had them within a sol."
               ],
               [
-                "The right front wheel's actuator, in January 2006, two years in. It stopped steering, then stopped turning.",
-                "Four years of dragging that wheel through the sand is the reason we know what is under the dust."
+                "Once it had landed safe, NASA renamed the lander the Carl Sagan Memorial Station, after the astronomer.",
+                "The rover's name came from a schools contest with 3,500 entries, won by a twelve-year-old asking for Sojourner Truth."
               ]
             ]
           },
           {
-            "title": "The broken wheel",
+            "title": "What it was",
             "questionOptionsForUser": [
-              "What did dragging a wheel do?",
-              "What was under the sand?",
-              "Did it help the science?",
-              "How do rovers drive with five wheels?"
+              "Why six tiny wheels?",
+              "Which end is the front?",
+              "How much power does it have?",
+              "What is under its nose?"
             ],
             "answerForEachOption": [
               [
-                "It ploughed. The dead wheel scraped the crust off the ground and exposed material that had been buried.",
-                "Spirit then drove in reverse for months so the working wheels did the steering."
+                "Thirteen centimetres of aluminium wheel, six of them, on a rocker and a bogie with no axles and no springs to jam.",
+                "The bogie ties the front wheel to the middle, the rocker carries the rear pair, so it stays level over an 8 cm rock."
               ],
               [
-                "Bright white deposits of nearly pure silica, in a place where acidic hot water had once moved through the soil.",
-                "The best evidence of past habitable conditions either rover found, dragged up by a wheel that would not turn."
+                "Neither. A flip-up stereo camera head at each end and a colour camera on the back, and it decided as it went.",
+                "Each front camera had five laser stripe projectors: it lit the ground with stripes and measured the hole before driving in."
               ],
               [
-                "It made a six-year mission into a better one. The rover was designed to look at rock; the failure made it look at ground.",
-                "Every mission plan assumes the hardware works. This one is the counterexample."
+                "One flat array on its back, thirteen strings of gallium-arsenide cells, over the gold box the batteries lived in.",
+                "Lander and rover had about a kilowatt-hour a day: two to four hours of talking, and enough warmth to keep its memory."
               ],
               [
-                "A rocker-bogie suspension: three wheels per side hinged so the body stays level, and no wheel has to carry the load alone.",
-                "It is why a rover can climb over an obstacle twice its wheel diameter and why it can still drive with a dead wheel."
+                "An Alpha-Proton X-ray Spectrometer on a little deployment arm, reading an element by what a source throws back.",
+                "It had to sit exactly one reach from the target, so the rover came at every rock in steps of a wheel diameter."
               ]
             ]
           },
           {
-            "title": "Getting stuck",
+            "title": "What it found",
             "questionOptionsForUser": [
-              "How did it die?",
-              "How long did they try?",
-              "What was Troy?",
-              "Was it recoverable?"
+              "Why land in a flood channel?",
+              "What did the rocks say?",
+              "Was it a surprise to anybody?",
+              "How far did it actually drive?"
             ],
             "answerForEachOption": [
               [
-                "On 23 April 2009 it broke through a thin crust into a pocket of soft sand and could not get out.",
-                "By 1 May it had no mobility at all, and its panels could not be turned toward the sun."
+                "Water had done the sampling already. Everything the flood could move from upstream was carried into this field.",
+                "Land once, read a whole catchment. It was also a cheap test for a rover: a field of obstacles for eight sols of cover."
               ],
               [
-                "A year of it. Trenching, rocking, reverse driving, and a warm-up routine invented for the occasion.",
-                "The last transmission was 22 March 2010. NASA declared the mission complete on 25 May 2011, after winter took the power."
+                "Two rocks here, Barnacle Bill and Yogi, came back as andesite, which on Earth means crust that has been worked over.",
+                "That was unwelcome. Andesite takes a step between mantle and crust, and Mars was supposed to be too simple for it."
               ],
               [
-                "The place it stopped, on the west side of a ledge called Home Plate, at the foot of the Columbia Hills.",
-                "It spent its last two Martian winters tilted in the sand, still sending pictures of the ground it could not leave."
+                "An eight-sol technology demonstration that did geology for eighty-three and never stopped working to do it.",
+                "The first wheeled vehicle on another world, and its lander's windsocks were the first Martian weather since Viking."
               ],
               [
-                "With a machine on the surface, possibly. With a machine 200 million km away and a five-minute light delay, no.",
-                "Every sol it needed to make its own decision about how hard to pull, and it was not built to judge sand."
+                "Its radio reached 500 m, and that number keeps being repeated as how far it drove. It is how far it could talk.",
+                "NASA never published an odometer total. The tracks, photographed by the lander and later by HiRISE, are the only one."
               ]
             ]
           },
           {
-            "title": "Still out there",
+            "title": "How it ended",
             "questionOptionsForUser": [
-              "Can orbiters still see it?",
-              "What does it look like from above?",
-              "Will anyone go back?",
-              "Was it a success?"
+              "When was the last signal?",
+              "Why did it die?",
+              "Did they try to bring it back?",
+              "Can you see any of it now?"
             ],
             "answerForEachOption": [
               [
-                "Yes. Mars Reconnaissance Orbiter has photographed it many times, including with its wheels still in the trench it made.",
-                "The track marks are legible: 7.7 km of them, ending in a scuff of sand where the last attempt was made."
+                "The last transmission from this site was received at 10:23 UT on 27 September 1997, ninety-two sols after it arrived.",
+                "Communications failed for good after 7 October, on a sol the lander was expected to talk."
               ],
               [
-                "A bright dot with a dark fan of disturbed dust around it, and a long thin path leading back to a crater.",
-                "Nothing about it has weathered, because there is almost no air to weather anything with."
+                "Formally, unknown. NASA's own line is that contact was lost for reasons that were never established.",
+                "Dust on the arrays was suspect one; a heater stuck on and draining the batteries in the cold was suspect two."
               ],
               [
-                "It is a hazard to a future landing site, and the interesting geology has samples on it already.",
-                "It will be left exactly where it is, and eventually buried by the same dust that killed it."
+                "Five months of it. Commands, rehearsals on the test article in the sandbox at JPL, then termination on 10 March 1998.",
+                "A flight spare of this rover is in a museum on Earth, still wired, still running the software that drove it here."
               ],
               [
-                "It was designed for 90 sols and 1 km and returned six years and 7.7 km, plus the silica.",
-                "NASA has never had a better return on a Mars rover, and it ran out of nothing but the wheel."
+                "HiRISE came over in January 2007 and put the lander down as a bright mark with three ramps and moved soil around it.",
+                "The rover is too small to pick out. But Big Crater, the landmark its mast camera photographed, is there, 3 km off."
               ]
             ]
           }
@@ -631,7 +631,7 @@
       ],
       "QA": {
         "planet": "mars",
-        "location": "Meridiani Planum, east rim of Endeavour Crater · 2.28°S 5.23°W",
+        "location": "Perseverance Valley, west rim of Endeavour Crater, Meridiani Planum · 2.28°S 5.23°W",
         "rounds": [
           {
             "title": "A landing with airbags",
@@ -785,7 +785,7 @@
             ]
           },
           {
-          "title": "The mole that would not dig",
+            "title": "The mole that would not dig",
             "questionOptionsForUser": [
               "What was HP3 supposed to do?",
               "Why did it fail?",

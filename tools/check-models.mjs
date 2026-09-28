@@ -1,11 +1,11 @@
 // The walk's hardware comes from NASA now, so this checks the files the browser will actually fetch rather
 // than the format that happened to be convenient to generate. Two containers are allowed - a self-contained
-// .glb, or a .gltf whose buffer is a data: URI - because the reduced NASA exports and the one hand-built
-// model use different ones. What is not allowed is anything the app's bare GLTFLoader cannot serve: no
-// required extension it has no decoder for, and no sidecar .bin or .jpg that a phone has to make another
-// round trip for. Draco is the one that would bite hardest: every model on NASA's own 3D Resources page is
-// Draco-compressed, so three would need a wasm decoder before the first frame, and tools/prepare-models.mjs
-// exists to take that out.
+// .glb, or a .gltf whose buffer is a data: URI - because the six reduced NASA exports and the four models
+// NASA does not publish at all (Surveyor 3, the Lunar Roving Vehicle, an ALSEP, Sojourner) use different ones.
+// What is not allowed is anything the app's bare GLTFLoader cannot serve: no required extension it has no
+// decoder for, and no sidecar .bin or .jpg that a phone has to make another round trip for. Draco is the one
+// that would bite hardest: every model on NASA's own 3D Resources page is Draco-compressed, so three would
+// need a wasm decoder before the first frame, and tools/prepare-models.mjs exists to take that out.
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -16,7 +16,7 @@ const { apply, OBJECTS } = await import("../src/data/objects.js");
 const { STOPS } = await import("../src/journey/stops.js");
 apply(OBJECTS); // binds each stop to the file it draws with, which is what the act budget below sums
 
-// three 0.186's GLTFLoader handles these without a decoder being registered; nothing else in the file may be
+// three.js 0.186's GLTFLoader handles these without a decoder being registered; nothing else in the file may be
 // in extensionsRequired.
 const ALLOWED_REQUIRED = new Set(["EXT_texture_webp"]);
 
@@ -48,8 +48,10 @@ for (const o of objects) {
   if (!fs.existsSync(file)) { fails.push(at("model file missing: " + o["3dmodel"])); continue; }
   const { json: d, bin, raw } = readDoc(file);
   const tag = path.basename(o["3dmodel"]);
-  if (seen.has(tag)) continue; // three stops are the same vehicle; the file is checked once
-  seen.set(tag, true);
+  // Ten stops, ten machines, ten files. Two stops drawing one file is two identical vehicles on a walk that
+  // is supposed to be a tour of ten different things NASA left behind, so it is a failure rather than a saving.
+  if (seen.has(tag)) fails.push(at(`draws ${tag}, which ${seen.get(tag)} already draws: every stop has to be a different machine`));
+  seen.set(tag, o.id);
 
   ok(d.asset?.version === "2.0", at("not glTF 2.0"));
   for (const e of d.extensionsRequired ?? []) ok(ALLOWED_REQUIRED.has(e), at(`requires ${e}, which the app cannot decode without a loader extension`));

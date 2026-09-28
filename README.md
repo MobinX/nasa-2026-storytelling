@@ -22,7 +22,7 @@ npm install
 npm run dev --host        # http://<box-ip>:5173/
 npm run build && npm run preview --host   # :4173 — measure performance here, not in dev
 npm run check             # eight headless suites: auditor self-test, content, models, dialogue, boot, journey, UVs, frame
-node tools/build-surveyor.mjs   # regenerates the one model NASA does not publish (Surveyor 3)
+node tools/build-surveyor.mjs && node tools/build-hardware.mjs   # regenerate the four models NASA does not publish
 node tools/prepare-models.mjs .dl-scratch public/models   # re-reduces the NASA downloads; see the file header
 ```
 
@@ -130,18 +130,25 @@ header, and the per-body resolutions are chosen at decode time because only 2k a
 `public/preview.gif` is left over from the starter this repo began as, and `.dl-scratch/` holds the
 unreduced NASA downloads that `tools/prepare-models.mjs` reads - inputs, not assets, and not committed.
 
-`public/models/*` are the real vehicles, from [NASA's 3D Resources](https://science.nasa.gov/3d-resources/) -
+`public/models/*` are the real vehicles. Six come from [NASA's 3D Resources](https://science.nasa.gov/3d-resources/) -
 the Apollo Lunar Module, the Mars Exploration Rover, InSight, a Viking lander, Mars Global Surveyor and
 Pioneer 10 - reduced by `tools/prepare-models.mjs`, because as published none of them is usable here: every
 NASA file is Draco-compressed (three would need a wasm decoder before the first frame), the LM arrives as
 134 nodes and 157 primitives, InSight as 143, and both carry 1024² maps. The tool decodes the Draco, bakes
 the scene graph into one mesh, buckets materials by colour so the primitives join, simplifies with
 meshoptimizer, applies each file's authored unit scale, drops the result onto `y=0`, and re-encodes the
-maps to 512² WebP. Six vehicles ship at 2-6k triangles and 3-10 draw calls apiece, which puts the lunar
-act at 52 of the 60 draws it is allowed and the Martian act at 49. One exception is on the record: **NASA
-publishes no model of a Surveyor** - the whole 1,583-entry catalog was enumerated - so
-`tools/build-surveyor.mjs` builds Surveyor 3 from its published dimensions instead, in the same flat
-material language.
+maps to 512² WebP.
+
+Four more are built here, because **NASA publishes no model at all** for them - the whole 1,583-entry
+catalog was enumerated, and there is nothing in any format for a Surveyor, a Lunar Roving Vehicle, an ALSEP
+or Sojourner. `tools/build-surveyor.mjs` and `tools/build-hardware.mjs` write those four from published
+dimensions through one shared glTF writer (`tools/gltfkit.mjs`), in the same three-material flat language, so
+they load and light exactly like the downloads: Surveyor 3 at 3.10 m with its fibreglass legs and 1.08 m dish,
+the rover at 3.12 × 1.90 m on 81.8 cm wire-mesh wheels, an Apollo 16 ALSEP as a central station with its
+SNAP-27 and four instruments and the cable web between them, and the Pathfinder lander with its three
+solar-array petals deployed as ramps and Sojourner parked at the foot of one. Ten stops, ten different
+machines, ten files: `tools/check-models.mjs` fails the build if any two of them ever draw the same one.
+That puts the lunar act at 44 of the 60 draws it is allowed, the Martian act at 46, and the deep-space act at 35.
 
 `tools/check-models.mjs` validates the containers (self-contained, 4-aligned, `min`/`max` present, every
 mesh reachable from a node), refuses any file needing an extension three cannot decode without a loader,

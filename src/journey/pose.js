@@ -127,7 +127,22 @@ const APPROACH = (world) => [
 
 const aimOf = (stop) => [stop.obj[0], stop.aim, stop.obj[2]];
 const midOf = (a, b, k = 0.5) => [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k];
+const unit = (a) => {
+  const l = Math.hypot(a[0], a[2]) || 1;
+  return [a[0] / l, 0, a[2] / l];
+};
 
+// A surface act, generated from the walk schedule: four legs down and up on the feet, then a walking leg and
+// a hold leg per object, then off the pad. The approach is authored - a landing is tuned by eye and there
+// is nothing in a stop list to generate it from - and the route is not, because every stop has to end up
+// exactly where the checker measures it and exactly where the model and its crew member are drawn.
+//
+// Each hold leg is two centimetres of rail against a whole screen of scroll, which is the mechanism: the
+// picture stops, the scroll stops with it, and a man talks to you about the thing in front of you.
+//
+// Every offset in here is measured along the direction the walker is actually travelling rather than along
+// the site's z axis, because the hardware is scattered around each world. A route that bulges and creeps
+// exclusively in +z is the reason ten machines in a row start to look like a queue.
 const surfaceLegs = (planet, world) => {
   const legs = APPROACH(world);
   const stand = legs[legs.length - 1];
@@ -135,24 +150,31 @@ const surfaceLegs = (planet, world) => {
   let look = stand.look[stand.look.length - 1];
   for (const stop of STOPS[planet]) {
     const aim = aimOf(stop);
+    const fwd = unit([stop.cam[0] - cam[0], 0, stop.cam[2] - cam[2]]);
+    const aside = [-fwd[2], 0, fwd[0]];
+    const along = (t, at = stop.cam) => [at[0] + fwd[0] * t, at[1], at[2] + fwd[2] * t];
+    const bulge = (t) => midOf(cam, stop.cam, 0.55).map((v, i) => v + aside[i] * t);
+
     legs.push({
       pace: "linear",
-      points: [cam, midOf(cam, stop.cam, 0.55).map((v, i) => (i === 0 ? v + 0.45 : v)), stop.cam],
+      points: [cam, bulge(0.45), stop.cam],
       look: [look, midOf(look, aim, 0.45), aim],
       fov: [57, 57],
     });
-    // The hold leg is two centimetres forward of the arrival, never back toward the previous stop: an
-    // earlier version took `cam` from the enclosing step and slid the camera 7 m backwards while a man was
-    // talking. The rail is monotone in z along the walk, and tools/check-journey.mjs holds it to that.
-    const parked = [stop.cam[0], stop.cam[1], stop.cam[2] + 0.06];
+    // Two centimetres forward of the arrival, never back toward the previous stop: an earlier version took
+    // the park point from the enclosing step and slid the camera seven metres backwards while a man was
+    // talking. The crawler drifts to the side as it goes, so the hold is not a freeze frame.
+    const crawl = (t, k) => [along(t)[0] + aside[0] * k, along(t)[1], along(t)[2] + aside[2] * k];
+    const parked = crawl(0.06, 0.012);
+    const held = [aim[0] + aside[0] * 0.09, aim[1] + 0.06, aim[2] + aside[2] * 0.09];
     legs.push({
       pace: "linear",
-      points: [stop.cam, [stop.cam[0], stop.cam[1], stop.cam[2] + 0.03], parked],
-      look: [aim, [aim[0] + 0.04, aim[1] + 0.03, aim[2]], [aim[0] + 0.09, aim[1] + 0.06, aim[2] + 0.05]],
+      points: [stop.cam, crawl(0.03, 0.006), parked],
+      look: [aim, [aim[0] + aside[0] * 0.04, aim[1] + 0.03, aim[2] + aside[2] * 0.04], held],
       fov: [57, 55],
     });
     cam = parked;
-    look = [aim[0] + 0.09, aim[1] + 0.06, aim[2] + 0.05];
+    look = held;
   }
   // Off the pad: up and back over the landing site, the nose dropping until the frame is regolith again -
   // the hand-off pose, which is the ascent's destination rather than anywhere near the last object.
