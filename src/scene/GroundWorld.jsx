@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { NEAR_R, MID_R } from "../lib/terrain.js";
 import { maps } from "../lib/textures.js";
+import { ground } from "../lib/surface.js";
 import { journey } from "../state/journey.js";
 import { TIERS } from "../lib/quality.js";
 import { Footprints, BlobShadow } from "./Props.jsx";
@@ -85,19 +86,22 @@ export default function GroundWorld({ world, terrain }) {
   const tier = TIERS[journey.tier];
   const hazy = world.air > 0;
 
+  // One shared gain for both ground colours: the near field comes up to its map's own brightness and the far
+  // field keeps the recession it was authored with. See lib/surface.js.
+  const tints = useMemo(() => ground(world.groundColor, world.farColor), [world]);
   const near = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
         map: crop(world, 1, tier.aniso),
         normalMap: tier.normalMap ? normalMap : null,
         roughnessMap: maps.detail,
-        color: world.groundColor,
+        color: tints.near,
         roughness: world.roughness,
         metalness: 0,
       }),
-    [normalMap, world],
+    [normalMap, world, tints],
   );
-  const far = useMemo(() => new THREE.MeshLambertMaterial({ map: crop(world, 6, 2), color: world.farColor }), [world]);
+  const far = useMemo(() => new THREE.MeshLambertMaterial({ map: crop(world, 6, 2), color: tints.far }), [world, tints]);
   const ridge = useMemo(() => {
     const g = new THREE.CylinderGeometry(2400, 2400, 44, 128, 1, true);
     const m = new THREE.ShaderMaterial({ vertexShader: RIDGE_VERT, fragmentShader: ridgeFrag(hazy), transparent: true, side: THREE.BackSide, depthWrite: false });

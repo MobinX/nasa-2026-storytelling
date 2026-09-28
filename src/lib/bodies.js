@@ -1,5 +1,6 @@
 import { smoothstep } from "../journey/timeline.js";
 import { SEAM_A } from "../journey/timeline.js";
+import { tint } from "./surface.js";
 
 export const AU2U = (a) => 4.6 + 6.6 * Math.pow(a, 0.55);
 export const KM2U = (km) => 0.42 * Math.pow(km / 6371, 0.35);
@@ -27,6 +28,9 @@ for (const b of BODIES) {
   b.radius = b.id === "earth" ? KM2U(b.km) : KM2U(b.km);
   b.w = 1 / Math.sqrt(b.years);
   b.rev = 0.44 / Math.sqrt(b.years);
+  // The tint, not the hue: every body in the opening diagram is a texture times its colour, and the hexes
+  // as authored were keeping a fifth to two thirds of each map. See lib/surface.js.
+  b.tint = tint(b.colour);
   // At 20 segments the silhouette is a polygon, and every planet is only 10-40 px across in the opening diagram.
   // 8 spheres at 48x32 is ~23k triangles - cheaper than the fill rate the dpr and MSAA bumps just bought.
   b.segments = [48, 32];

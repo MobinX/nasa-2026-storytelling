@@ -4,6 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { journey } from "../state/journey.js";
 import { dialogue } from "../state/dialogue.js";
+import { reveal } from "../lib/surface.js";
 
 const box = (w, h, d, x, y, z) => new THREE.BoxGeometry(w, h, d).translate(x, y, z);
 const cyl = (r1, r2, h, x, y, z, seg = 8) => new THREE.CylinderGeometry(r1, r2, h, seg, 1).translate(x, y, z);
@@ -40,8 +41,11 @@ const shared = (() => {
     body, upper, fore,
     helmet: new THREE.SphereGeometry(0.205, 14, 12),
     visor: new THREE.SphereGeometry(0.175, 12, 10),
-    suitMat: new THREE.MeshStandardMaterial({ color: "#e6e7ea", roughness: 0.82, metalness: 0.04 }),
-    glassMat: new THREE.MeshStandardMaterial({ color: "#c9a227", roughness: 0.22, metalness: 0.85 }),
+    // Gold-tinted and metallic, which is what a real helmet visor is - and in a scene with no environment
+    // to mirror, a metal is a mirror that reflects nothing. lib/surface.js is what stops his face being a
+    // black hole at the centre of every conversation.
+    suitMat: reveal(new THREE.MeshStandardMaterial({ color: "#e6e7ea", roughness: 0.82, metalness: 0.04 })),
+    glassMat: reveal(new THREE.MeshStandardMaterial({ color: "#c9a227", roughness: 0.22, metalness: 0.85 })),
   };
 })();
 

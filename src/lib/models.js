@@ -1,4 +1,5 @@
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { reveal } from "./surface.js";
 
 // The objects you walk up to are files, not code: objects.json names a glTF for each and this module owns
 // reading them. Loaded once behind the boot screen, cloned per instance, so a model that appears twice in a
@@ -29,6 +30,14 @@ export function instance(path, proxy) {
   const scene = doc.scene.clone(true);
   // glTF hands back MeshStandardMaterials with whatever the authoring tool wrote for doubleSided, and the
   // demo models are open soup: without this the inside of every leg and panel disappears at some angles.
-  scene.traverse((o) => { if (o.isMesh && o.material) o.material.side = 2; });
+  // The same traverse makes each file readable under this scene's one sun - see lib/surface.js. A mesh with
+  // more than one material is a mesh whose parts would otherwise each keep their own black hole.
+  scene.traverse((o) => {
+    if (!o.isMesh || !o.material) return;
+    for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
+      m.side = 2;
+      reveal(m);
+    }
+  });
   return scene;
 }

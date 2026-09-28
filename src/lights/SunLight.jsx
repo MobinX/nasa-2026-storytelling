@@ -4,9 +4,12 @@ import { useFrame } from "@react-three/fiber";
 import { journey } from "../state/journey.js";
 import { BY_ID, MOON } from "../journey/worlds.js";
 
-// Airless body: one hard directional source and effectively no fill. Ambient past ~0.05 makes the black
-// sky lie, and there is no atmosphere to scatter, so no <Environment>/HDRI and no hemisphere light. In the
-// solar act the sun is a body in the scene and everything is unlit by design.
+// Airless body: one hard directional source and effectively no fill - no <Environment>/HDRI and no hemisphere
+// light, because there is no atmosphere to scatter. The fill stays near nothing for the ground's sake rather
+// than the sky's: the stars and the sky dome are unlit geometry that ambient cannot reach, but the regolith
+// can see ambient, and the one thing that makes a lunar noon look like a lunar noon is that a shadow cast on
+// it is black. The hardware does not have to live with that, and does not: lib/surface.js gives every vehicle
+// its own bounce between its own panels, which is the part a single beam cannot show.
 //
 // Two things change per world, and both are about the light rather than the camera. The Moon's sun sits 20
 // degrees up, so a horizontal field only catches a third of it and a frame with no sky in it measured as
@@ -31,13 +34,13 @@ export default function SunLight({ direction }) {
       // replaces with a string would stay a string, and this component must run identically under both.
       light.current.color = new Color(world.sunColor);
       fill.current.intensity = world.ambient;
-      fill.current.color = new Color(world.air > 0 ? "#8c6a52" : "#0a0a0e");
+      fill.current.color = new Color(world.ambientColor);
     }
   });
   return (
     <>
       <directionalLight ref={light} color={start.sunColor} intensity={start.sunIntensity} />
-      <ambientLight ref={fill} color="#0a0a0e" intensity={start.ambient} />
+      <ambientLight ref={fill} color={start.ambientColor} intensity={start.ambient} />
     </>
   );
 }

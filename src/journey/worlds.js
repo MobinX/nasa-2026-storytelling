@@ -63,7 +63,7 @@ export const MARS_CENTRE = MOON_SUN.clone()
   .normalize()
   .multiplyScalar(MARS_DISTANCE);
 
-const build = ({ id, radius, lat, lon, centre, relief, gait, sunColor, ambient, legs, seam, contact, impactEnd, walkIn, graph, ...rest }) => {
+const build = ({ id, radius, lat, lon, centre, relief, gait, sunColor, sunIntensity, ambient, ambientColor, legs, seam, contact, impactEnd, walkIn, graph, ...rest }) => {
   const site = siteFrame(lat * DEG, lon * DEG, radius, centre ? centre.clone() : new Vector3());
   // There is one sun in this scene and it has one world direction. What differs per world is where it sits
   // in that world's local frame, which is the number the sky, the terminator and the shadows all read.
@@ -82,7 +82,9 @@ const build = ({ id, radius, lat, lon, centre, relief, gait, sunColor, ambient, 
     relief: RELIEF[relief],
     gait: GAIT[gait],
     sunColor,
+    sunIntensity,
     ambient,
+    ambientColor,
     legs,
     seam,
     contact,
@@ -106,7 +108,10 @@ export const MOON = build({
   relief: "moon",
   gait: "moon",
   sunColor: "#fff6e8",
+  // Nothing scatters on the Moon, so the fill is the regolith's own bounce and it is small: a shadow cast on
+  // lunar soil is black, and that is the whole look. The hardware is not left with nothing - lib/surface.js.
   ambient: 0.014,
+  ambientColor: "#0a0a0e",
   legs: MOON_LEGS,
   seam: SEAM_B,
   contact: MOON_CONTACT,
@@ -142,6 +147,7 @@ export const MARS = build({
   // The opposite of the Moon in the one respect that matters: a thin CO2 atmosphere carrying suspended
   // dust scatters most of the daylight, so the fill is enormous and there is no black in a shadow.
   ambient: 0.42,
+  ambientColor: "#8c6a52",
   legs: MARS_LEGS,
   seam: MARS_SEAM,
   contact: MARS_CONTACT,
@@ -191,6 +197,7 @@ export const EVA = {
   sunColor: "#fff6e8",
   sunIntensity: 3.1,
   ambient: 0.012,
+  ambientColor: "#0a0a0e",
 };
 
 // Every world the sun can be asked to light, keyed by the id the rig writes into journey.worldId: a world

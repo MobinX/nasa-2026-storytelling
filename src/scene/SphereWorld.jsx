@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { maps } from "../lib/textures.js";
+import { tint } from "../lib/surface.js";
 import { MOON, MARS, R_MARS } from "../journey/worlds.js";
 import { EARTH_AT, EARTH_R } from "../journey/pose.js";
 import { journey } from "../state/journey.js";
@@ -13,6 +14,13 @@ import { journey } from "../state/journey.js";
 // another component: leaving one world and arriving at the other has to be one continuous view, and the
 // only thing that changes between them is which vertical the rig treats as up. Mars is 1.95x the Moon by
 // radius and 400 units out, so it arrives as a disc growing into a world without ever being swapped.
+//
+// Module scope, like every other config literal in this piece: R3F re-applies a prop whose identity changed,
+// and the re-render that follows is what unhooks the scroller. The two tints are the globes' hues raised to
+// the brightness their maps were authored at - see lib/surface.js.
+const MOON_TINT = tint("#c9c9cf");
+const MARS_TINT = tint("#bd7a58");
+
 export default function SphereWorld() {
   const group = useRef();
   const marsGroup = useRef();
@@ -28,7 +36,7 @@ export default function SphereWorld() {
     <group ref={group}>
       <mesh>
         <sphereGeometry args={[MOON.radius, 64, 32]} />
-        <meshLambertMaterial map={maps.moon} color='#c9c9cf' />
+        <meshLambertMaterial map={maps.moon} color={MOON_TINT} />
       </mesh>
       <mesh position={EARTH_AT.toArray()}>
         <sphereGeometry args={[EARTH_R, 24, 14]} />
@@ -37,7 +45,7 @@ export default function SphereWorld() {
       <group ref={marsGroup} position={MARS.centre.toArray()} quaternion={MARS.spin.toArray()}>
         <mesh>
           <sphereGeometry args={[R_MARS, 64, 32]} />
-          <meshLambertMaterial map={maps.mars} color='#bd7a58' />
+          <meshLambertMaterial map={maps.mars} color={MARS_TINT} />
         </mesh>
       </group>
     </group>

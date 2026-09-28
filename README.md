@@ -21,7 +21,7 @@ render budget, gesture handling and texture memory are all sized for that, not f
 npm install
 npm run dev --host        # http://<box-ip>:5173/
 npm run build && npm run preview --host   # :4173 — measure performance here, not in dev
-npm run check             # eight headless suites: auditor self-test, content, models, dialogue, boot, journey, UVs, frame
+npm run check             # nine headless suites: auditor self-test, content, models, dialogue, boot, journey, light, UVs, frame
 node tools/build-surveyor.mjs && node tools/build-hardware.mjs   # regenerate the four models NASA does not publish
 node tools/prepare-models.mjs .dl-scratch public/models   # re-reduces the NASA downloads; see the file header
 ```
@@ -101,11 +101,19 @@ Both fields are also flattened along the walked corridor before they are levelle
 because a landing site is chosen for being flat. Levelling a single point fixes the eye height at the cut but
 leaves the regional swell tilting the field under the walk, and that tilt was what hid hardware behind a rise the mission would never have parked on.
 
-The lunar surface act renders brighter than the sphere act, and not by the same light: the sun is 20° up, so a
-horizontal field only catches a third of it and a frame that is all ground and no sky read as under-exposed
-on the phone. The surface act lifts the directional for that reason, and `GroundWorld` carries one more
-directional light pointed upward from below the site — regolith bounce, the only fill an airless body has,
-which raises the shadow sides of the hardware without moving the terminator.
+The lunar surface act renders brighter than the sphere act: the sun is 20° up, so a horizontal field only
+catches a third of it and a frame that is all ground and no sky read as under-exposed on the phone. The
+surface act lifts the directional for that reason, and nothing else lights the scene — there is no second
+fill light, no hemisphere light and no environment map, because ambient cannot tell a lander's panels from
+the soil it stands on and the soil is what makes a lunar noon look like one. What the hardware gets instead is
+`src/lib/surface.js`, applied to every material as it is instantiated: metalness capped (a glTF metal is a
+mirror, and with no environment there is nothing in it to reflect — three of the NASA exports leave
+`metallicFactor` off, which defaults to 1.0, so Opportunity's white body arrived at 4/255), a floor under the
+albedo, and each material's own colour added back at 7% as the bounce between a vehicle's own panels. Four of
+the ten stops stand with their night side to the visitor, because the route alternates which side of the
+walking line a machine is on and there is one sun; that self-fill is what makes them readable without moving
+the terminator. The same module lifts the planet and ground tints, which were holding their maps to a fifth
+to two thirds of themselves. `tools/check-light.mjs` measures all of it.
 
 Other choices worth knowing: orbit rings are one instanced draw with an analytic `fwidth` antialiased ring
 shader (`THREE.LineLoop` is 1 px and hard-aliased; drei `<Line>` rebuilds its geometry on every phone
@@ -155,7 +163,11 @@ mesh reachable from a node), refuses any file needing an extension three cannot 
 and totals the per-act draw and triangle budgets from the shipped files; `tools/check-boot.mjs` parses each
 one through the same `GLTFLoader` the browser uses; and `src/lib/models.js` falls back to a proxy box the
 size of the authored object if a file ever fails to arrive, so a missing model cannot make an object
-invisible.
+invisible. `tools/check-light.mjs` then shades every vehicle from the stop the scroll holds it at - the same
+irradiance, the same ACES curve, the same output encoding, triangles weighted by how much of them is in frame -
+and holds each stop to a mean of 35/255 with no more than a tenth of the frame under 9/255, while insisting the
+sun side stays twice the night side. The two floors pull against each other on purpose: the first fails a
+silhouette, the second fails a wash.
 
 ## Notes
 

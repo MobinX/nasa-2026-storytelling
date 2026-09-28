@@ -3,6 +3,7 @@ import { MathUtils, RingGeometry } from "three";
 import { useFrame } from "@react-three/fiber";
 import { BODIES, SUN_U, EARTH, MOON_DOT_U, MOON_ORBIT_U, MOON_THETA, thetaAt } from "../lib/bodies.js";
 import { maps } from "../lib/textures.js";
+import { tint } from "../lib/surface.js";
 import { radializeRing } from "../lib/geometry.js";
 import { makeGlow } from "../lib/glow.js";
 import { journey } from "../state/journey.js";
@@ -15,6 +16,7 @@ const TILT = BODIES.map((b) => MathUtils.degToRad(b.tilt));
 const SATURN = BODIES.find((b) => b.id === "saturn");
 const RING_IN = SATURN.radius * 1.11;
 const RING_OUT = SATURN.radius * 2.27;
+const MOON_DOT_TINT = tint("#c9c9cd");
 
 export default function SolarSystem() {
   const root = useRef();
@@ -57,7 +59,7 @@ export default function SolarSystem() {
           <group ref={(el) => (spinners[i] = el)} rotation={[0, 0, TILT[i]]}>
             <mesh>
               <sphereGeometry args={[b.radius, b.segments[0], b.segments[1]]} />
-              <meshBasicMaterial color={b.colour} map={maps[b.id]} toneMapped={false} />
+              <meshBasicMaterial color={b.tint} map={maps[b.id]} toneMapped={false} />
             </mesh>
             {b.id === "saturn" && (
               <mesh geometry={ringGeo} renderOrder={3}>
@@ -69,7 +71,7 @@ export default function SolarSystem() {
           {b === EARTH && (
             <mesh position={[Math.cos(MOON_THETA) * MOON_ORBIT_U, 0, Math.sin(MOON_THETA) * MOON_ORBIT_U]}>
               <sphereGeometry args={[MOON_DOT_U, 32, 20]} />
-              <meshBasicMaterial color='#c9c9cd' map={maps.moon} toneMapped={false} />
+              <meshBasicMaterial color={MOON_DOT_TINT} map={maps.moon} toneMapped={false} />
             </mesh>
           )}
         </group>
