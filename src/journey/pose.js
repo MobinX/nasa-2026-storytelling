@@ -1,22 +1,20 @@
-// The camera path: one pure function of the scroll offset, over six spaces and five scene graphs.
+// The camera path: one pure function of the scroll offset, over seven spaces and six scene graphs.
 //
-// Every rail here is authored data; the maths lives in rail.js and timeline.js. Two of the six spaces are
-// sphere flights - down onto the Moon, down onto Mars - and the Martian one is the lunar one multiplied by
-// the radius ratio, because limb coverage is scale-invariant (see worlds.js). The ground acts are authored
-// in each site's own local metres.
+// Every rail here is authored data; the maths lives in rail.js and timeline.js. Three of the seven spaces
+// are flights - down onto the Moon, down onto Mars, and out past both - and the Martian descent is the lunar
+// one multiplied by the radius ratio, because limb coverage is scale-invariant (see worlds.js). The walks
+// are authored in each site's own local metres.
 import { Vector3 } from "three";
 import { makeRail, sampleRail, scratchSample } from "./rail.js";
 import { MOON_DOT_POS } from "../lib/bodies.js";
-import { MOON, MARS, R_MARS, R_MOON, MARS_CENTRE, localAt, localDir, MOON_SUN } from "./worlds.js";
-import { SEAM_A, SEAM_B, DEPART, TRANSFER_END, MARS_SEAM, MOON_LEGS, MARS_LEGS, smoothstep } from "./timeline.js";
+import { MOON, MARS, EVA, R_MARS, R_MOON, MARS_CENTRE, EVA_ORIGIN, localAt, localDir, MOON_SUN } from "./worlds.js";
+import { SEAM_A, SEAM_B, DEPART, TRANSFER_END, MARS_SEAM, MARS_DEPART, smoothstep } from "./timeline.js";
+import { STOPS } from "./stops.js";
 
-export const SITE_UV = MOON.uv;
 export const SUN_DIR = MOON_SUN;
-export const EARTH_DIR = localDir(MOON, 0.3, 0.574, 0.76);
+const EARTH_DIR = localDir(MOON, 0.3, 0.574, 0.76);
 export const EARTH_AT = EARTH_DIR.clone().multiplyScalar(120);
 export const EARTH_R = 2.0;
-export const R_SPHERE = R_MOON;
-export const CUT_LOCAL = MOON.cut;
 const CUT_LOOK = MOON.cutLook;
 const EYE_Y = 1.7;
 const S = R_MARS / R_MOON;
@@ -91,69 +89,17 @@ const MARS_SPHERE_LEGS = DESCENT_RAIL.map((L) => ({ ...L, points: L.points.map(m
 // 66-degree frame with nothing but regolith.
 const HANDOVER_LOOK = [0, -9.75, 7.84];
 
-// Lunar surface act, in local metres: down, settle, contact, stand up, walk, walk, hold at the LM, off the
-// pad. The hold leg is the conversation - two centimetres of rail against an eighth of the act, so a man can
-// finish a sentence without the picture moving. The ascent then climbs and pitches down until the frame is
-// regolith again, which is the hand-off pose the transfer space takes over from.
-const MOON_GROUND_LEGS = [
+// A surface act, generated from the walk schedule: four legs down and up on the feet, then a walking leg
+// and a hold leg per object, then off the pad. The approach is authored (a landing is tuned by eye and
+// there is nothing in a stop list to generate it from); the route is not, because every stop has to end up
+// exactly where the checker measures it and exactly where the model and the crew member are drawn.
+//
+// Each hold leg is two centimetres of rail against a screen of scroll, which is the whole mechanism: the
+// picture stops, the scroll stops with it, and a man talks to you about the thing in front of you.
+const APPROACH = (world) => [
   {
     pace: "linear",
-    points: [[0, MOON.landingAlt, -3], [0, 6.6, -2.85], [0, 5.2, -2.65], [0, 4, -2.45]],
-    look: [[0, -9.75, 7.84], [0, -7.46, 6.99], [0, -5.16, 6.04], [0, -3.35, 4.9]],
-    fov: [66, 64],
-  },
-  {
-    pace: "ease",
-    points: [[0, 4, -2.45], [0, 3.2, -2.25], [0, 2.4, -2.05], [0, 1.6, -1.85]],
-    look: [[0, -3.35, 4.9], [0, -1.92, 4.31], [0, -0.91, 3.24], [0, -0.35, 1.82]],
-    fov: [64, 60],
-  },
-  {
-    // Contact. The camera is parked, so the rumble is the only motion there is - against ground, rocks and
-    // a horizon, which is the reason the landing is flown this low and not from 0.42u above a sphere.
-    pace: "linear",
-    points: [[0, 1.6, -1.85], [0, 1.55, -1.83], [0, 1.5, -1.8]],
-    look: [[0, -0.35, 1.82], [0, -0.22, 1.79], [0, -0.09, 1.76]],
-    fov: [60, 60],
-  },
-  {
-    pace: "ease",
-    points: [[0, 1.5, -1.8], [0, 1.55, -1], [0.2, 1.65, -0.2], [0.3, EYE_Y, 0.6]],
-    look: [[0, -0.09, 1.76], [0, 0.58, 2.91], [0, 1.35, 4.08], [0, 1.91, 5.02]],
-    fov: [60, 57],
-  },
-  {
-    pace: "linear",
-    points: [[0.3, EYE_Y, 0.6], [0.6, EYE_Y, 5.5], [0.1, EYE_Y, 10.5], [0.8, EYE_Y, 15.5]],
-    look: [[0, 1.91, 5.02], [0.4, 1.45, 12], [0.1, 1.5, 18], [1.1, 1.55, 24]],
-    fov: [57, 57],
-  },
-  {
-    pace: "linear",
-    points: [[0.8, EYE_Y, 15.5], [1.6, EYE_Y, 20], [2.5, EYE_Y, 25], [3.2, EYE_Y, 29]],
-    look: [[1.1, 1.55, 24], [2.2, 1.6, 30], [3.1, 1.6, 35], [3.9, 1.55, 39]],
-    fov: [57, 57],
-  },
-  {
-    pace: "linear",
-    points: [[3.2, EYE_Y, 29], [3.2, EYE_Y, 29.03], [3.2, EYE_Y, 29.06]],
-    look: [[3.9, 1.55, 39], [3.9, 1.57, 39.06], [3.95, 1.62, 39.2]],
-    fov: [57, 55],
-  },
-  {
-    pace: "ease",
-    points: [[3.2, EYE_Y, 29.06], [2.6, 2.4, 22], [1.4, 4.4, 11], [0, MOON.landingAlt, -3]],
-    look: [[3.9, 1.55, 39], [2.4, 0.4, 30], [0.8, -1.6, 18], HANDOVER_LOOK],
-    fov: [55, 66],
-  },
-];
-
-// Martian surface act. The same choreography, but the reveal is the point of the second half: the frame
-// comes up into a sky with colour in it for the first time in the piece.
-const MARS_GROUND_LEGS = [
-  {
-    pace: "linear",
-    points: [[0, MARS.landingAlt, -3], [0, 6.6, -2.85], [0, 5.2, -2.65], [0, 4, -2.45]],
+    points: [[0, world.landingAlt, -3], [0, 6.6, -2.85], [0, 5.2, -2.65], [0, 4, -2.45]],
     look: [[0, -9.75, 7.84], [0, -7.46, 6.99], [0, -5.16, 6.04], [0, -3.35, 4.9]],
     fov: [66, 64],
   },
@@ -164,6 +110,8 @@ const MARS_GROUND_LEGS = [
     fov: [64, 60],
   },
   {
+    // Contact: the camera is parked, so the rumble is the only motion there is - against ground, rocks and
+    // a horizon, which is why the landing is flown from eight metres and not from 0.42u above a sphere.
     pace: "linear",
     points: [[0, 1.7, -1.85], [0, 1.65, -1.83], [0, 1.6, -1.8]],
     look: [[0, -0.3, 1.9], [0, -0.18, 1.88], [0, -0.05, 1.86]],
@@ -173,27 +121,100 @@ const MARS_GROUND_LEGS = [
     pace: "ease",
     points: [[0, 1.6, -1.8], [0.05, 1.5, -1], [0.2, EYE_Y, -0.2], [0.3, EYE_Y, 0.6]],
     look: [[0, -0.05, 1.86], [0, 0.7, 3.2], [0, 1.45, 4.6], [0, 2.0, 5.6]],
-    fov: [60, 56],
-  },
-  {
-    pace: "linear",
-    points: [[0.3, EYE_Y, 0.6], [0.6, EYE_Y, 5.5], [0.1, EYE_Y, 10.5], [0.8, EYE_Y, 15.5]],
-    look: [[0, 2.0, 5.6], [0.4, 1.5, 12], [0.1, 1.55, 18], [1.1, 1.6, 24]],
-    fov: [56, 56],
-  },
-  {
-    pace: "linear",
-    points: [[0.8, EYE_Y, 15.5], [1.6, EYE_Y, 20], [2.5, EYE_Y, 25], [3.2, EYE_Y, 29]],
-    look: [[1.1, 1.6, 24], [2.2, 1.65, 30], [3.1, 1.65, 35], [3.9, 1.6, 39]],
-    fov: [56, 56],
-  },
-  {
-    pace: "linear",
-    points: [[3.2, EYE_Y, 29], [3.2, EYE_Y, 29.03], [3.2, EYE_Y, 29.06]],
-    look: [[3.9, 1.6, 39], [3.9, 1.62, 39.06], [3.95, 1.65, 39.2]],
-    fov: [56, 54],
+    fov: [60, 57],
   },
 ];
+
+const aimOf = (stop) => [stop.obj[0], stop.aim, stop.obj[2]];
+const midOf = (a, b, k = 0.5) => [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k];
+
+const surfaceLegs = (planet, world) => {
+  const legs = APPROACH(world);
+  const stand = legs[legs.length - 1];
+  let cam = stand.points[stand.points.length - 1];
+  let look = stand.look[stand.look.length - 1];
+  for (const stop of STOPS[planet]) {
+    const aim = aimOf(stop);
+    legs.push({
+      pace: "linear",
+      points: [cam, midOf(cam, stop.cam, 0.55).map((v, i) => (i === 0 ? v + 0.45 : v)), stop.cam],
+      look: [look, midOf(look, aim, 0.45), aim],
+      fov: [57, 57],
+    });
+    // The hold leg is two centimetres forward of the arrival, never back toward the previous stop: an
+    // earlier version took `cam` from the enclosing step and slid the camera 7 m backwards while a man was
+    // talking. The rail is monotone in z along the walk, and tools/check-journey.mjs holds it to that.
+    const parked = [stop.cam[0], stop.cam[1], stop.cam[2] + 0.06];
+    legs.push({
+      pace: "linear",
+      points: [stop.cam, [stop.cam[0], stop.cam[1], stop.cam[2] + 0.03], parked],
+      look: [aim, [aim[0] + 0.04, aim[1] + 0.03, aim[2]], [aim[0] + 0.09, aim[1] + 0.06, aim[2] + 0.05]],
+      fov: [57, 55],
+    });
+    cam = parked;
+    look = [aim[0] + 0.09, aim[1] + 0.06, aim[2] + 0.05];
+  }
+  // Off the pad: up and back over the landing site, the nose dropping until the frame is regolith again -
+  // the hand-off pose, which is the ascent's destination rather than anywhere near the last object.
+  legs.push({
+    pace: "ease",
+    points: [cam, midOf(cam, [1.6, 2.6, 26]), midOf([1.6, 2.6, 26], [0, world.landingAlt, -3], 0.45), [0, world.landingAlt, -3]],
+    look: [look, midOf(look, [1.5, -0.4, 30], 0.5), midOf([1.5, -0.4, 30], HANDOVER_LOOK, 0.5), HANDOVER_LOOK],
+    fov: [55, 66],
+  });
+  return legs;
+};
+
+const MOON_GROUND_LEGS = surfaceLegs("moon", MOON);
+const MARS_GROUND_LEGS = surfaceLegs("mars", MARS);
+
+// Out of Mars and among the machines. Two legs climb away from Jezero - the hand-off pose again, so the
+// cut is invisible - and turn the camera until Mars is a disc behind and the first observatory is a
+// handrail ahead; then a drift and a hold per machine, with no gait, because nobody walks on a tether.
+const evaWorldAt = (p) => localAt(EVA, p[0], p[1], p[2]).toArray();
+const _marsHandOff = marsLocal(MARS.cut);
+const _marsHandLook = marsLocal(MARS.cutLook);
+const _evaIn = mix(_marsHandOff, EVA_ORIGIN.toArray(), 0.55);
+const _evaTurn = mix(_marsHandOff, EVA_ORIGIN.toArray(), 0.9);
+
+const EVA_ACT_LEGS = [
+  {
+    pace: "linear",
+    points: [_marsHandOff, marsLocal([0, 0.9, -3.6]), marsLocal([0, 1.7, -4.4]), mix(_marsHandOff, _evaIn, 0.5)],
+    look: [_marsHandLook, marsLocal([0, 0.2, 1.5]), marsLocal([0.4, 2.2, 7]), mix(_marsHandLook, localAt(EVA, ...aimOf(STOPS.solar[0])).toArray(), 0.25)],
+    fov: [66, 54],
+  },
+  {
+    pace: "linear",
+    points: [mix(_marsHandOff, _evaIn, 0.5), _evaIn, mix(_evaIn, _evaTurn, 0.6), _evaTurn],
+    look: [
+      mix(_marsHandLook, localAt(EVA, ...aimOf(STOPS.solar[0])).toArray(), 0.25),
+      mix(_marsHandLook, localAt(EVA, ...aimOf(STOPS.solar[0])).toArray(), 0.7),
+      localAt(EVA, ...aimOf(STOPS.solar[0])).toArray(),
+      localAt(EVA, ...aimOf(STOPS.solar[0])).toArray(),
+    ],
+    fov: [54, 50],
+  },
+];
+for (const [i, stop] of STOPS.solar.entries()) {
+  const aim = localAt(EVA, ...aimOf(stop)).toArray();
+  const cam = evaWorldAt(stop.cam);
+  const parked = evaWorldAt([stop.cam[0], stop.cam[1], stop.cam[2] + 0.4]);
+  const prev = i === 0 ? _evaTurn : evaWorldAt([STOPS.solar[i - 1].cam[0], STOPS.solar[i - 1].cam[1], STOPS.solar[i - 1].cam[2] + 0.4]);
+  const prevAim = i === 0 ? localAt(EVA, ...aimOf(STOPS.solar[0])).toArray() : localAt(EVA, ...aimOf(STOPS.solar[i - 1])).toArray();
+  EVA_ACT_LEGS.push({
+    pace: "linear",
+    points: [prev, mix(prev, cam, 0.55), cam],
+    look: [prevAim, mix(prevAim, aim, 0.5), aim],
+    fov: [50, 52],
+  });
+  EVA_ACT_LEGS.push({
+    pace: "linear",
+    points: [cam, mix(cam, parked, 0.5), parked],
+    look: [aim, mix(aim, [aim[0] + 0.3, aim[1] + 0.2, aim[2]], 0.5), mix(aim, [aim[0] + 0.6, aim[1] + 0.35, aim[2] + 0.2], 1)],
+    fov: [52, 50],
+  });
+}
 
 // Out of the Moon. The first frame is the hand-off pose - regolith, steep, no horizon - and then the nose
 // comes up: the limb, then the disc, then the whole world shrinking behind while Mars grows ahead. The last
@@ -250,7 +271,8 @@ export const SPACES = [
   buildSpace({ id: "ground", graph: MOON.graph, from: SEAM_B, to: DEPART, near: 0.02, far: 4200, legs: MOON_GROUND_LEGS, local: true, world: MOON }),
   buildSpace({ id: "transfer", graph: "transfer", from: DEPART, to: TRANSFER_END, near: 0.05, far: 2000, legs: TRANSFER_LEGS, world: MOON }),
   buildSpace({ id: "marsOrbit", graph: "transfer", from: TRANSFER_END, to: MARS_SEAM, near: 0.05, far: 2000, legs: MARS_SPHERE_LEGS, world: MARS }),
-  buildSpace({ id: "marsGround", graph: MARS.graph, from: MARS_SEAM, to: 1, near: 0.02, far: 4200, legs: MARS_GROUND_LEGS, local: true, world: MARS }),
+  buildSpace({ id: "marsGround", graph: MARS.graph, from: MARS_SEAM, to: MARS_DEPART, near: 0.02, far: 4200, legs: MARS_GROUND_LEGS, local: true, world: MARS }),
+  buildSpace({ id: "eva", graph: EVA.graph, from: MARS_DEPART, to: 1, near: 0.02, far: 2000, legs: EVA_ACT_LEGS, world: EVA }),
 ];
 
 export const spaceAt = (offset) => {
@@ -329,12 +351,10 @@ export const walkDistance = (space, offset) => {
 export const walkRate = (space, offset, eps = 1.5e-3) =>
   (walkDistance(space, offset + eps) - walkDistance(space, offset - eps)) / (2 * eps);
 
-export const MOON_GROUND = SPACES[2];
-export const MARS_GROUND = SPACES[5];
+// Looked up by id rather than by index: a fourth surface act would insert itself anywhere in the list and
+// every module that names one of these spaces would keep working.
+const byId = (id) => SPACES.find((s) => s.id === id);
+export const MOON_GROUND = byId("ground");
+export const MARS_GROUND = byId("marsGround");
+export const EVA_SPACE = byId("eva");
 export const legStartOf = (space, i) => space.from + (i / space.legs.length) * (space.to - space.from);
-
-// Where each ending composition is measured: the hold leg, not the end of the rail.
-export const MOON_FRAMED_AT = legStartOf(MOON_GROUND, MOON_LEGS - 2) + 0.002;
-export const MARS_FRAMED_AT = legStartOf(MARS_GROUND, MARS_LEGS - 1) + 0.002;
-
-export { MARS_CENTRE, R_MARS, R_MOON };

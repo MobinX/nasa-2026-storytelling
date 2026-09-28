@@ -5,10 +5,13 @@ import { NEAR_R, MID_R } from "../lib/terrain.js";
 import { maps } from "../lib/textures.js";
 import { journey } from "../state/journey.js";
 import { TIERS } from "../lib/quality.js";
-import Props, { Footprints, BlobShadow } from "./Props.jsx";
-import Companion from "./Companion.jsx";
+import { Footprints, BlobShadow } from "./Props.jsx";
+import WalkObjects from "./WalkObjects.jsx";
 import { scatterRocks, ROCK_N } from "../lib/rocks.js";
 import { CORRIDOR_BY_WORLD } from "../journey/corridor.js";
+import { STOPS } from "../journey/stops.js";
+
+const STOPS_BY_ID = { moon: STOPS.moon, mars: STOPS.mars };
 
 // A standing-person world: the displaced near field, the far ring, the band that hides where the plane
 // stops, the rocks, the hardware and the crew member. One component, driven entirely by a world
@@ -140,8 +143,7 @@ export default function GroundWorld({ world, terrain }) {
       </mesh>
       <mesh geometry={ridge.g} material={ridge.m} position={[0, 6, 0]} renderOrder={1} />
       <instancedMesh ref={rocks} args={[rockGeo, near, ROCK_N]} frustumCulled={false} />
-      <Props heights={heights} world={world} />
-      <Companion heights={heights} world={world} />
+      <WalkObjects stops={STOPS_BY_ID[world.id]} site={world.site} heights={heights} graph={world.graph} />
       <Footprints heights={heights} world={world} />
       <BlobShadow heights={heights} world={world} />
     </group>

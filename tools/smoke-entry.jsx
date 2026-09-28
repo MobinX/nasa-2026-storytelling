@@ -4,22 +4,25 @@ import App from "../src/App.jsx";
 import * as hub from "./stubs/hub.js";
 import { fakeState } from "./stubs/hub-bridge.js";
 import { preloadMaps, maps } from "../src/lib/textures.js";
+import { apply, OBJECTS, allStops } from "../src/data/objects.js";
 import { buildTerrain, levelTerrain, flattenAlongCorridor, deriveNormalMap, heightAt } from "../src/lib/terrain.js";
 import { poseAt, scratchPose, walkRate, MARS_GROUND } from "../src/journey/pose.js";
-import { MOON, MARS, SITE, BY_ID } from "../src/journey/worlds.js";
+import { MOON, MARS, BY_ID } from "../src/journey/worlds.js";
 import { groundPose, scratchGround } from "../src/journey/ground.js";
-import { MARS_WALK_IN } from "../src/journey/timeline.js";
+import { MARS_WALK_IN, MARS_DEPART, SURFACE_STOPS, SEAM_A, SEAM_B, DEPART, TRANSFER_END, MARS_SEAM } from "../src/journey/timeline.js";
 import { CORRIDOR_BY_WORLD } from "../src/journey/corridor.js";
 import { journey } from "../src/state/journey.js";
 import { auditMaterials } from "./lib-shader-audit.mjs";
-import { seenMaterials, hosts } from "./stubs/hub.js";
+import { seenMaterials } from "./stubs/hub.js";
 
-// The walk is now scroll-only, so the interesting failures are not "does the joystick move me" but
-// "does the rig add anything the pure function does not" and "did some component quietly reattach a
-// gesture listener", which is the one thing that can kill page scrolling on Android.
+// The walk is scroll-only, so the interesting failures are not "does the joystick move me" but "does the rig
+// add anything the pure function does not", "did the scroll trap let a flick run past a crew member who is
+// still talking" and "did some component quietly reattach a gesture listener", which is the one thing that
+// can kill page scrolling on Android.
 export async function run() {
   const out = { errors: [], notes: [] };
   await preloadMaps(4);
+  for (const m of apply(OBJECTS)) out.errors.push("objects.json: " + m);
   const terrains = {};
   for (const world of [MOON, MARS]) {
     const t = buildTerrain({ seg: 96, avoid: CORRIDOR_BY_WORLD[world.id], relief: world.relief });
@@ -28,7 +31,6 @@ export async function run() {
     t.normalMap = deriveNormalMap(t.heights, 256);
     terrains[world.id] = t;
   }
-  const terrain = terrains.moon;
 
   const res = hub.renderTree(createElement(App, { terrains }));
   Object.assign(out, { passes: res.passes, hosts: res.hosts, frames: hub.frames.length });
@@ -50,6 +52,11 @@ export async function run() {
   let walkedFinite = true;
   const track = { xLo: Infinity, xHi: -Infinity };
 
+  // The sweep is the rail, and a scroll trap would stop it at the first crew member. Answering everything
+  // is the state a visitor who has finished the walk is in, and it is what the trap test below releases
+  // from, so the sweep runs with every conversation closed.
+  for (const stop of allStops()) journey.done[stop.id] = true;
+
   for (let i = 0; i <= 300; i++) {
     const o = i / 300;
     hub.setScroll(o);
@@ -64,7 +71,7 @@ export async function run() {
     }
     if (!Number.isFinite(cam.position.length() + cam.fov + cam.near + cam.far)) out.errors.push("non-finite camera at o=" + o.toFixed(3));
     if (!Number.isFinite(journey.walked)) walkedFinite = false;
-    if (journey.spaceId === "ground") {
+    if (journey.graphId === MOON.graph) {
       track.xLo = Math.min(track.xLo, journey.camLocal.x);
       track.xHi = Math.max(track.xHi, journey.camLocal.x);
     }
@@ -77,19 +84,75 @@ export async function run() {
   out.notes.push("walk act unlocked at o=" + (walkedAt < 0 ? "never" : walkedAt.toFixed(2)));
   if (!walkedFinite) out.errors.push("walk distance went non-finite during the sweep");
 
+  // The trap is the whole mechanism of the walk, so it is asserted rather than assumed: an unanswered crew
+  // member holds the offset exactly where the rail arrived, pins the scroller, and lets go the moment his
+  // conversation is finished. A flick that runs past him leaves the visitor standing somewhere with nobody
+  // talking and nothing to look at.
+  const held = SURFACE_STOPS.mars[1];
+  const toScroller = (o) => 1 + o * (hub.scrollState.el.scrollHeight - hub.scrollState.el.clientHeight - 1);
+  delete journey.done[held.id];
+  hub.setScroll(held.lock - 0.004);
+  for (let k = 0; k < hub.frames.length; k++) hub.frames[k].cb(fakeState, dt);
+  hub.setScroll(held.lock + held.spanSize * 3);
+  hub.scrollState.el.scrollTop = toScroller(held.lock + held.spanSize * 3);
+  for (let k = 0; k < hub.frames.length; k++) hub.frames[k].cb(fakeState, dt);
+  const pinned = Math.abs(hub.scrollState.el.scrollTop - toScroller(held.lock)) < 2;
+  out.notes.push("flick past " + held.id + ": offset " + journey.offset.toFixed(4) + " vs lock " + held.lock.toFixed(4) + ", scroller " + (pinned ? "pinned" : "escaped"));
+  if (Math.abs(journey.offset - held.lock) > 1e-4) out.errors.push("the scroll trap let a flick run " + ((journey.offset - held.lock) * 46).toFixed(2) + " screens past " + held.id);
+  if (!pinned) out.errors.push("the scroll trap held the camera but not the scroller, so releasing jumps");
+  if (journey.talkStop !== held.id) out.errors.push("the rig reported " + journey.talkStop + " as the held stop, not " + held.id);
+  const escaped = cam.position.clone();
+  journey.done[held.id] = true;
+  for (let k = 0; k < hub.frames.length; k++) hub.frames[k].cb(fakeState, dt);
+  if (cam.position.distanceTo(escaped) < 1e-3) out.errors.push("finishing the conversation did not release the scroll");
+  out.notes.push("released at o=" + journey.offset.toFixed(4) + " after the conversation was answered");
+
+  // The same hold, but released the way a visitor releases it: tap the caption, choose a question, tap
+  // through the answer, four rounds, and the outro. Nothing below writes journey.done, so this is the whole
+  // loop - HUD callbacks, phase machine, rig and scroller pin - and it is the only place the piece is tested
+  // as the thing it actually is: a scroll that will not move until somebody has been talked to.
+  const { stepDialogue, advanceDialogue, askDialogue, dialogueView } = await import("../src/ui/Dialogue.jsx");
+  const conversed = SURFACE_STOPS.moon[0];
+  journey.done = {};
+  hub.setScroll(conversed.lock + conversed.spanSize * 0.5);
+  let asked = 0, bubbles = 0, guard = 0, view = null, heldPose = null;
+  // One frame first, so the rig has had the flick and has already decided to hold: the loop below is
+  // written against the offset the visitor is *allowed* to reach, not the one they asked for.
+  for (let k = 0; k < hub.frames.length; k++) hub.frames[k].cb(fakeState, dt);
+  heldPose = cam.position.clone();
+  while (guard++ < 4000 && journey.offset <= conversed.lock + 1e-3) {
+    stepDialogue(1 / 30);
+    view = dialogueView();
+    if (!view) break;
+    if (view.chips.length) {
+      askDialogue(view.chips[0].id);
+      asked++;
+    } else {
+      if (view.phase === "line") bubbles++;
+      advanceDialogue();
+    }
+    for (let k = 0; k < hub.frames.length; k++) hub.frames[k].cb(fakeState, dt);
+  }
+  out.notes.push("conversation at " + conversed.id + ": " + bubbles + " caption taps, " + asked + " questions asked, released after " + guard + " ticks");
+  if (asked !== 4) out.errors.push("the visitor asked " + asked + " questions at " + conversed.id + "; a stop is four rounds of one question each");
+  if (view && view.total !== 4) out.errors.push(conversed.id + " reports " + view.total + " questions for its progress line");
+  if (journey.offset <= conversed.lock + 1e-3) out.errors.push("answering every question did not release the scroll at " + conversed.id);
+  if (heldPose && cam.position.distanceTo(heldPose) < 1e-3) out.errors.push("the scroll released but the camera stayed where it was");
+  for (const stop of allStops()) journey.done[stop.id] = true;
+
   // With no input state left to integrate, the rig must be exactly groundPose. Anything else that ever
   // crept in would be invisible in a screenshot and fatal to reverse scrubbing.
-  hub.setScroll(0.95);
+  const STANDOFF = MARS_DEPART - 0.06;
+  hub.setScroll(STANDOFF);
   hub.scrollState.delta = 0;
   for (let k = 0; k < hub.frames.length; k++) hub.frames[k].cb(fakeState, dt);
   const p = scratchPose();
   const gp = scratchGround();
-  poseAt(0.95, p);
-  groundPose(0.95, terrains[p.world.id].heights, p, gp, 0);
-  const siteQuat = SITE.quaternion;
+  poseAt(STANDOFF, p);
+  groundPose(STANDOFF, terrains[p.world.id].heights, p, gp, 0);
   const expected = gp.local.clone().applyQuaternion(p.world.site.quaternion).add(p.world.site.pos);
   const drift = cam.position.distanceTo(expected);
-  out.notes.push("rig vs groundPose at o=0.95 idle: " + (drift * 1000).toFixed(4) + "mm of drift");
+  out.notes.push("rig vs groundPose at o=" + STANDOFF.toFixed(2) + " idle: " + (drift * 1000).toFixed(4) + "mm of drift");
   if (drift > 1e-9) out.errors.push("the rig is not a pure function of the offset: " + drift.toExponential(2) + "m off groundPose");
 
   // The gait is driven by scroll velocity now. Parked must be dead still; a deliberate scroll must bob.
@@ -99,7 +162,7 @@ export async function run() {
     return cam.position.distanceTo(new Vector3(journey.camLocal.x, h, journey.camLocal.z).applyQuaternion(site.quaternion).add(site.pos));
   };
 
-  hub.setScroll(0.95);
+  hub.setScroll(STANDOFF);
   hub.scrollState.delta = 0;
   const parked = [];
   for (let i = 0; i < 40; i++) {
@@ -109,13 +172,15 @@ export async function run() {
   const parkedTravel = Math.max(...parked) - Math.min(...parked);
 
   // The rail does not move uniformly - the landing legs crawl and the walk legs run - so the scroll rate
-  // that means 2.2 m/s is read off the leg the test actually walks in, not off an average of the act.
+  // that means 2.2 m/s is read off the leg the test actually walks in, not off an average of the act. The
+  // march stops at the last screen of the Martian act, because past it there is no ground to stand on.
   let o2 = MARS_WALK_IN + 0.01;
+  const oEnd = MARS_DEPART - 0.002;
   const scrollDeltaFor = (mps) => (mps / walkRate(MARS_GROUND, o2)) * dt;
   const moving = [];
-  for (let i = 0; i < 240; i++) {
+  for (let i = 0; i < 240 && o2 < oEnd; i++) {
     hub.scrollState.delta = scrollDeltaFor(2.2);
-    o2 = Math.min(0.999, o2 + scrollDeltaFor(2.2));
+    o2 = Math.min(oEnd, o2 + scrollDeltaFor(2.2));
     hub.setScroll(o2);
     hub.scrollState.delta = scrollDeltaFor(2.2);
     for (let k = 0; k < hub.frames.length; k++) hub.frames[k].cb(fakeState, dt);
@@ -134,7 +199,9 @@ export async function run() {
   if (parkedTravel > 1e-9) out.errors.push("the gait is still moving with no scroll: " + parkedTravel.toExponential(1) + "m");
   if (reversals < 3) out.errors.push("a deliberate scroll did not bob, it slid: " + reversals + " reversals");
 
-  hub.setScroll(0.95);
+  // The band the lunar walk is allowed to wander in, measured across the whole sweep above and checked
+  // against the corridor the terrain was cleared for. Parked here, in the middle of that walk.
+  hub.setScroll(SURFACE_STOPS.moon[1].lock);
   hub.scrollState.delta = 0;
   for (let k = 0; k < hub.frames.length; k++) hub.frames[k].cb(fakeState, dt);
   const railX = CORRIDOR_BY_WORLD.moon.map(([x]) => x);
@@ -145,7 +212,16 @@ export async function run() {
 
   out.hosts = hub.hosts.map((h) => h.tag);
 
-  for (const probe of [["solar", 0.02], ["moonSphere", 0.2], ["moonGround", 0.42], ["transfer", 0.62], ["marsGround", 0.95]]) {
+  const probes = [
+    ["solar", 0.02],
+    ["moonSphere", (SEAM_A + SEAM_B) / 2],
+    ["moonGround", SURFACE_STOPS.moon[2].lock],
+    ["transfer", (DEPART + TRANSFER_END) / 2],
+    ["marsOrbit", (TRANSFER_END + MARS_SEAM) / 2],
+    ["marsGround", SURFACE_STOPS.mars[0].lock],
+    ["eva", SURFACE_STOPS.solar[0].lock],
+  ];
+  for (const probe of probes) {
     hub.setScroll(probe[1]);
     for (let k = 0; k < hub.frames.length; k++) hub.frames[k].cb(fakeState, dt);
     const b = hub.budgetAt();
@@ -204,7 +280,10 @@ export async function run() {
   if (textured.length < 10) out.errors.push("only " + textured.length + " textured materials; expected the 8 planets + moon dot + moon sphere + Earth");
   const sized = [...seenMaterials].filter((m) => m.map?.image).map((m) => m.map.image.width + "x" + m.map.image.height);
   out.notes.push("map sizes " + [...new Set(sized)].sort().join(" "));
-  for (const w of [MOON, MARS]) out.notes.push(w.id + " walk ends at local (" + w.lm.join(", ") + ") craft and (" + w.companion.join(", ") + ") crew");
+  for (const planet of ["moon", "mars"]) {
+    const last = SURFACE_STOPS[planet].at(-1);
+    out.notes.push(planet + " walk ends at " + last.name + " (" + last.model + "), 12.5 m of rail between stops");
+  }
   audit.notes.forEach((n) => out.notes.push("note: " + n));
   return out;
 }

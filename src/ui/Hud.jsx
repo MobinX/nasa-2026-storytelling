@@ -62,8 +62,9 @@ export default function Hud() {
   const rows = [
     ["act", journey.actId],
     ["offset", (journey.offset * 100).toFixed(1) + "%"],
-    ["scroll", journey.scrollAlive ? "responding" : "awaiting input"],
+    ["scroll", journey.connected ? "attached" : "detached"],
     ["flicks", journey.flicks + " / " + PAGES + " screens"],
+    ["stop", journey.talkStop ?? (journey.lock.engaged ? "held" : "-")],
   ];
   const fine = [
     ["fps", journey.fps.toFixed(0)],
@@ -125,6 +126,11 @@ export default function Hud() {
       <div className='hint' data-hidden={journey.offset > 0.02}>
         scroll to travel
       </div>
+      {journey.lock.engaged ? (
+        <div className='hint hint-hold' data-hidden={false}>
+          {talk && !talk.chips.length ? "tap the caption" : "answer him to go on"}
+        </div>
+      ) : null}
       {DEBUG && (
         <div className={"readout" + (journey.connected ? "" : " readout-dead")}>
           {rows.map(([k, v]) => (

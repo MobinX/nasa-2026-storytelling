@@ -9,6 +9,7 @@ import CameraRig from "./CameraRig.jsx";
 import SolarSystem from "./SolarSystem.jsx";
 import SphereWorld from "./SphereWorld.jsx";
 import GroundWorld from "./GroundWorld.jsx";
+import EvaWorld from "./EvaWorld.jsx";
 import SunLight from "../lights/SunLight.jsx";
 import { StarDome, SunGlow } from "./Sky.jsx";
 
@@ -84,10 +85,9 @@ const FrameMeter = () => {
 const Snapshot = () => {
   const scroll = useScroll();
   useFrame(() => {
-    const o = clamp01(scroll.offset);
-    journey.offset = o;
+    // The rig owns journey.offset, because a held stop is not the same number as the scroller.
     journey.raw = clamp01(scroll.scroll.current);
-    journey.actId = actAt(o).id;
+    journey.actId = actAt(journey.offset).id;
   });
   return null;
 };
@@ -121,6 +121,7 @@ export default function Experience({ terrains }) {
       <SphereWorld />
       <GroundWorld world={MOON} terrain={terrains.moon} />
       <GroundWorld world={MARS} terrain={terrains.mars} />
+      <EvaWorld />
     </>
   );
 }

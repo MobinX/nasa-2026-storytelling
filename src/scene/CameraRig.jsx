@@ -3,7 +3,7 @@ import { Euler, Matrix4, Quaternion, Vector3 } from "three";
 import { useFrame } from "@react-three/fiber";
 import { useScroll } from "@react-three/drei";
 import { poseAt, scratchPose, walkRate } from "../journey/pose.js";
-import { MOON_TALK_IN, MOON_TALK_OUT, MARS_TALK_IN, clamp01, smoothstep } from "../journey/timeline.js";
+import { SURFACE_STOPS, clamp01, smoothstep } from "../journey/timeline.js";
 import { groundPose, scratchGround } from "../journey/ground.js";
 import { journey } from "../state/journey.js";
 
@@ -13,21 +13,22 @@ const _e = new Euler(0, 0, 0, "YXZ");
 const _q = new Quaternion();
 
 // Scroll speed to gait amplitude. The speed is the rail's real one - metres per unit of offset times the
-// scroll rate - so the parked touchdown and conversation legs, which advance eighths of the act against
+// scroll rate - so the parked touchdown and hold legs, which advance a screen of scroll against
 // centimetres, get no bob at all and the walking legs get the full lope. With the physical 1.62 m lunar
 // stride that is a 9 Hz vibration at a fast flick, so the band-pass tapers it back to a glide. Footprint
 // spacing still comes from stepEvent() at the true stride, so the tracks never lie about distance.
 const gaitAmplitude = (metresPerSecond) => smoothstep(metresPerSecond, 0.15, 0.9) * (1 - smoothstep(metresPerSecond, 6, 18));
 
-// A conversation window, not a step: the lunar one has to close again, because the ascent continues past
-// it and a speech bubble hovering over a crew member who is 30 m and falling behind is worse than none.
-const window_ = (o, open, close) => Math.min(smoothstep(o, open, open + 0.012), 1 - smoothstep(o, close - 0.005, close + 0.005));
+// Which stop list belongs to which space. The approach and the flights have none: only a walk does.
+const STOPS_OF = { ground: SURFACE_STOPS.moon, marsGround: SURFACE_STOPS.mars, eva: SURFACE_STOPS.solar };
 
-// The only writer of the camera, and a pure function of scroll.offset: scrubbing backwards reproduces
-// every pose exactly. drei's internal ScrollControls damp is the whole smoothing budget - anything
-// derived from the offset that gets damped a second time feels rubber-bandy.
-// The height field is per world, and the rig is the only thing that knows which one the offset is
-// standing on, so it takes both and picks per frame.
+// The only writer of the camera, and a pure function of scroll.offset with one exception: a stop holds the
+// offset where it arrived until its conversation is finished. The exception is kept out of the pose math -
+// it clamps the input and pins the scroller, it never edits a pose - so scrub-back purity survives for
+// every offset that is not currently being argued about.
+//
+// The height field is per world, and the rig is the only thing that knows which one the offset is standing
+// on, so it takes both and picks per frame.
 export default function CameraRig({ terrains }) {
   const scroll = useScroll();
   const pose = scratchPose();
@@ -35,17 +36,38 @@ export default function CameraRig({ terrains }) {
 
   useFrame(({ camera }, delta) => {
     const d = Math.min(delta, 1 / 20);
-    const o = clamp01(scroll.offset);
-    poseAt(o, pose);
+    const raw = clamp01(scroll.offset);
+    poseAt(raw, pose);
+    const list = STOPS_OF[pose.space.id];
+    let held = 0;
+    let stopId = null;
+    if (list) {
+      for (const stop of list) {
+        if (raw >= stop.lock && !journey.done[stop.id]) { held = Math.max(held, stop.lock); stopId = stop.id; }
+      }
+    }
+    const o = held ? Math.min(raw, held) : raw;
+    if (held) {
+      // Pin the scroller, or the visitor's flick runs ahead of the hold and the release jumps.
+      const el = scroll.el;
+      if (el) {
+        const max = el.scrollHeight - el.clientHeight;
+        const want = 1 + held * (max - 1);
+        if (Math.abs(el.scrollTop - want) > 1) el.scrollTop = want;
+      }
+    }
+    if (o !== raw) poseAt(o, pose);
     const local = pose.space.local;
     const world = pose.world;
     journey.graphId = pose.space.graph;
     journey.worldId = world.id;
     journey.air = local ? world.air : 0;
-    journey.moon.talk = window_(o, MOON_TALK_IN, MOON_TALK_OUT);
-    journey.mars.talk = Math.min(1, smoothstep(o, MARS_TALK_IN, MARS_TALK_IN + 0.012));
+    journey.offset = o;
+    journey.raw = raw;
+    journey.lock = { engaged: !!held, offset: held, id: stopId };
+    journey.talkStop = stopId;
+    journey.talk = held ? 1 : 0;
     journey.walkActive = local && o > world.walkIn;
-    journey.talk = local ? (world.id === "mars" ? journey.mars.talk : journey.moon.talk) : 0;
 
     if (!local) {
       camera.position.copy(pose.position);

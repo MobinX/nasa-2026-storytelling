@@ -1,0 +1,1106 @@
+{
+  "objects": [
+    {
+      "id": "moon-solar-wind",
+      "name": "Solar Wind Composition collector",
+      "3dmodel": "models/moon-solar-wind.gltf",
+      "introductoryTalk": [
+        "That foil was left in sunlight for 77 minutes and it is still the best sample we have.",
+        "It caught the Sun's own atmosphere out of the solar wind, and we took it home."
+      ],
+      "QA": {
+        "rounds": [
+          {
+            "title": "What the foil caught",
+            "questionOptionsForUser": [
+              "How do you catch something with no container?",
+              "What is actually in the solar wind?",
+              "Why are noble gases the point?",
+              "How pure is the sample?"
+            ],
+            "answerForEachOption": [
+              [
+                "You leave clean foil in the wind. Atoms implant in the top micrometre, and you read the foil."
+              ],
+              [
+                "Mostly protons and electrons, with helium, and traces of everything heavier down to the noble gases."
+              ],
+              [
+                "They are the fingerprint of the Sun's bulk composition, which you cannot sample any other way."
+              ],
+              [
+                "Very. The Moon has no atmosphere and no magnetic field, so nothing shields it and nothing contaminates it."
+              ]
+            ]
+          },
+          {
+            "title": "Reading it later",
+            "questionOptionsForUser": [
+              "What did the analysis find?",
+              "Why is that worth a sample return?",
+              "Did it say anything about the Sun?",
+              "Are the foils still useful?"
+            ],
+            "answerForEachOption": [
+              [
+                "Solar-wind noble gases in the Sun's own ratios, and a heavier component from an ancient solar wind."
+              ],
+              [
+                "It sets the baseline composition of the Solar System, so meteorites and our own air can be measured against it."
+              ],
+              [
+                "The Sun has run denser and slower in the past, recorded layer by layer in the foil."
+              ],
+              [
+                "Yes. Later instruments have far better sensitivity, so some of it is still unopened on purpose."
+              ]
+            ]
+          },
+          {
+            "title": "Deploying it",
+            "questionOptionsForUser": [
+              "Why was it put out in the sun?",
+              "Why at arm's length?",
+              "How big was it?",
+              "What would ruin it?"
+            ],
+            "answerForEachOption": [
+              [
+                "It was fetched and deployed in sunlight, at arm's length, with the sheet facing the Sun by its own shadow."
+              ],
+              [
+                "To keep suit outgas and dust off the collector. Almost every lunar deploy rule comes from that."
+              ],
+              [
+                "A bay-sized sheet unrolled from a cassette, under 7 kg, which is a real price in launch mass for foil."
+              ],
+              [
+                "Dust on the face, and one careless glove. Both are why the site was chosen by a human and not a camera."
+              ]
+            ]
+          },
+          {
+            "title": "What came after",
+            "questionOptionsForUser": [
+              "Is there a modern version?",
+              "What does a solar probe do instead?",
+              "Why keep collecting at all?",
+              "What would you measure next?"
+            ],
+            "answerForEachOption": [
+              [
+                "Genesis collected solar wind at L1 and came back in 2004, after a parachute failure that cost most of it."
+              ],
+              [
+                "Parker flies into the wind itself and measures the fields and particles directly, close to the Sun."
+              ],
+              [
+                "The Sun's composition is the reference point for everything else, and we can touch the wind but not the Sun."
+              ],
+              [
+                "Isotopes of the volatile elements at precision the 1969 foil cannot give, from a longer exposure."
+              ]
+            ]
+          }
+        ],
+        "planet": "moon",
+        "location": "Mare Tranquillitatis, 32 m north of the LM \u2014 a foil sheet facing the Sun"
+      }
+    },
+    {
+      "id": "moon-seismometer",
+      "name": "Passive Seismic Experiment",
+      "3dmodel": "models/moon-seismometer.gltf",
+      "introductoryTalk": [
+        "That box listens to the Moon and has never been switched off by anyone who could reach it.",
+        "We set it on the surface, wired it to the lander, and left it running on one lunar day of sun."
+      ],
+      "QA": {
+        "rounds": [
+          {
+            "title": "What it listens for",
+            "questionOptionsForUser": [
+              "Does the Moon have earthquakes?",
+              "What hits it most often?",
+              "What was the surprise?",
+              "Did it hear anything you did not want?"
+            ],
+            "answerForEachOption": [
+              [
+                "Moonquakes, yes, and they come from tides and from a crust that is shrinking as it cools."
+              ],
+              [
+                "Meteoroids. Small ones, all day, at 20 km/s. The record is mostly a rain of impacts."
+              ],
+              [
+                "Deep moonquakes, 700 to 1000 km down, driven by the Earth's tide. Nobody expected the interior to answer that far."
+              ],
+              [
+                "Thermal events. The box flexes as sunrise arrives, and the first readings were the instrument waking up."
+              ]
+            ]
+          },
+          {
+            "title": "Why the surface",
+            "questionOptionsForUser": [
+              "Why not leave it on the ladder?",
+              "What does regolith do to a signal?",
+              "How was it powered?",
+              "Who chose the site?"
+            ],
+            "answerForEachOption": [
+              [
+                "A seismometer needs mechanical contact. It sat on the regolith with its feet packed down by hand."
+              ],
+              [
+                "It is a dry fractured blanket, so the surface waves it records are slow, scattered and strange."
+              ],
+              [
+                "A solar panel and a battery sized for one lunar day, which is why the traverse had to come back."
+              ],
+              [
+                "A survey camera on the LM, and then a person walking, looking for level ground and a clear Sun."
+              ]
+            ]
+          },
+          {
+            "title": "What it taught us",
+            "questionOptionsForUser": [
+              "What is the Moon's core?",
+              "Is the Moon seismically alive?",
+              "Why does that matter to a mission now?",
+              "Was it ever visited again?"
+            ],
+            "answerForEachOption": [
+              [
+                "Small: a solid iron-rich inner core inside a fluid one, about a fifth of the radius. Seismics and ranging pinned it."
+              ],
+              [
+                "Barely. A handful of shallow events a year, big enough for the later Apollo stations to record well."
+              ],
+              [
+                "Landing near a fault is a safety question, and this is the only long record we own."
+              ],
+              [
+                "The Apollo 12 crew walked back to their own and re-pointed it. Three missions did that by hand."
+              ]
+            ]
+          },
+          {
+            "title": "Working by radio",
+            "questionOptionsForUser": [
+              "How did it talk to Earth?",
+              "What happened when the LM left?",
+              "Why was that useful?",
+              "When did it go quiet?"
+            ],
+            "answerForEachOption": [
+              [
+                "Through the LM's UHF link while we were on the surface, then through the relay left running behind it."
+              ],
+              [
+                "The ascent stage impact rang the whole network on purpose: a known explosion, a known mass, a known time."
+              ],
+              [
+                "It calibrated the Moon. One blast seen by every station, at a moment known to the second."
+              ],
+              [
+                "1977, when the network was closed for budget. The boxes are still there, dead and undisturbed."
+              ]
+            ]
+          }
+        ],
+        "planet": "moon",
+        "location": "Mare Tranquillitatis, 63 m west of the LM \u2014 level ground, feet packed in"
+      }
+    },
+    {
+      "id": "moon-retroreflector",
+      "name": "Laser Ranging Retroreflector",
+      "3dmodel": "models/moon-retroreflector.gltf",
+      "introductoryTalk": [
+        "That plate of fused silica is the most useful thing we left up here.",
+        "It has been in the sun since 1969 and nobody has touched it since."
+      ],
+      "QA": {
+        "rounds": [
+          {
+            "title": "What it is for",
+            "questionOptionsForUser": [
+              "What does a mirror on the Moon do?",
+              "Why is the precision interesting?",
+              "Does it measure anything but distance?",
+              "Who still shoots lasers at it?"
+            ],
+            "answerForEachOption": [
+              [
+                "Range. Observatories fire a laser at it and time the return; the round trip is 2.5 seconds at best."
+              ],
+              [
+                "Centimetres, over 384,000 km. It is the best-tested distance in solar system astronomy."
+              ],
+              [
+                "The orbit. The Moon recedes from us 3.8 cm a year, dragged outward by tides on Earth."
+              ],
+              [
+                "Several observatories, on scheduled nights, at the ephemeris of a 1969 object none of them has visited."
+              ]
+            ]
+          },
+          {
+            "title": "Why glass",
+            "questionOptionsForUser": [
+              "Why not a normal mirror?",
+              "Why does it come back so bright?",
+              "How many are up here?",
+              "Will it stop working?"
+            ],
+            "answerForEachOption": [
+              [
+                "Metal would absorb sunlight and warp. Fused silica survives it and stays flat to a wavelength."
+              ],
+              [
+                "Corner cubes return light parallel to where it came from, so it shines back at its own laser."
+              ],
+              [
+                "Two from Apollo, plus three left by Soviet landers. Only some of them still give a usable return."
+              ],
+              [
+                "Micrometeorites darken it over millions of years. Long after that it will still be sitting there."
+              ]
+            ]
+          },
+          {
+            "title": "Handling it",
+            "questionOptionsForUser": [
+              "Did you have to aim it?",
+              "What was the risk in deploying it?",
+              "Why is dust a problem out here?",
+              "Did it get dirty anyway?"
+            ],
+            "answerForEachOption": [
+              [
+                "No. It is passive, and wide-acceptance, which is the only reason it still works."
+              ],
+              [
+                "Kicking dust across the optical face. The crew deployed it at arm's length, back turned."
+              ],
+              [
+                "Nothing washes it away and nothing settles it. Levitated dust is the local weather."
+              ],
+              [
+                "Slightly, and the return dropped. Later crews photographed it and cleaned one with a glove."
+              ]
+            ]
+          },
+          {
+            "title": "What it proved",
+            "questionOptionsForUser": [
+              "What did ranging settle?",
+              "Anything surprising?",
+              "Is the equivalence principle in there?",
+              "Why do you care about that?"
+            ],
+            "answerForEachOption": [
+              [
+                "The orbit, the libration, and a hard number for the Earth-Moon distance that geodesy still uses."
+              ],
+              [
+                "The orbit behaves differently than the models, and the interior turned out to be partly molten."
+              ],
+              [
+                "Yes. The Sun pulls Earth and Moon, and ranging shows they fall together to one part in 10 to the 13."
+              ],
+              [
+                "It is the tightest test of gravity you can run without leaving the Solar System, and it needs no power."
+              ]
+            ]
+          }
+        ],
+        "planet": "moon",
+        "location": "Mare Tranquillitatis, 0.674\u00b0N 23.473\u00b0E \u2014 58 m east of the footpads"
+      }
+    },
+    {
+      "id": "moon-eagle",
+      "name": "Eagle, Lunar Module descent stage",
+      "3dmodel": "models/moon-eagle.gltf",
+      "introductoryTalk": [
+        "Watch your step. That is the only footpad on the Moon nobody has ever flown again.",
+        "Sixty hours ago this was the only thing between two men and the vacuum."
+      ],
+      "QA": {
+        "rounds": [
+          {
+            "title": "What is this machine",
+            "questionOptionsForUser": [
+              "What is this machine?",
+              "Why does it look like a spider?",
+              "How big is it?",
+              "Who came down in it?"
+            ],
+            "answerForEachOption": [
+              [
+                "Eagle. A Lunar Module, two stages stacked. The descent stage you are standing on stays here permanently.",
+                "The ascent stage above carries two men back to orbit. Nobody ever flew the bottom half again."
+              ],
+              [
+                "There is no air, so there is no wing, no brake, no runway, no streamlining. Nothing aerodynamic survives here.",
+                "So it grows legs, lands on them, burns its own structure as fuel, and stands up on the top. Ugly is correct."
+              ],
+              [
+                "Nine metres tall, four and a half across the footpads, fifteen thousand kilograms.",
+                "Which on the Moon weighs what two and a half tonnes does on Earth. That is the only reason it flies."
+              ],
+              [
+                "Armstrong and Aldrin. Four hundred and five thousand people put them in it.",
+                "Collins stayed above in Columbia, alone, twelve minutes out of contact on every orbit."
+              ]
+            ]
+          },
+          {
+            "title": "Getting down",
+            "questionOptionsForUser": [
+              "How did you land it?",
+              "How much fuel was left?",
+              "What were the alarms?",
+              "Why is it covered in grey dust?"
+            ],
+            "answerForEachOption": [
+              [
+                "Mostly by hand. The computer was flying toward a field of boulders the size of cars.",
+                "Armstrong took the control hand, overshot the crater and flew east until the ground said clear."
+              ],
+              [
+                "About twenty-five seconds of margin at touch-down.",
+                "Below that the procedure was an abort: the ascent engine fires either way and you never come back."
+              ],
+              [
+                "A 1202 and a 1201, computer overflow, from a rendezvous radar feeding it data nobody needed.",
+                "The fix was already written on the ground. They called it up and the computer kept flying."
+              ],
+              [
+                "No weather, so nothing washes away. It is pulverised glass and rock, ground fine for four billion years.",
+                "And it clings, electrostatically. It got inside the suits and smelled like spent gunpowder."
+              ]
+            ]
+          },
+          {
+            "title": "Living here",
+            "questionOptionsForUser": [
+              "How long could you stay?",
+              "How do you sleep in that?",
+              "What is the suit doing?",
+              "Why does walking here look like bouncing?"
+            ],
+            "answerForEachOption": [
+              [
+                "Roughly sixty hours on consumables. They spent twenty-one and a half, every minute scheduled.",
+                "Twenty-two seconds of that schedule was the whole margin between a sample return and a scrub."
+              ],
+              [
+                "Standing up, in a cabin with no seats. One on the engine cover, one curled in the equipment bay.",
+                "It is the worst bed ever designed and it still beat not sleeping before a moonwalk."
+              ],
+              [
+                "A personal spacecraft: 21 kilopascals of pure oxygen, a water-cooled undershirt, four hours of nothing else.",
+                "Try opening a jar with oven mitts on, underwater, wearing a fishbowl. That is the glove."
+              ],
+              [
+                "One sixth of Earth weight, so a step becomes a hop and the crew developed a lope.",
+                "Every tool needs two hands, because a stiff glove gives you no feel at the fingertips."
+              ]
+            ]
+          },
+          {
+            "title": "What stays",
+            "questionOptionsForUser": [
+              "What did you leave behind?",
+              "Is any of this still working?",
+              "What did you take with you?",
+              "Who built this?"
+            ],
+            "answerForEachOption": [
+              [
+                "The descent stage, a flag, and a reflector still used to range the Earth-Moon distance to the centimetre.",
+                "A seismometer, a solar wind collector, and a disc with messages from forty nations."
+              ],
+              [
+                "The reflector: observatories still range off it. The seismometer recorded until the budget closed it out.",
+                "Everything else is in vacuum, so it does not rust and nothing grows over it. It will outlast the buildings."
+              ],
+              [
+                "Twenty-one point seven kilograms of rock and soil, sealed before anyone opened it.",
+                "Sealed both ways, so nothing from here could get out either."
+              ],
+              [
+                "Grumman, on Long Island. Twelve thousand people who argued for two years over whether the legs should fold.",
+                "Their program manager's own verdict: the ugliest thing he had ever been proud of. It brought them home."
+              ]
+            ]
+          }
+        ],
+        "planet": "moon",
+        "location": "Statio Tranquillitatis, 0.674\u00b0N 23.473\u00b0E \u2014 the pad itself"
+      }
+    },
+    {
+      "id": "mars-rover",
+      "name": "Perseverance-class rover",
+      "3dmodel": "models/mars-rover.gltf",
+      "introductoryTalk": [
+        "That is the field party. It has driven this delta for years with nobody in it.",
+        "It will still be working when the last of us is a name on a plate over there."
+      ],
+      "QA": {
+        "rounds": [
+          {
+            "title": "Why Jezero",
+            "questionOptionsForUser": [
+              "Why land in a crater?",
+              "How was the site chosen?",
+              "What were you looking for?",
+              "What did the delta deliver?"
+            ],
+            "answerForEachOption": [
+              [
+                "Because a river ran into it. Jezero is a delta: sediment sorted by water, in one place, 3.5 billion years ago."
+              ],
+              [
+                "Orbiters, for twenty years, reading minerals and slope. Then one human decision about which boulder field to risk."
+              ],
+              [
+                "Signs of life that survived. Not cells: chemistry and texture, where water left them lying around."
+              ],
+              [
+                "Layered sand and mud, carbonates, and igneous rock you can date. A geologist's whole day in two kilometres."
+              ]
+            ]
+          },
+          {
+            "title": "Living off a robot",
+            "questionOptionsForUser": [
+              "How does it drive itself?",
+              "What is the worst part of the job?",
+              "How long is a sol here?",
+              "Does it ever get stuck?"
+            ],
+            "answerForEachOption": [
+              [
+                "It plans its own path over terrain it has seen, then stops and waits for us to review the day."
+              ],
+              [
+                "Dust on solar panels is the classic killer, so this one carries a nuclear battery and never has to care."
+              ],
+              [
+                "24 hours 39 minutes. The clocks run in sols and the number in the caption is what people read."
+              ],
+              [
+                "It has slipped and tipped. The escape was rehearsed on Earth against a mock-up of that exact wheel."
+              ]
+            ]
+          },
+          {
+            "title": "What it carries",
+            "questionOptionsForUser": [
+              "What is on the mast?",
+              "Why shoot lasers at rocks?",
+              "What is the arm for?",
+              "What would you change?"
+            ],
+            "answerForEachOption": [
+              [
+                "Two pairs of eyes at human separation, so the stereo is genuinely stereoscopic, and a laser that zaps rock."
+              ],
+              [
+                "To read chemistry from 7 m away, which saves the arm, the drill and the tubes for the good targets."
+              ],
+              [
+                "Touch: grinding a rind off rock, caching a core, and taking the picture no orbiter can take."
+              ],
+              [
+                "Mass and time. A human does all of this faster, and the mass budget is why it is a robot."
+              ]
+            ]
+          },
+          {
+            "title": "What it leaves",
+            "questionOptionsForUser": [
+              "Where are the samples?",
+              "Why cache them outside?",
+              "What happens to the wheels?",
+              "Is it lonely?"
+            ],
+            "answerForEachOption": [
+              [
+                "In tubes on the ground, in a depot east of here. A second mission was supposed to come and get them."
+              ],
+              [
+                "Because one lander that drills, caches and returns was never affordable. So it is two missions and a promise."
+              ],
+              [
+                "They are tearing themselves on sharp regolith. Somebody had to learn that on a robot first."
+              ],
+              [
+                "It drives towards nothing, photographs nothing for anyone, and is the best-engineered instrument on the planet."
+              ]
+            ]
+          }
+        ],
+        "planet": "mars",
+        "location": "Jezero Crater western rim, 18.4\u00b0N 77.5\u00b0E \u2014 an ancient river delta"
+      }
+    },
+    {
+      "id": "mars-airfield",
+      "name": "Ingenuity-class airfield",
+      "3dmodel": "models/mars-airfield.gltf",
+      "introductoryTalk": [
+        "This flat patch of ground is an airfield, and there is a helicopter buried in it.",
+        "Ninety-two flights. The design life was five."
+      ],
+      "QA": {
+        "rounds": [
+          {
+            "title": "Flying on Mars",
+            "questionOptionsForUser": [
+              "How do you fly where there is hardly any air?",
+              "What does one percent air cost?",
+              "Why bother at all?",
+              "Does it fly by remote?"
+            ],
+            "answerForEachOption": [
+              [
+                "Big blades, fast, light. The atmosphere is one percent of Earth's, so the disc is huge and it turns at 2400 rpm."
+              ],
+              [
+                "A helicopter the size of a biscuit tin, 1.8 kg, with one percent of an atmosphere to push on."
+              ],
+              [
+                "Because an aircraft sees the terrain a rover will commit to, and it decides the route before the wheels do."
+              ],
+              [
+                "No. It flies a stored route by itself and lands wherever the ground allowed it to."
+              ]
+            ]
+          },
+          {
+            "title": "The hard part",
+            "questionOptionsForUser": [
+              "What kills a Mars helicopter?",
+              "How did it survive the first winter?",
+              "What is the landing gear?",
+              "What broke in the end?"
+            ],
+            "answerForEachOption": [
+              [
+                "Night. Minus ninety with no radioisotope heat, so it survives by design rather than by power."
+              ],
+              [
+                "It was driven onto a south-facing slope so the Sun would warm it, and the plan was rewritten for that."
+              ],
+              [
+                "Four legs and a body, on a rotorcraft, on a planet, with no maintenance and no fuel truck."
+              ],
+              [
+                "A blade, landing on rough ground, two years past anything anyone claimed for it."
+              ]
+            ]
+          },
+          {
+            "title": "What it changed",
+            "questionOptionsForUser": [
+              "Did it do its job?",
+              "What does that unlock?",
+              "Would you send a bigger one?",
+              "What is the lesson?"
+            ],
+            "answerForEachOption": [
+              [
+                "It scouted drives, found a rock that stopped a traverse, and proved powered flight off Earth."
+              ],
+              [
+                "Reconnaissance for crewed landings, sample retrieval over terrain a rover cannot cross, and cliffs."
+              ],
+              [
+                "A helicopter that carries instruments is the obvious next machine, and it is already on a drawing board."
+              ],
+              [
+                "Overbuild the survival and underbuild the mission. The five-flight plan got ninety-two."
+              ]
+            ]
+          },
+          {
+            "title": "Standing on it",
+            "questionOptionsForUser": [
+              "Why is this the airfield?",
+              "Where is the spacecraft?",
+              "Do you walk there?",
+              "Can you see it from there?"
+            ],
+            "answerForEachOption": [
+              [
+                "Flat, clear of boulders, with a slope the Sun can work on. That is the entire site survey."
+              ],
+              [
+                "Over the ridge, still bolted to its backshell, exactly where the terminal descent put it."
+              ],
+              [
+                "Not today: a three kilometre round trip in a sol, and the delta is the other way."
+              ],
+              [
+                "No. Two worlds, one horizon, and a radio link to a machine that cannot look back."
+              ]
+            ]
+          }
+        ],
+        "planet": "mars",
+        "location": "Jezero Crater, 18.5\u00b0N 77.4\u00b0E \u2014 a flat sand sheet with a south-facing edge"
+      }
+    },
+    {
+      "id": "mars-depot",
+      "name": "Sample caching depot",
+      "3dmodel": "models/mars-depot.gltf",
+      "introductoryTalk": [
+        "Those tubes are the start of a return mission that has not launched yet.",
+        "Ten cores of rock and regolith, sealed, sitting on another planet."
+      ],
+      "QA": {
+        "rounds": [
+          {
+            "title": "What is in the tubes",
+            "questionOptionsForUser": [
+              "What is actually in them?",
+              "Why so precise?",
+              "What will they answer?",
+              "What is the risk in leaving them?"
+            ],
+            "answerForEachOption": [
+              [
+                "Cores: 15 to 20 grams of rock and regolith, drilled, sealed and numbered in titanium tubes."
+              ],
+              [
+                "Because an Earth laboratory is a hundred times better than anything that can land there, and this is the shortcut."
+              ],
+              [
+                "When Jezero had water, for how long, and whether anything grew in it. Dating needs samples, not pictures."
+              ],
+              [
+                "Nobody can check the seals. A future mission finds tubes in dust with no way to know they are shut."
+              ]
+            ]
+          },
+          {
+            "title": "Why a depot",
+            "questionOptionsForUser": [
+              "Why not land the return vehicle now?",
+              "Why ten tubes, not one?",
+              "Is the site marked?",
+              "What if nothing comes?"
+            ],
+            "answerForEachOption": [
+              [
+                "Because a Mars sample return is three spacecraft, and it is the most expensive thing planetary science has attempted."
+              ],
+              [
+                "Insurance. They are dropped in a scatter so that one bad landing cannot lose the set."
+              ],
+              [
+                "Photographed from both ends, from orbit and from the ground, to be found by a machine that has never seen it."
+              ],
+              [
+                "Then they stay exactly as they are for a very long time. Out here only radiation and dust are active."
+              ]
+            ]
+          },
+          {
+            "title": "Getting them back",
+            "questionOptionsForUser": [
+              "How do you launch off Mars?",
+              "Has anything like that been tried?",
+              "What is the hard part scientifically?",
+              "Why is that worth the money?"
+            ],
+            "answerForEachOption": [
+              [
+                "A small ascent vehicle built here, fuelled there, off a pad nobody has ever used."
+              ],
+              [
+                "No. Every gram that has left Mars left because an impact threw it, and a few landed on Earth."
+              ],
+              [
+                "Sealing and certifying. Bringing Mars to Earth means proving nothing alive came with it."
+              ],
+              [
+                "Because the instruments waiting in clean rooms are a thousand times better than anything that can land."
+              ]
+            ]
+          },
+          {
+            "title": "Standing in it",
+            "questionOptionsForUser": [
+              "What is this ground?",
+              "How old?",
+              "Are the rocks interesting?",
+              "What would a human do first?"
+            ],
+            "answerForEachOption": [
+              [
+                "An ancient lake floor: fine sand over cemented pebbles, and carbonate where the water did the sorting."
+              ],
+              [
+                "About 3.5 billion years, and it is the best evidence there has ever been for warm wet Mars."
+              ],
+              [
+                "Igneous ones you can date and sedimentary ones that hold the chemistry, both within a kilometre."
+              ],
+              [
+                "Turn over a rock nobody has turned over, look underneath it, then go find shade for the suit."
+              ]
+            ]
+          }
+        ],
+        "planet": "mars",
+        "location": "Jezero Crater, ten sealed tubes scattered on flat ground east of the airfield"
+      }
+    },
+    {
+      "id": "mars-ares",
+      "name": "Ares habitat and ascent vehicle",
+      "3dmodel": "models/mars-ares.gltf",
+      "introductoryTalk": [
+        "Captain. Easy, that dark ring is your own bootprint.",
+        "Everything under your boots is iron oxide. It is the only colour this planet has."
+      ],
+      "QA": {
+        "rounds": [
+          {
+            "title": "Getting down",
+            "questionOptionsForUser": [
+              "How did you land this time?",
+              "Why is the descent so long?",
+              "What did you see out of the window?",
+              "How much margin was left?"
+            ],
+            "answerForEachOption": [
+              [
+                "The Moon was flown by hand. Mars is flown by a machine you cannot argue with for seven minutes.",
+                "Aeroshell, a supersonic parachute, then a skycrane that lowers you on a cable and flies off to crash itself."
+              ],
+              [
+                "There is an atmosphere, which is a brake and a threat at once: five kilometres a second of heat, 400 seconds of wind.",
+                "On the Moon there was nothing to fly through, so the whole landing was rocket fuel from orbit down."
+              ],
+              [
+                "Nothing, on the way in. Four minutes of plasma blackout, instruments only.",
+                "Then the ground appeared already close, which is the part every test pilot complains about."
+              ],
+              [
+                "Fuel, plenty compared with the Moon. Time was the margin here: no window opens twice a month.",
+                "Miss the date and the return is 26 months away, so an abort was never actually an option."
+              ]
+            ]
+          },
+          {
+            "title": "The wrong sky",
+            "questionOptionsForUser": [
+              "Why is the sky the wrong colour?",
+              "Is it cold?",
+              "Does the weather ever change?",
+              "Why is the Sun smaller?"
+            ],
+            "answerForEachOption": [
+              [
+                "Fine dust in suspension, all day. It scatters the blue out of the light and leaves butterscotch.",
+                "And it runs backwards at sunset: the same dust piles blue into a halo round the Sun."
+              ],
+              [
+                "Minus sixty on average, and it swings 60 kelvin in one day because there is hardly any air to hold heat.",
+                "Your suit is a thermos in that, and the habitat is a house that is also a pressure vessel."
+              ],
+              [
+                "Dust storms, seasonally: from whirls you photograph to events that wrap the planet for months.",
+                "There is no lightning. There is not enough air, and no water, to make it."
+              ],
+              [
+                "You are 1.52 astronomical units out, so the light is 43 percent of what it was at Earth.",
+                "The disc is a third across, and the panels are sized for that number rather than for the one you remember."
+              ]
+            ]
+          },
+          {
+            "title": "Twice the weight",
+            "questionOptionsForUser": [
+              "Is walking harder than on the Moon?",
+              "Can you lift anything?",
+              "What does the air do for you?",
+              "How long are your days?"
+            ],
+            "answerForEachOption": [
+              [
+                "Thirty-eight percent of Earth against the Moon's sixteen. The hop is gone, you walk like a person again.",
+                "Same suit, so every movement you trained for is wrong. The lope that worked out there looks ridiculous here."
+              ],
+              [
+                "Yes, and that is the good news: a 100 kg tool is a 38 kg tool, which is why the site work is human at all.",
+                "What gravity gives back, the dust takes straight away."
+              ],
+              [
+                "Almost nothing for pressure, and everything for heat: you can shed waste heat into it, which the Moon never let us do.",
+                "It is also why the samples do not have to be protected from the outside, only from us."
+              ],
+              [
+                "Twenty-four hours thirty-nine minutes, so the crew keep Earth hours and call the count sols.",
+                "Two of the three watch systems in that habitat exist to put a shift in daylight."
+              ]
+            ]
+          },
+          {
+            "title": "Who else is here",
+            "questionOptionsForUser": [
+              "Who else is out here with us?",
+              "What does the crew do first?",
+              "What do you fear out here?",
+              "Why is there a flag here?"
+            ],
+            "answerForEachOption": [
+              [
+                "Robots. One has driven this rim for years, longer than anyone has been off Earth.",
+                "It will still be working when the last of us is a name here, and that is the design requirement, not a joke."
+              ],
+              [
+                "Look up. Then pressure, then dust, then samples, in that order, every sol.",
+                "A human geologist does in a week what the rover managed in a year."
+              ],
+              [
+                "The suit, the dust and the return date, in that order, and not the cold.",
+                "Every loss in this business has come from something that was supposed to be routine."
+              ],
+              [
+                "Because the one over there took 400,000 people to plant, and the sunlight bleached it white.",
+                "It marks the site for whoever comes next, and it will outlast the building we arrived in."
+              ]
+            ]
+          }
+        ],
+        "planet": "mars",
+        "location": "Jezero Crater western rim, 18.4\u00b0N 77.5\u00b0E \u2014 Sol 1"
+      }
+    },
+    {
+      "id": "solar-l2-observatory",
+      "name": "Sun-Earth L2 observatory",
+      "3dmodel": "models/solar-l2-observatory.gltf",
+      "introductoryTalk": [
+        "Take your time with the handholds. That mirror has been cold for years and it is still looking.",
+        "There is nobody out here. That is the entire point of the place."
+      ],
+      "QA": {
+        "rounds": [
+          {
+            "title": "Why L2",
+            "questionOptionsForUser": [
+              "Why come all the way out here?",
+              "Is it a place you can park?",
+              "What does the shield do?",
+              "What is on the cold side?"
+            ],
+            "answerForEachOption": [
+              [
+                "Because L2 is the one direction where the Sun, Earth and Moon are all behind you, and you can radiate away from all three."
+              ],
+              [
+                "No. L2 is unstable, so it rides a halo orbit around nothing and station-keeps about once a month."
+              ],
+              [
+                "It is the design: one sunshield the size of a tennis court, permanently between the Sun and the cold side."
+              ],
+              [
+                "Forty kelvin of telescopes and detectors, in the shade, pointed away from the brightest thing nearby."
+              ]
+            ]
+          },
+          {
+            "title": "Floating out here",
+            "questionOptionsForUser": [
+              "What is it like, being out here?",
+              "Can you go for a walk?",
+              "What does a spacesuit do here?",
+              "How long is an EVA out here?"
+            ],
+            "answerForEachOption": [
+              [
+                "Quiet. The Sun is always behind you, so your own shadow is permanently in front of your feet."
+              ],
+              [
+                "There is nothing to walk on. You are on a tether, in a suit, working off handholds on a machine."
+              ],
+              [
+                "Not enough. With no air to cool against, a suit in sunlight here is a survival problem, not a workspace."
+              ],
+              [
+                "On the station, six to eight hours. A repair like this one was planned as seven sorties and took weeks."
+              ]
+            ]
+          },
+          {
+            "title": "What it sees",
+            "questionOptionsForUser": [
+              "What does it look at?",
+              "Why infrared?",
+              "Why not build bigger on Earth?",
+              "What has it broken?"
+            ],
+            "answerForEachOption": [
+              [
+                "Everything faint and everything old: the first galaxies, and the air of planets around other stars."
+              ],
+              [
+                "Because expansion stretches early light into wavelengths the ground cannot see at all."
+              ],
+              [
+                "Because the atmosphere glows in the infrared and it twinkles. Both are fixed by going 1.5 million km away."
+              ],
+              [
+                "Nothing, and that is the surprise. The mirror came into focus better than the ground tests predicted."
+              ]
+            ]
+          },
+          {
+            "title": "Living there",
+            "questionOptionsForUser": [
+              "How long does it last?",
+              "What kills it eventually?",
+              "Where does it go when it dies?",
+              "Would you work out here?"
+            ],
+            "answerForEachOption": [
+              [
+                "Until the propellant runs out, which was sized for ten years and bought by launch vehicle margin."
+              ],
+              [
+                "Micrometeoroids on the shield, and one part in a service module nobody can reach."
+              ],
+              [
+                "Nowhere. It cannot be deorbited from L2, so it is pushed into a disposal orbit that never returns."
+              ],
+              [
+                "Once. On a tether, in a suit, with no way down and a two week light delay on every answer."
+              ]
+            ]
+          }
+        ],
+        "planet": "solar",
+        "location": "Sun-Earth L2, 1.5 million km from Earth away from the Sun \u2014 halo orbit"
+      }
+    },
+    {
+      "id": "solar-sun-probe",
+      "name": "Inner heliocentric solar probe",
+      "3dmodel": "models/solar-sun-probe.gltf",
+      "introductoryTalk": [
+        "Look at the heat shield, then at the Sun. Only one of those two is designed to be there.",
+        "This is the closest anything has come to a star, and it is unmanned on purpose."
+      ],
+      "QA": {
+        "rounds": [
+          {
+            "title": "Flying into a star",
+            "questionOptionsForUser": [
+              "How do you get that close to the Sun?",
+              "What is the temperature out there?",
+              "Why is the corona hot?",
+              "What holds it up?"
+            ],
+            "answerForEachOption": [
+              [
+                "You do not fall in, you give up speed: seven Venus passes to shed the Earth's 30 km/s of orbital motion."
+              ],
+              [
+                "Fourteen hundred degrees on the shield face. Behind it the instruments sit near room temperature."
+              ],
+              [
+                "That is the mission. The surface is 5500 and the air above it is a million degrees, and nobody knows why."
+              ],
+              [
+                "Twelve centimetres of carbon composite, with the instruments behind it in a shade that never moves."
+              ]
+            ]
+          },
+          {
+            "title": "What it samples",
+            "questionOptionsForUser": [
+              "What does it fly through?",
+              "What can you measure that Earth cannot?",
+              "What did it already find?",
+              "Does it touch the Sun?"
+            ],
+            "answerForEachOption": [
+              [
+                "The solar wind itself, every 88 days, in the region where the wind is still being made."
+              ],
+              [
+                "Fields and particles at the same instant, in the plasma, instead of 150 million km downstream."
+              ],
+              [
+                "Magnetic switchbacks, zig-zags in the field that turn out to start at structures on the surface."
+              ],
+              [
+                "It touches what comes off it. Nothing solid survives the corona and nothing solid needs to."
+              ]
+            ]
+          },
+          {
+            "title": "Surviving it",
+            "questionOptionsForUser": [
+              "What is the hardest engineering problem?",
+              "How does it keep pointing?",
+              "What happens if a thruster fails?",
+              "How much sunlight is that?"
+            ],
+            "answerForEachOption": [
+              [
+                "Autonomy. The Sun blocks the radio path, so a lost link means a lost craft before anyone down here notices."
+              ],
+              [
+                "Six small thrusters and a star tracker asked to work 40 degrees from the brightest object in the sky."
+              ],
+              [
+                "The two that matter have redundancy, and there is a propellant budget that quietly decides the end."
+              ],
+              [
+                "Fifteen times what a panel gets at Earth, which is why the arrays retract into the shield's shadow."
+              ]
+            ]
+          },
+          {
+            "title": "Standing where you are",
+            "questionOptionsForUser": [
+              "Why not send a person?",
+              "What does the Sun look like here?",
+              "How do you float out here?",
+              "What comes next?"
+            ],
+            "answerForEachOption": [
+              [
+                "A human needs a hundred tonnes of radiator to last ten minutes. This needs a shield and a battery."
+              ],
+              [
+                "Fourteen times the disc you left behind, and the sky is still black, because there is no air to light up."
+              ],
+              [
+                "You do not. You watch from a distance that keeps the numbers honest, through instruments built for this."
+              ],
+              [
+                "The same shield, bigger, with a sampler that brings coronal material home."
+              ]
+            ]
+          }
+        ],
+        "planet": "solar",
+        "location": "0.05 AU perihelion, inside Mercury's orbit \u2014 inside the solar corona"
+      }
+    }
+  ]
+}

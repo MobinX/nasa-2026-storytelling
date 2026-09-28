@@ -1,15 +1,15 @@
-import { SPACES, walkDistance } from "./pose.js";
+import { walkDistance, MOON_GROUND, MARS_GROUND } from "./pose.js";
 import { sampleRail, scratchSample } from "./rail.js";
-import { MOON_TALK_START, MOON_LEGS, DEPART } from "./timeline.js";
+import { SURFACE_STOPS } from "./timeline.js";
 
-// Every local [x,z] a ground camera will occupy, at ~0.5 m. The walk used to be one of many paths the
+// Every local [x,z] the ground camera will occupy, at ~0.5 m. The walk used to be one of many paths the
 // player could take, so the crater field and the rock scatter only had to be plausible on average; with
 // no steering this polyline is the path, and both have to be generated against it rather than against a
-// bounding box that was never the same shape. Each world needs its own: the two rails are 60 m and 30 m
-// apart in shape, and the fields are generated from these points at boot.
+// bounding box that was never the same shape.
 //
-// Kept out of pose.js on purpose: pose.js imports lib/terrain.js for the site frame, and terrain takes
-// this as an argument, so importing it back would close the cycle.
+// Each world gets its own, and it stops at the last conversation rather than at the end of the act: the
+// ascent retraces the route on purpose, and a polyline that crosses itself makes the rock-clearance test
+// meaningless - every rock would be "on the path" twice, in two different places.
 const corridorOf = (space, until) => {
   const rail = space.rail;
   const s = scratchSample();
@@ -23,8 +23,9 @@ const corridorOf = (space, until) => {
   return out;
 };
 
-// The lunar corridor ends one leg past the conversation hold; the Martian one runs to the end of the rail.
-const MOON_UNTIL = MOON_TALK_START + (DEPART - SPACES[2].from) / MOON_LEGS;
-export const GROUND_CORRIDOR = corridorOf(SPACES[2], MOON_UNTIL);
-export const MARS_CORRIDOR = corridorOf(SPACES[5], 1);
+const extraLeg = (space) => (space.to - space.from) / space.legs.length;
+const endOfWalk = (space, stops) => stops.at(-1).lock + extraLeg(space) * 0.6;
+
+export const GROUND_CORRIDOR = corridorOf(MOON_GROUND, endOfWalk(MOON_GROUND, SURFACE_STOPS.moon));
+export const MARS_CORRIDOR = corridorOf(MARS_GROUND, endOfWalk(MARS_GROUND, SURFACE_STOPS.mars));
 export const CORRIDOR_BY_WORLD = { moon: GROUND_CORRIDOR, mars: MARS_CORRIDOR };

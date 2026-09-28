@@ -28,6 +28,13 @@ globalThis.document = {
 globalThis.self = globalThis;
 globalThis.window = { location: { search: "" }, addEventListener: () => {} };
 Object.defineProperty(globalThis, "navigator", { value: { hardwareConcurrency: 8, deviceMemory: 8, devicePixelRatio: 3 }, configurable: true });
+// three's FileLoader wraps a streamed response in ProgressEvent for onProgress. Node has no such class,
+// and the data-URI buffers of the walk models go through that same path, so it is declared rather than the
+// loader being worked around - the browser supplies it and the app never sees a difference.
+globalThis.ProgressEvent = class ProgressEvent {
+  constructor(type, init = {}) { Object.assign(this, { type, lengthComputable: false, loaded: 0, total: 0 }, init); }
+};
+
 globalThis.Image = class {
   set src(v) {
     const file = path.join(root, "public", v.replace(/^\//, ""));
@@ -44,6 +51,8 @@ globalThis.Image = class {
 };
 
 const { preloadMaps, maps } = await import("../src/lib/textures.js");
+const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js");
+const { apply, OBJECTS, modelPaths } = await import("../src/data/objects.js");
 const { buildTerrain, deriveNormalMap, levelTerrain, flattenAlongCorridor, heightAt } = await import("../src/lib/terrain.js");
 const { MOON, MARS } = await import("../src/journey/worlds.js");
 const { CORRIDOR_BY_WORLD } = await import("../src/journey/corridor.js");
@@ -63,6 +72,22 @@ const keys = Object.keys(maps);
 console.log("maps:", keys.join(" "));
 const missing = ["sun", "mercury", "venus", "earth", "mars", "jupiter", "saturn", "uranus", "neptune", "moon", "saturnRing", "detail"].filter((k) => !maps[k]);
 console.log(missing.length ? "MISSING MAPS: " + missing.join(",") : "all 12 maps decoded, anisotropy=" + maps.moon.anisotropy + " colorSpace=" + maps.moon.colorSpace);
+
+// The content step of the boot, and the models it names, parsed by the loader the app actually uses. A
+// glTF that is structurally valid JSON and still refuses to build a scene is the failure this catches.
+const bootProblems = apply(OBJECTS);
+for (const m of bootProblems) console.log("objects.json: " + m);
+if (bootProblems.length) process.exit(1);
+const gltf = new GLTFLoader();
+let walkTris = 0;
+for (const p of modelPaths()) {
+  const buf = fs.readFileSync(path.join(root, "public", p));
+  const scene = await new Promise((res, rej) => gltf.parse(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength), "", res, rej));
+  let meshes = 0;
+  scene.scene.traverse((o) => { if (o.isMesh) { meshes++; walkTris += o.geometry.attributes.position.count / 3; } });
+  if (!meshes) console.log("MODEL HAS NO MESHES: " + p);
+}
+console.log(`objects.json bound: ${OBJECTS.length} objects, ${modelPaths().length} models parsed, ${Math.round(walkTris)} triangles of walk hardware`);
 
 const terrain = buildTerrain({ seg: 96, avoid: GROUND_CORRIDOR, relief: MOON.relief });
 flattenAlongCorridor(terrain, GROUND_CORRIDOR);

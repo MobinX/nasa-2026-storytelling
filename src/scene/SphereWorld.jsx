@@ -17,10 +17,12 @@ export default function SphereWorld() {
   const group = useRef();
   const marsGroup = useRef();
   useFrame(() => {
-    const on = journey.graphId === "moonSphere" || journey.graphId === "transfer";
+    // The spheres are also the backdrop of the deep-space act: the two machines up there are metres in
+    // the foreground, and Mars has to still be a world behind them.
+    const on = journey.graphId === "moonSphere" || journey.graphId === "transfer" || journey.graphId === "eva";
     group.current.visible = on;
     if (!on) return;
-    marsGroup.current.visible = journey.graphId === "transfer";
+    marsGroup.current.visible = journey.graphId !== "moonSphere";
   });
   return (
     <group ref={group}>

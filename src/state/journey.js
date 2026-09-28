@@ -4,7 +4,6 @@
 export const journey = {
   offset: 0,
   raw: 0,
-  scrollAlive: true,
   flicks: 0,
   fps: 0,
   dpr: 1,
@@ -12,14 +11,15 @@ export const journey = {
   walked: 0,
   walkActive: false,
   talk: 0,
+  talkStop: null,
   air: 0,
+  // Which conversations have been finished (by stop id) and where the scroll is currently being held.
+  done: {},
+  lock: { engaged: false, offset: 0, id: null },
   yaw: 0,
   camLocal: { x: 0, z: -20 },
   graphId: "solar",
   worldId: "moon",
-  // One slot per landing: the walk gates, and the conversation gate, of whichever world is underfoot.
-  moon: { walkActive: false, talk: 0 },
-  mars: { walkActive: false, talk: 0 },
   companion: { x: 0.5, y: 0.5, on: false },
   actId: "system",
   connected: false,

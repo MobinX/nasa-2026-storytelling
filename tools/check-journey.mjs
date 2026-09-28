@@ -4,18 +4,25 @@ import fs from "node:fs";
 // assertions are repeated for it rather than assumed to transfer.
 // node tools/check-journey.mjs
 import { Euler, Matrix4, PerspectiveCamera, Quaternion, Vector3 } from "three";
-import { poseAt, scratchPose, SPACES, MOON_GROUND, MARS_GROUND, MOON_FRAMED_AT, MARS_FRAMED_AT, legStartOf, walkDistance, walkRate } from "../src/journey/pose.js";
-import { MOON, MARS, R_SPHERE } from "../src/journey/worlds.js";
+import { poseAt, scratchPose, SPACES, MOON_GROUND, MARS_GROUND, EVA_SPACE, legStartOf, walkDistance, walkRate } from "../src/journey/pose.js";
+import { apply } from "../src/data/objects.js";
+import { SURFACE_STOPS } from "../src/journey/timeline.js";
+import { MOON, MARS } from "../src/journey/worlds.js";
 import { groundPose, scratchGround } from "../src/journey/ground.js";
 import { buildTerrain, buildCraters, levelTerrain, flattenAlongCorridor, heightAt, NEAR_R } from "../src/lib/terrain.js";
 import { CORRIDOR_BY_WORLD } from "../src/journey/corridor.js";
 import { ROCK_N, ROCK_CLEARANCE, scatterRocks } from "../src/lib/rocks.js";
 import { nearestOnCorridor } from "../src/lib/path-clearance.js";
-import { SEAM_A, SEAM_B, DEPART, TRANSFER_END, MARS_SEAM, MOON_LEGS, MARS_LEGS, MOON_TALK_START, MOON_ASCENT_START, rumble, walkWeight } from "../src/journey/timeline.js";
-const MOON_TALK_END = MOON_ASCENT_START;
+import { SEAM_A, SEAM_B, DEPART, TRANSFER_END, MARS_SEAM, MARS_DEPART, MOON_LEGS, MARS_LEGS, rumble, walkWeight } from "../src/journey/timeline.js";
+
 
 const fails = [];
 const ok = (cond, msg) => { if (!cond) fails.push(msg); };
+
+// The same boot step the app runs: objects.json fills the authored route with names, models and
+// conversations, and a file that disagrees with the route fails here rather than at runtime.
+const bootProblems = apply(JSON.parse(fs.readFileSync(new URL("../src/data/objects.json", import.meta.url), "utf8")).objects);
+for (const m of bootProblems) fails.push("objects.json: " + m);
 const DEG = 180 / Math.PI;
 const UP = new Vector3(0, 1, 0);
 
@@ -37,20 +44,15 @@ const localOf = (v, w) => v.clone().sub(w.site.pos).applyQuaternion(inv(w));
 const heading = (o) => { poseAt(o, p); return p.target.clone().sub(p.position).normalize(); };
 const upOf = (sp) => (sp.id === "solar" ? UP : sp.world.site.n);
 // The rig's own attitude on the sphere side of a cut: lookAt with that world's vertical as up.
-const sphereQuat = (o) => {
+// The rig's own attitude at an offset, through whichever branch the space uses: a surface act composes an
+// Euler off the site frame, a flight looks at a target with that world's vertical as up.
+const quatAt = (o) => {
   poseAt(o, p);
-  return new Quaternion().setFromRotationMatrix(new Matrix4().lookAt(p.position, p.target, upOf(p.space)));
-};
-const groundQuat = (o) => {
-  poseAt(o, p);
+  if (!p.space.local) return new Quaternion().setFromRotationMatrix(new Matrix4().lookAt(p.position, p.target, upOf(p.space)));
   groundPose(o, terrains[p.world.id].heights, p, gp, 0);
   return new Quaternion().setFromEuler(new Euler(gp.pitch, gp.yaw, gp.roll, "YXZ")).premultiply(p.world.site.quaternion);
 };
-const rollAcross = (o) => {
-  const a = sphereQuat(o - 1e-5);
-  const b = groundQuat(o + 1e-5);
-  return 2 * Math.acos(Math.min(1, Math.abs(a.dot(b)))) * DEG;
-};
+const rollAcross = (o) => 2 * Math.acos(Math.min(1, Math.abs(quatAt(o - 1e-5).dot(quatAt(o + 1e-5))))) * DEG;
 // Half the diagonal of a portrait frame, which is the worst corner a horizon can leak through.
 const cornerOf = (fov) => {
   const tv = Math.tan(fov / 2 / DEG);
@@ -81,13 +83,28 @@ for (let i = 0; i <= N; i++) {
   const above = gp.local.y - heightAt(terrains[w.id].heights, gp.local.x, gp.local.z);
   eye[w.id].lo = Math.min(eye[w.id].lo, above);
   eye[w.id].hi = Math.max(eye[w.id].hi, above);
-  // The ascent retraces the walk northward on purpose; only the walking itself must never step back.
-  if (o <= (w.id === "moon" ? MOON_TALK_END : 1) && prevZ[w.id] !== null && gp.local.z < prevZ[w.id] - 1e-6) zBack[w.id]++;
+  // The ascent retraces the walk back toward the pad on purpose; only the walking must never step back.
+  const lastLock = (w.id === "moon" ? SURFACE_STOPS.moon : SURFACE_STOPS.mars).at(-1).lock;
+  if (o <= lastLock && prevZ[w.id] !== null && gp.local.z < prevZ[w.id] - 1e-6) zBack[w.id]++;
   prevZ[w.id] = gp.local.z;
 }
 
 ok(nonFinite === 0, `${nonFinite} non-finite poses`);
-for (const [k, v] of steps) ok(v < (k.endsWith("Ground") ? 0.05 : 0.6), `${k} rail has a ${v.toFixed(3)}-unit jump between adjacent samples`);
+// No teleport inside a space. A rail's speed varies by design - the descents decelerate into their
+// hand-offs, the transfer crosses 400 units in four screens of scroll - so an absolute per-sample budget is
+// the wrong ruler for it. What is always wrong is a discontinuity where one leg hands over to the next, and
+// that is checked at the joint, in that rail's own units.
+for (const sp of SPACES) {
+  const n = sp.legs.length;
+  for (let k = 1; k < n; k++) {
+    const b = sp.from + (k / n) * (sp.to - sp.from);
+    poseAt(b - 1e-7, p);
+    const a = p.position.clone();
+    poseAt(b + 1e-7, p);
+    const gap = a.distanceTo(p.position);
+    ok(gap < sp.rail.total * 1e-3, `${sp.id} teleports ${gap.toFixed(4)}u where leg ${k - 1} hands over to leg ${k}`);
+  }
+}
 for (const w of [MOON, MARS]) {
   ok(eye[w.id].lo > 0.15, `${w.id} eye dips into the terrain: min ${eye[w.id].lo.toFixed(3)}m`);
   ok(eye[w.id].hi < 9, `${w.id} eye floats too high: max ${eye[w.id].hi.toFixed(3)}m`);
@@ -142,6 +159,7 @@ const SEAMS = [
   { name: "C moon ground->transfer", o: DEPART, cut: true, heading: 0.999 },
   { name: "D transfer->mars orbit", o: TRANSFER_END, cut: false, heading: 0.999 },
   { name: "E mars orbit->mars ground", o: MARS_SEAM, cut: true, heading: 0.999 },
+  { name: "F mars ground->deep space", o: MARS_DEPART, cut: true, heading: 0.999 },
 ];
 for (const seam of SEAMS) {
   poseAt(seam.o - 1e-5, p);
@@ -161,7 +179,7 @@ poseAt(SEAM_A, p);
 ok(p.space.id === "solar", "at exactly SEAM_A the solar rail's frame-filling terminus must still be the live pose");
 poseAt(SEAM_A + 1e-6, p);
 ok(p.space.id === "lunar", "the lunar space must take over immediately after SEAM_A");
-ok(SPACES.length === 6 && SPACES.filter((s) => s.local).length === 2, "expected 6 spaces with exactly two surface acts");
+ok(SPACES.length === 7 && SPACES.filter((s) => s.local).length === 2, `expected 7 spaces with exactly two surface acts, got ${SPACES.length}/${SPACES.filter((s) => s.local).length}`);
 
 // ---- the two landings --------------------------------------------------------------------------------
 for (const world of [MOON, MARS]) {
@@ -195,7 +213,7 @@ for (const world of [MOON, MARS]) {
   ok(walkWeight(world.contact, world.walkIn) === 0, `${world.id}: the gait gate is open during the landing`);
   ok(walkWeight(world.walkIn + 0.03, world.walkIn) === 1, `${world.id}: the gait never turns on`);
   let lo = 9, hi = -9, rate = 0;
-  const walkEnd = world.id === "moon" ? MOON_TALK_END : 1;
+  const walkEnd = (world.id === "moon" ? SURFACE_STOPS.moon : SURFACE_STOPS.mars).at(-1).lock;
   for (let i = 0; i <= 300; i++) {
     const o = world.walkIn + (i / 300) * (walkEnd - world.walkIn);
     const g = at(o);
@@ -238,77 +256,103 @@ for (const world of [MOON, MARS]) {
   console.log(`${world.id}: corridor ${craters.length}/${uncut.length} craters kept (rim margin ${margin.toFixed(1)}m), rocks ${near(raw).toFixed(2)} -> ${near(clamped).toFixed(2)}m, max slope ${(maxSlope * DEG).toFixed(1)}deg`);
 }
 
-// ---- both endings, framed and asserted --------------------------------------------------------------
+// ---- every stop: the hold is where the rail arrived, and the thing is in frame ----------------------
+// The scroll trap is only honest if the offset it holds is the offset the camera arrives at the object,
+// and the framing is only honest if it is measured where the visitor is actually standing. Both are checked
+// for all ten stops, because a route is exactly as good as its worst stop.
 const camera = new PerspectiveCamera(57, 0.5, 0.02, 4200);
 const eyeSlot = { v: new Vector3(), q: new Quaternion() };
-const BOX = { half: 2.0, top: 4.0 }, SMALL = { half: 0.55, top: 2.4 }, PERSON = { half: 0.45, top: 1.95 };
+const localToSite = (w) => new Quaternion(w.site.quaternion.x, w.site.quaternion.y, w.site.quaternion.z, w.site.quaternion.w).invert();
+const SPACE_BY_PLANET = { moon: MOON_GROUND, mars: MARS_GROUND, solar: EVA_SPACE };
 
-const subject = (terrain, site, box) => {
-  const y0 = heightAt(terrain.heights, site[0], site[2]);
-  const pts = [];
-  for (const sx of [-box.half, box.half]) for (const sz of [-box.half, box.half]) for (const sy of [y0, y0 + box.top]) pts.push(new Vector3(site[0] + sx, sy, site[2] + sz).sub(eyeSlot.v).applyQuaternion(eyeSlot.q.clone().invert()));
-  const centre = new Vector3(site[0], y0 + box.top / 2, site[2]).sub(eyeSlot.v).applyQuaternion(eyeSlot.q.clone().invert());
-  const halfT = Math.tan(camera.fov / 2 / DEG);
+// The eight corners of a prop in camera space. |ndc| <= 1 is the frame edge and the assertion uses 0.98,
+// so a phone slightly narrower than 400 px still keeps the subject in. A prop that grows later is caught
+// by the box rather than slipping out of frame, and `heights` is null where there is no ground to hide
+// something behind.
+//
+// Occlusion is measured per corner, along that corner's own sight line: comparing the ground against the
+// lowest corner of the box on the centre line called a hidden object whenever a prop stood in a dip, even
+// though every visible part of it was clear of the ridge.
+const subject = (heights, site, box) => {
+  const groundAt = (x, z) => (heights ? heightAt(heights, x, z) : 0);
+  const y0 = groundAt(site[0], site[2]);
   const elOf = (v) => Math.atan2(v.y, Math.hypot(v.x, -v.z));
-  const base = Math.min(...pts.map(elOf));
-  const range = centre.length();
-  let blocked = 0, peak = -Infinity;
-  for (let d = 1; d < range - 0.6; d += 0.5) {
-    const k = d / range;
-    const terr = Math.atan2(heightAt(terrain.heights, eyeSlot.v.x + (site[0] - eyeSlot.v.x) * k, eyeSlot.v.z + (site[2] - eyeSlot.v.z) * k) - eyeSlot.v.y, d);
-    if (terr > peak) peak = terr;
-    if (terr > base + 1e-6) blocked++;
+  const halfT = Math.tan(camera.fov / 2 / DEG);
+  const pts = [];
+  for (const sx of [-box.half, box.half]) for (const sz of [-box.half, box.half]) for (const sy of [y0, y0 + box.top]) {
+    const world = new Vector3(site[0] + sx, sy, site[2] + sz);
+    const v = world.clone().sub(eyeSlot.v).applyQuaternion(eyeSlot.q.clone().invert());
+    const d = world.clone().sub(eyeSlot.v);
+    const range = Math.hypot(d.x, d.z);
+    // Both terms in the site's own level frame: the camera is pitched, and comparing a corner's elevation
+    // in the camera's frame against a ridge measured off the local vertical is off by exactly that pitch.
+    const corner = Math.atan2(world.y - eyeSlot.v.y, range);
+    let blocked = false, peak = -Infinity;
+    for (let k = 1; k < range - 0.6; k += 0.5) {
+      const f = k / range;
+      const terr = Math.atan2(groundAt(eyeSlot.v.x + d.x * f, eyeSlot.v.z + d.z * f) - eyeSlot.v.y, k);
+      if (terr * DEG > peak) peak = terr * DEG;
+      if (terr > corner + 1e-6) { blocked = true; break; }
+    }
+    pts.push({ v, blocked, peak, range });
   }
+  const centre = new Vector3(site[0], y0 + box.top / 2, site[2]).sub(eyeSlot.v).applyQuaternion(eyeSlot.q.clone().invert());
   return {
-    ax: Math.max(...pts.map((v) => Math.abs(v.x / (-v.z * camera.aspect * halfT)))),
-    ay: Math.max(...pts.map((v) => Math.abs(v.y / (-v.z * halfT)))),
+    ax: Math.max(...pts.map((q) => Math.abs(q.v.x / (-q.v.z * camera.aspect * halfT)))),
+    ay: Math.max(...pts.map((q) => Math.abs(q.v.y / (-q.v.z * halfT)))),
     az: Math.atan2(centre.x, -centre.z) * DEG,
-    arc: (Math.max(...pts.map(elOf)) - base) * DEG,
-    range, blocked, peak: peak * DEG,
+    arc: (Math.max(...pts.map((q) => elOf(q.v))) - Math.min(...pts.map((q) => elOf(q.v)))) * DEG,
+    range: centre.length(),
+    blocked: pts.filter((q) => q.blocked).length,
+    peak: Math.max(...pts.map((q) => q.peak)),
   };
 };
 
-for (const [world, at] of [[MOON, MOON_FRAMED_AT], [MARS, MARS_FRAMED_AT]]) {
-  const terrain = terrains[world.id];
-  poseAt(at, p);
-  groundPose(at, terrain.heights, p, gp, 0);
-  camera.fov = p.fov;
-  camera.position.copy(gp.world);
-  camera.quaternion.copy(new Quaternion().setFromEuler(new Euler(gp.pitch, gp.yaw, gp.roll, "YXZ")).premultiply(world.site.quaternion));
-  camera.updateProjectionMatrix();
-  camera.updateMatrixWorld(true);
-  // A camera yawed and pitched out of the world axes while standing on a surface whose normal is 89deg
-  // away from them renders the horizon sideways, and no screenshot was ever taken to notice.
-  const camUp = new Vector3(0, 1, 0).applyQuaternion(camera.quaternion);
-  const camRight = new Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
-  const tilt = Math.atan2(world.site.n.dot(camRight), world.site.n.dot(camUp)) * DEG;
-  ok(Math.abs(tilt) < 3, `${world.id}: the horizon is ${tilt.toFixed(1)}deg off level at the ending`);
+for (const planet of ["moon", "mars", "solar"]) {
+  const space = SPACE_BY_PLANET[planet];
+  const world = space.world;
+  const heights = planet === "solar" ? null : terrains[world.id].heights;
+  for (const stop of SURFACE_STOPS[planet]) {
+    const o = stop.lock + 1e-4;
+    poseAt(o, p);
+    const g = heights ? groundPose(o, heights, p, gp, 0) : null;
+    const local = g ? g.local : localOf(p.position, world);
+    const drift = Math.hypot(local.x - stop.cam[0], local.z - stop.cam[2]);
+    ok(drift < 0.4, `${planet} stop ${stop.index}: the scroll holds ${drift.toFixed(2)}m away from where the route says the object stands`);
+    ok(stop.model && stop.convo, `${planet} stop ${stop.index} "${stop.id}": no model or conversation bound - objects.json did not load`);
+    if (stop.name === stop.id) ok(false, `${planet} stop ${stop.index}: objects.json never filled in the name`);
 
-  eyeSlot.v.copy(gp.local);
-  eyeSlot.q.setFromEuler(new Euler(gp.pitch, gp.yaw, gp.roll, "YXZ"));
-  const craft = subject(terrain, world.lm, world.air > 0 ? { half: 2.2, top: 4.6 } : BOX);
-  const flag = subject(terrain, world.flag, SMALL);
-  const cp = subject(terrain, world.companion, PERSON);
-  for (const [name, x] of [["craft", craft], ["flag", flag], ["crew", cp]]) {
-    ok(x.ax <= 0.98 && x.ay <= 0.98, `${world.id}: ${name} leaves the portrait frame (ndc ${x.ax.toFixed(2)},${x.ay.toFixed(2)})`);
-    ok(x.blocked === 0, `${world.id}: ${name} is behind a ridge: ${x.blocked} samples, peaking at ${x.peak.toFixed(1)}deg`);
-  }
-  const sep = Math.abs(craft.az - flag.az);
-  ok(sep > 4 && sep < 22, `${world.id}: craft/flag bearing separation ${sep.toFixed(1)}deg`);
-  const cpSep = Math.min(Math.abs(cp.az - craft.az), Math.abs(cp.az - flag.az));
-  ok(cpSep > 2.5, `${world.id}: the crew member is within ${cpSep.toFixed(1)}deg of both subjects; he would be hidden`);
-  ok(cp.arc > 6 && cp.arc < 30, `${world.id}: the crew member spans ${cp.arc.toFixed(1)}deg at ${cp.range.toFixed(1)}m`);
-  ok(cp.range > 3 && cp.range < 16, `${world.id}: the crew member is ${cp.range.toFixed(1)}m away; the conversation does not work at that distance`);
-  if (world.rover) {
-    const rv = subject(terrain, world.rover, { half: 1.1, top: 1.4 });
-    ok(rv.ax <= 0.98 && rv.ay <= 0.98, `${world.id}: the rover leaves the frame (ndc ${rv.ax.toFixed(2)},${rv.ay.toFixed(2)})`);
-    ok(rv.blocked === 0, `${world.id}: the rover is behind a ridge`);
-    console.log(`${world.id} ending: crew ${cp.range.toFixed(1)}m/${cp.arc.toFixed(1)}deg, craft ${craft.range.toFixed(1)}m at ${craft.az.toFixed(1)}deg, flag ${flag.range.toFixed(1)}m at ${flag.az.toFixed(1)}deg (sep ${sep.toFixed(1)}deg), rover ${rv.range.toFixed(1)}m, horizon ${tilt.toFixed(1)}deg off level`);
-  } else {
-    ok(flag.arc > craft.arc, `${world.id}: the flag spans ${flag.arc.toFixed(1)}deg and the LM ${craft.arc.toFixed(1)}deg - the foreground subject must read larger`);
-    console.log(`${world.id} ending: crew ${cp.range.toFixed(1)}m/${cp.arc.toFixed(1)}deg, LM ${craft.range.toFixed(1)}m at ${craft.az.toFixed(1)}deg, flag ${flag.range.toFixed(1)}m at ${flag.az.toFixed(1)}deg (sep ${sep.toFixed(1)}deg), horizon ${tilt.toFixed(1)}deg off level`);
+    const q = quatAt(o);
+    camera.fov = p.fov;
+    camera.position.copy(p.position);
+    camera.quaternion.copy(q);
+    camera.updateProjectionMatrix();
+    camera.updateMatrixWorld(true);
+    const camUp = new Vector3(0, 1, 0).applyQuaternion(q);
+    const camRight = new Vector3(1, 0, 0).applyQuaternion(q);
+    const tilt = Math.atan2(world.site.n.dot(camRight), world.site.n.dot(camUp)) * DEG;
+    ok(Math.abs(tilt) < 3, `${planet} stop ${stop.index}: the vertical is ${tilt.toFixed(1)}deg off level`);
+
+    if (g) eyeSlot.q.setFromEuler(new Euler(gp.pitch, gp.yaw, gp.roll, "YXZ"));
+    else {
+      const dv = p.target.clone().sub(p.position).applyQuaternion(localToSite(world));
+      eyeSlot.q.setFromEuler(new Euler(Math.asin(dv.y / dv.length()), Math.atan2(-dv.x, -dv.z), 0, "YXZ"));
+    }
+    eyeSlot.v.copy(local);
+    const thing = subject(heights, stop.obj, { half: 1.2, top: stop.top });
+    const crew = subject(heights, stop.crew, { half: 0.45, top: 1.95 });
+    for (const [name, x] of [["object", thing], ["crew", crew]]) {
+      ok(x.ax <= 0.98 && x.ay <= 0.98, `${planet} stop ${stop.index}: ${name} leaves the portrait frame (ndc ${x.ax.toFixed(2)},${x.ay.toFixed(2)})`);
+      if (heights) ok(x.blocked === 0, `${planet} stop ${stop.index}: ${name} is behind the ground: ${x.blocked} of 8 corners, worst ridge ${x.peak.toFixed(1)}deg`);
+    }
+    const sep = Math.abs(thing.az - crew.az);
+    ok(sep > 2.5 && sep < 20, `${planet} stop ${stop.index}: object and crew are ${sep.toFixed(1)}deg apart in azimuth`);
+    ok(crew.range > 3.5 && crew.range < 18, `${planet} stop ${stop.index}: the crew member is ${crew.range.toFixed(1)}m off; the conversation does not work at that distance`);
+    ok(thing.range > crew.range * 0.5, `${planet} stop ${stop.index}: the object (${thing.range.toFixed(1)}m) is nearer than the crew (${crew.range.toFixed(1)}m) and would hide him`);
+    console.log(`${planet} stop ${stop.index} ${stop.id}: held ${drift.toFixed(2)}m off route | object ${thing.range.toFixed(1)}m at ${thing.az.toFixed(1)}deg, ${thing.arc.toFixed(1)}deg tall | crew ${crew.range.toFixed(1)}m at ${crew.az.toFixed(1)}deg | fov ${p.fov.toFixed(0)} tilt ${tilt.toFixed(1)}`);
   }
 }
+
 
 // The rig is a pure function of the offset with nothing added, so either surface act can be scrubbed back
 // and compared bit for bit - which was impossible while damped input integrators fed it.

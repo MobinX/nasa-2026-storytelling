@@ -10,9 +10,9 @@ import { MathUtils, Quaternion, Vector3 } from "three";
 import { siteFrame, uvFromDirection, RELIEF } from "../lib/terrain.js";
 import { GAIT } from "../lib/gait.js";
 import {
-  SEAM_A, SEAM_B, DEPART, TRANSFER_END, MARS_SEAM,
-  MOON_LEGS, MARS_LEGS, MOON_CONTACT, MOON_IMPACT_END, MOON_WALK_IN, MOON_TALK_IN, MOON_TALK_OUT,
-  MARS_CONTACT, MARS_IMPACT_END, MARS_WALK_IN, MARS_TALK_IN, MARS_TALK_OUT,
+  SEAM_B, MARS_SEAM, EVA_SEAM,
+  MOON_LEGS, MARS_LEGS, EVA_LEGS, MOON_CONTACT, MOON_IMPACT_END, MOON_WALK_IN,
+  MARS_CONTACT, MARS_IMPACT_END, MARS_WALK_IN,
 } from "./timeline.js";
 
 const DEG = Math.PI / 180;
@@ -63,7 +63,7 @@ export const MARS_CENTRE = MOON_SUN.clone()
   .normalize()
   .multiplyScalar(MARS_DISTANCE);
 
-const build = ({ id, radius, lat, lon, centre, relief, gait, sunColor, ambient, legs, seam, contact, impactEnd, walkIn, talkIn, talkOut, graph, ...rest }) => {
+const build = ({ id, radius, lat, lon, centre, relief, gait, sunColor, ambient, legs, seam, contact, impactEnd, walkIn, graph, ...rest }) => {
   const site = siteFrame(lat * DEG, lon * DEG, radius, centre ? centre.clone() : new Vector3());
   // There is one sun in this scene and it has one world direction. What differs per world is where it sits
   // in that world's local frame, which is the number the sky, the terminator and the shadows all read.
@@ -88,8 +88,6 @@ const build = ({ id, radius, lat, lon, centre, relief, gait, sunColor, ambient, 
     contact,
     impactEnd,
     walkIn,
-    talkIn,
-    talkOut,
     graph,
     scale: radius / R_MOON,
     ...rest,
@@ -114,16 +112,12 @@ export const MOON = build({
   contact: MOON_CONTACT,
   impactEnd: MOON_IMPACT_END,
   walkIn: MOON_WALK_IN,
-  talkIn: MOON_TALK_IN,
-  talkOut: MOON_TALK_OUT,
   graph: "moonGround",
   // The hand-off frame above the surface: the sphere descent's last frame, the ground act's first, the
   // ascent act's last, and the spot the field is levelled at.
   cut: [0, 0.42, -3.0],
   cutLook: [0, -4.27, -0.13],
   landingAlt: 8,
-  // Prop sites in LOCAL metres, next to the rail that has to walk up to them. The ending composition is
-  // asserted against these numbers - an edit that leaves frame fails the suite instead of the phone.
   // The look of the ground, and the physics of the sky: air = 0 means nothing scatters and nothing fades.
   mapKey: "moon",
   radiusM: 1737400,
@@ -132,16 +126,8 @@ export const MOON = build({
   roughness: 1,
   rockSeed: 7717,
   air: 0,
-  skyZenith: [0, 0, 0],
-  skyHorizon: [0, 0, 0],
-  skyGlow: [0, 0, 0],
   sunIntensity: 2.8,
-  lm: [5, 0, 44.5],
-  flag: [3.0, 0, 34.0],
-  panel: [-4.2, 0, 12],
-  companion: [3.5, 0, 37],
-  masts: [[20, 62], [-16, 71]],
-  park: [3.2, 29],
+  // Prop sites now live in journey/stops.js, because every one of them is a stop on the walk.
 });
 
 export const MARS = build({
@@ -161,8 +147,6 @@ export const MARS = build({
   contact: MARS_CONTACT,
   impactEnd: MARS_IMPACT_END,
   walkIn: MARS_WALK_IN,
-  talkIn: MARS_TALK_IN,
-  talkOut: MARS_TALK_OUT,
   graph: "marsGround",
   cut: [0, 0.42 * (R_MARS / R_MOON), -3.0 * (R_MARS / R_MOON)],
   cutLook: [0, -4.27 * (R_MARS / R_MOON), -0.13 * (R_MARS / R_MOON)],
@@ -179,32 +163,36 @@ export const MARS = build({
   skyHorizon: [0.66, 0.50, 0.37],
   skyGlow: [0.62, 0.72, 0.88],
   sunIntensity: 2.05,
-  // Authored against the Martian rail's final frame (3.4, 1.7, 30) looking at (4.2, 1.95, 41): a
-  // 30-degree-wide portrait frame at that heading reaches about -10 to +19 degrees of azimuth, so the
-  // habitat sits at +12, the crew member at +3 and the survey marker at -4, each far enough off the next
-  // that nothing hides behind the other. tools/check-journey.mjs measures all of it.
-  // The same triangle the lunar ending uses, because the Martian rail's last two legs are the lunar
-  // ones: 5 m of flag, 8 m of crew, 15 m of habitat, all inside a 30-degree portrait frame at a gaze
-  // that drifts 4 degrees east. The rover is the one new subject, parked wide left and far enough back
-  // that nothing in front of it can hide it.
-  lm: [5, 0, 48],
-  flag: [3.0, 0, 34.0],
-  panel: [-4.2, 0, 12],
-  companion: [3.5, 0, 37],
-  rover: [1.1, 0, 49],
-  uv: MARS_UV,
-  spin: MARS_SPIN,
-  masts: [[18, 58], [-14, 66]],
-  park: [3.2, 29],
+  // The Martian route is the lunar one: same stops, same standoffs, different hardware.
 });
 
-export const WORLDS = [MOON, MARS];
-export const BY_ID = { moon: MOON, mars: MARS };
-export const SITE = MOON.site; //  the lunar site frame, which the first half of the piece is built on
-export const SITE_UV = MOON.uv;
-export const SUN_DIR = MOON_SUN;
-export const EARTH_DIR = localDir(MOON, 0.3, 0.574, 0.76);
-export const EARTH_AT = EARTH_DIR.clone().multiplyScalar(120);
-export const EARTH_R = 2.0;
-export const MOON_SPHERE_U = R_MOON;
-export const R_SPHERE = R_MOON;
+// The deep-space act is metres at a spot out beyond Mars, oriented with Mars's own vertical so the
+// hand-off climbing out of the Martian sky does not roll the picture. There is no ground here: nothing is
+// levelled, no gait opens, and the two things the visitor drifts between are the only hardware in frame.
+export const EVA_ORIGIN = MARS_CENTRE.clone().addScaledVector(MARS.site.n, 62).addScaledVector(MARS.site.east, 26);
+export const EVA = {
+  id: "solar",
+  radius: 0,
+  air: 0,
+  graph: "eva",
+  site: { ...MARS.site, pos: EVA_ORIGIN.clone() },
+  sunLocal: MOON_SUN.clone().applyQuaternion(MARS.site.quaternion.clone().invert()).normalize(),
+  gait: GAIT.moon,
+  legs: EVA_LEGS,
+  seam: EVA_SEAM,
+  // Past the end of the offset, on purpose: nobody walks in a suit on a tether, so the gait never opens and
+  // the rumble never fires out here.
+  contact: 2,
+  impactEnd: 2,
+  walkIn: 2,
+  scale: 1,
+  // Out here there is no atmosphere between you and the sun at all, so the hardware is lit as it is on the
+  // Moon and harder: the light is the same beam, undimmed by the whole of Mars's air.
+  sunColor: "#fff6e8",
+  sunIntensity: 3.1,
+  ambient: 0.012,
+};
+
+// Every world the sun can be asked to light, keyed by the id the rig writes into journey.worldId: a world
+// missing from this map is a crash on the last screen of the journey.
+export const BY_ID = { moon: MOON, mars: MARS, solar: EVA };

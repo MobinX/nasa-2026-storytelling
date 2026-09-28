@@ -1,64 +1,107 @@
-// Screens of scroll for the whole journey. It used to be 10 and every flick swept a tenth of the story,
-// which is fast enough to blow straight past the descent and the landing; the piece is two landings long
-// now, so the budget is written in screens and every boundary below is a number of flicks, not a decimal.
-export const PAGES = 30;
+// Screens of scroll for the whole journey. The piece is three acts now - down onto the Moon and along its
+// route, down onto Mars and along its route, and a drift between two things in deep space - so every
+// boundary below is written as a number of flicks and converted once. A surface act is one leg per screen,
+// which is what makes a stop a thing you can feel: one flick, one instrument, one conversation.
+import { STOPS, legsForPlanet } from "./stops.js";
+
+export const PAGES = 46;
 export const DISTANCE = 1;
 export const DAMPING = 0.18;
 
 const screens = (n) => n / PAGES;
 
-// Scene-graph boundaries. Position is cut at all four and only orientation is handed off; the README's
-// "How it is put together" explains why a cut is the only thing that can work at these scales.
-export const SEAM_A = screens(4.5); //   solar diagram -> Moon sphere, the dot/sphere swap
-export const SEAM_B = screens(8); //     Moon sphere   -> lunar surface, the 8 m hand-off
-export const DEPART = screens(16.5); //  lunar surface -> transfer, the same hand-off inverted
-export const TRANSFER_END = screens(20.5); //  Moon's vertical -> Mars's vertical, at transfer speed
-export const MARS_SEAM = screens(24); //  Mars sphere   -> Martian surface, the 8 m hand-off again
+// Scene-graph boundaries. Position is cut at most of these and only orientation is handed off; the README's
+// "How it is put together" explains why a cut is the only thing that works at these scales.
+export const SEAM_A = screens(4); //    solar diagram -> Moon sphere, the dot/sphere swap
+export const SEAM_B = screens(7); //    Moon sphere   -> lunar surface, the 8 m hand-off
+export const DEPART = screens(20); //   lunar surface -> transfer, the same hand-off inverted
+export const TRANSFER_END = screens(24); //  Moon's vertical -> Mars's vertical, at transfer speed
+export const MARS_SEAM = screens(27); // Mars sphere  -> Martian surface, the 8 m hand-off again
+export const MARS_DEPART = screens(40); //  Martian surface -> transfer, inverted hand-off once more
+export const EVA_SEAM = screens(42); //  deep space: the coast ends and the two EVA stops begin
 
-// Each ground act is a list of equal legs and the milestones are leg starts. Nothing here can derive them
-// from the rails without a cycle, so tools/check-journey.mjs is what holds the two together.
-export const MOON_LEGS = 8;
-export const MARS_LEGS = 7;
-const legAt = (from, to, n, i) => from + (i / n) * (to - from);
+// A surface act: four legs to get down and stand up, then a walking leg and a hold leg per object, then
+// the ascent. The EVA act is just the pairs. Counted by journey/stops.js from the stop list, so adding an
+// object to objects.json lengthens the walk and moves every later boundary with it.
+export const MOON_LEGS = legsForPlanet("moon");
+export const MARS_LEGS = legsForPlanet("mars");
+export const EVA_LEGS = legsForPlanet("solar");
 
-export const MOON_CONTACT = legAt(SEAM_B, DEPART, MOON_LEGS, 2);
-export const MOON_IMPACT_END = legAt(SEAM_B, DEPART, MOON_LEGS, 3);
-export const MOON_WALK_IN = legAt(SEAM_B, DEPART, MOON_LEGS, 4);
-export const MOON_TALK_START = legAt(SEAM_B, DEPART, MOON_LEGS, 6);
-export const MOON_ASCENT_START = legAt(SEAM_B, DEPART, MOON_LEGS, 7);
-export const MOON_TALK_IN = MOON_TALK_START - 0.008;
-export const MOON_TALK_OUT = MOON_ASCENT_START + 0.005;
+const span = (from, to, legs) => (to - from) / legs;
+// Where each conversation traps the scroll: the offset the rail arrives at, which is the first frame of
+// that stop's hold leg. The window is deliberately wider than the leg, because the visitor has to be able
+// to arrive, look, and then find that they cannot advance.
+// The same stop objects, not copies: objects.json is applied to STOPS after this module has run, and a
+// conversation, a name and a model are only visible to the rig and the captions if they read the objects
+// that got filled in. The lock is written onto the stop, so the live route and the schedule cannot disagree.
+const stopAt = (stops, from, to, legs) => {
+  const s = span(from, to, legs);
+  for (const stop of stops) {
+    stop.lock = from + stop.leg * s;
+    stop.spanSize = s;
+  }
+  return stops;
+};
 
-export const MARS_CONTACT = legAt(MARS_SEAM, 1, MARS_LEGS, 2);
-export const MARS_IMPACT_END = legAt(MARS_SEAM, 1, MARS_LEGS, 3);
-export const MARS_WALK_IN = legAt(MARS_SEAM, 1, MARS_LEGS, 4);
-export const MARS_TALK_START = legAt(MARS_SEAM, 1, MARS_LEGS, 6);
-export const MARS_TALK_IN = MARS_TALK_START - 0.008;
-export const MARS_TALK_OUT = 2; //   the journey ends mid-conversation, so this one never closes
+export const SURFACE_STOPS = {
+  moon: stopAt(STOPS.moon, SEAM_B, DEPART, MOON_LEGS),
+  mars: stopAt(STOPS.mars, MARS_SEAM, MARS_DEPART, MARS_LEGS),
+  solar: stopAt(STOPS.solar, MARS_DEPART, 1, EVA_LEGS),
+};
 
-export const ACTS = [
-  { id: "system", from: 0, to: screens(1), graph: "solar", caption: "The Solar System" },
-  { id: "transit", from: screens(1), to: SEAM_A, graph: "solar", caption: "Inner Planes" },
-  { id: "approach", from: SEAM_A, to: screens(6), graph: "moonSphere", caption: "Approach" },
-  { id: "descent", from: screens(6), to: SEAM_B, graph: "moonSphere", caption: "Descent" },
-  { id: "landing", from: SEAM_B, to: MOON_CONTACT, graph: "moonGround", caption: "Landing" },
-  { id: "touchdown", from: MOON_CONTACT, to: MOON_IMPACT_END, graph: "moonGround", caption: "Touchdown" },
-  { id: "reveal", from: MOON_IMPACT_END, to: MOON_WALK_IN, graph: "moonGround", caption: "Sea of Tranquillity" },
-  { id: "walk", from: MOON_WALK_IN, to: MOON_TALK_START, graph: "moonGround", caption: "Sea of Tranquillity — 0.67°N 23.5°E" },
-  { id: "eagle", from: MOON_TALK_START, to: DEPART, graph: "moonGround", caption: "Eagle — Tranquillity Base" },
-  { id: "ascent", from: DEPART, to: screens(18), graph: "transfer", caption: "Ascent stage" },
-  { id: "transfer", from: screens(18), to: TRANSFER_END, graph: "transfer", caption: "Trans-Mars coast" },
-  { id: "capture", from: TRANSFER_END, to: screens(22), graph: "transfer", caption: "Mars, ahead" },
-  { id: "marsDescent", from: screens(22), to: MARS_SEAM, graph: "transfer", caption: "Descent to Jezero" },
-  { id: "marsLanding", from: MARS_SEAM, to: MARS_CONTACT, graph: "marsGround", caption: "Entry, descent, landing" },
-  { id: "marsTouchdown", from: MARS_CONTACT, to: MARS_IMPACT_END, graph: "marsGround", caption: "Touchdown" },
-  { id: "marsReveal", from: MARS_IMPACT_END, to: MARS_WALK_IN, graph: "marsGround", caption: "Jezero West" },
-  { id: "marsWalk", from: MARS_WALK_IN, to: MARS_TALK_START, graph: "marsGround", caption: "Jezero West — 18.4°N 77.5°E" },
-  { id: "ares", from: MARS_TALK_START, to: 1, graph: "marsGround", caption: "Ares — Sol 1" },
-];
+export const MOON_CONTACT = SEAM_B + span(SEAM_B, DEPART, MOON_LEGS) * 2;
+export const MOON_IMPACT_END = MOON_CONTACT + span(SEAM_B, DEPART, MOON_LEGS);
+export const MOON_WALK_IN = SEAM_B + span(SEAM_B, DEPART, MOON_LEGS) * 4;
+export const MARS_CONTACT = MARS_SEAM + span(MARS_SEAM, MARS_DEPART, MARS_LEGS) * 2;
+export const MARS_IMPACT_END = MARS_CONTACT + span(MARS_SEAM, MARS_DEPART, MARS_LEGS);
+export const MARS_WALK_IN = MARS_SEAM + span(MARS_SEAM, MARS_DEPART, MARS_LEGS) * 4;
+
+// One act per leg, so the caption says what is happening rather than where the number is. The surface
+// acts alternate "walking - <thing>" with "<thing> - <where it really is>", which is the only place the
+// location string from objects.json is ever shown. Those two are read through a getter, because the act
+// list is built before the file is applied and a caption frozen at import would name the stop by its id
+// for the rest of the session.
+const legSpan = (from, to, legs) => (to - from) / legs;
+const acts = [];
+const push = (id, from, to, graph, caption) => acts.push({ id, from, to, graph, caption });
+const named = (id, from, to, graph, build) => {
+  const act = { id, from, to, graph };
+  Object.defineProperty(act, "caption", { get: build, enumerable: true });
+  acts.push(act);
+};
+const surfaceActs = (planet, from, to, legs, graph) => {
+  const s = legSpan(from, to, legs);
+  const at = (leg) => from + leg * s;
+  push(planet + "-landing", at(0), at(2), graph, "Landing");
+  push(planet + "-touchdown", at(2), at(3), graph, "Touchdown");
+  push(planet + "-reveal", at(3), at(4), graph, planet === "moon" ? "Sea of Tranquillity" : "Jezero West");
+  for (const [i, stop] of SURFACE_STOPS[planet].entries()) {
+    named(`${planet}-walk-${i}`, at(stop.walkLeg), at(stop.leg), graph, () => "Walking — " + stop.name);
+    named(`${planet}-talk-${i}`, at(stop.leg), at(stop.leg + 1), graph, () => stop.name + " — " + stop.location);
+  }
+  push(planet + "-ascent", at(legs - 1), to, graph, planet === "moon" ? "Ascent stage" : "Off Mars");
+};
+push("system", 0, screens(1), "solar", "The Solar System");
+push("transit", screens(1), SEAM_A, "solar", "Inner Planes");
+push("approach", SEAM_A, screens(6), "moonSphere", "Approach");
+push("descent", screens(6), SEAM_B, "moonSphere", "Descent");
+surfaceActs("moon", SEAM_B, DEPART, MOON_LEGS, "moonGround");
+push("transfer", DEPART, TRANSFER_END, "transfer", "Trans-Mars coast");
+push("capture", TRANSFER_END, screens(26), "transfer", "Mars, ahead");
+push("marsDescent", screens(26), MARS_SEAM, "transfer", "Descent to Jezero");
+surfaceActs("mars", MARS_SEAM, 1, MARS_LEGS, "marsGround");
+{
+  const s = legSpan(MARS_DEPART, 1, EVA_LEGS);
+  push("away", MARS_DEPART, MARS_DEPART + s, "eva", "Leaving Mars orbit");
+  push("turn", MARS_DEPART + s, SURFACE_STOPS.solar[0].lock - s, "eva", "The machines out here");
+  SURFACE_STOPS.solar.forEach((stop, i) => {
+    named("eva-drift-" + i, MARS_DEPART + (2 + i * 2) * s, stop.lock, "eva", () => "Drifting — " + stop.name);
+    named("eva-talk-" + i, stop.lock, stop.lock + s, "eva", () => stop.name + " — " + stop.location);
+  });
+}
+export const ACTS = acts;
 
 export const clamp01 = (x) => (x < 0 ? 0 : x > 1 ? 1 : x);
-
 export const range01 = (x, from, to) => clamp01((x - from) / (to - from));
 
 // Zero derivative at both ends, so it can be inserted at a joint without a velocity pop.
@@ -83,8 +126,8 @@ export const rumble = (offset, from, to) => {
 
 export const actAt = (offset) => {
   const o = clamp01(offset);
-  for (let i = ACTS.length - 1; i >= 0; i--) if (o >= ACTS[i].from) return ACTS[i];
-  return ACTS[0];
+  for (let i = acts.length - 1; i >= 0; i--) if (o >= acts[i].from) return acts[i];
+  return acts[0];
 };
 
 export const CAMERA = { orbit: { near: 0.05, far: 2000 }, ground: { near: 0.02, far: 4200 } };
