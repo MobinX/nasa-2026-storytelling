@@ -1,1105 +1,1243 @@
 {
   "objects": [
     {
-      "id": "moon-solar-wind",
-      "name": "Solar Wind Composition collector",
-      "3dmodel": "models/moon-solar-wind.gltf",
+      "id": "moon-eagle",
+      "name": "Apollo 11 Lunar Module Eagle",
+      "3dmodel": "models/apollo-lunar-module.glb",
       "introductoryTalk": [
-        "That foil was left in sunlight for 77 minutes and it is still the best sample we have.",
-        "It caught the Sun's own atmosphere out of the solar wind, and we took it home."
+        "Apollo 11's descent stage. Two men rode it down on 20 July 1969.",
+        "The ascent stage took them back to Collins and burned up in Earth's air. This half stayed.",
+        "Ask me about it. Four rounds, one question each, then the scroll is yours."
       ],
       "QA": {
+        "planet": "moon",
+        "location": "Tranquility Base, Mare Tranquillitatis · 0.6742°N 23.4731°E",
         "rounds": [
           {
-            "title": "What the foil caught",
+            "title": "Coming down",
             "questionOptionsForUser": [
-              "How do you catch something with no container?",
-              "What is actually in the solar wind?",
-              "Why are noble gases the point?",
-              "How pure is the sample?"
+              "Why is only half a spacecraft here?",
+              "Did the computer land it?",
+              "What were the 1202 alarms?",
+              "How did the ground take it?"
             ],
             "answerForEachOption": [
               [
-                "You leave clean foil in the wind. Atoms implant in the top micrometre, and you read the foil."
+                "It is two stages. The bottom half is legs, tankage and the descent engine; the top half is the cockpit.",
+                "Only the top could leave, so only the top did. Six modules landed on the Moon and six descent stages are still out there."
               ],
               [
-                "Mostly protons and electrons, with helium, and traces of everything heavier down to the noble gases."
+                "The program flew most of it. At 600 m Armstrong saw the target was a boulder field and took the hand.",
+                "He flew east over it and set down with about twenty-five seconds of propellant to spare."
               ],
               [
-                "They are the fingerprint of the Sun's bulk composition, which you cannot sample any other way."
+                "Executive alarms. The rendezvous radar was loading the computer's bus faster than it could schedule the landing.",
+                "Steve Bales at Guidance called them executable - keep going. Aldrin cleared them one at a time."
               ],
               [
-                "Very. The Moon has no atmosphere and no magnetic field, so nothing shields it and nothing contaminates it."
+                "Soft. The pads punched into the fines about half their depth and the engine scoured a dark halo you can see from orbit.",
+                "There is no wind here to smooth it. The footprints are still exactly where they were put down."
               ]
             ]
           },
           {
-            "title": "Reading it later",
+            "title": "What else is still here",
             "questionOptionsForUser": [
-              "What did the analysis find?",
-              "Why is that worth a sample return?",
-              "Did it say anything about the Sun?",
-              "Are the foils still useful?"
+              "What instruments were left?",
+              "Does the reflector still work?",
+              "Why did the seismometer die?",
+              "Is the flag still standing?"
             ],
             "answerForEachOption": [
               [
-                "Solar-wind noble gases in the Sun's own ratios, and a heavier component from an ancient solar wind."
+                "A seismometer and a laser reflector - the first instruments set down on another world - plus a flag and 45 kg of refuse.",
+                "They left the refuse on purpose. The ascent had to lift two men and a sample box, and every gram came out of the same margin."
               ],
               [
-                "It sets the baseline composition of the Solar System, so meteorites and our own air can be measured against it."
+                "Yes. Observatories still range the Moon off it, bouncing a pulse across 380,000 km to the centimetre.",
+                "It is the weakest of the five arrays left up here and still returns a handful of photons per shot."
               ],
               [
-                "The Sun has run denser and slower in the past, recorded layer by layer in the foil."
+                "Twenty-two weeks. The sun climbed over Tranquility and the electronics, designed for a year, cooked.",
+                "Every Apollo surface station ended the same way: heat, dust, or somebody in Houston turning it off to save money."
               ],
               [
-                "Yes. Later instruments have far better sensitivity, so some of it is still unopened on purpose."
+                "Not upright. The ascent stage's exhaust laid it down; orbiters have seen it in the dust beside the legs since 2012.",
+                "The other five flags are still standing, as far as anyone can resolve from orbit."
               ]
             ]
           },
           {
-            "title": "Deploying it",
+            "title": "Why nobody came back",
             "questionOptionsForUser": [
-              "Why was it put out in the sun?",
-              "Why at arm's length?",
-              "How big was it?",
-              "What would ruin it?"
+              "Was this site ever visited again?",
+              "Could the descent stage launch?",
+              "Is the site protected?",
+              "How long will it last?"
             ],
             "answerForEachOption": [
               [
-                "It was fetched and deployed in sunlight, at arm's length, with the sheet facing the Sun by its own shadow."
+                "No. Twelve men walked on the Moon and every mission went somewhere new. The six sites are six different latitudes.",
+                "Tranquility has been photographed from orbit many times and touched by nobody since 1969."
               ],
               [
-                "To keep suit outgas and dust off the collector. Almost every lunar deploy rule comes from that."
+                "Not with what is here. The descent engine burned once, and its tanks were vented after liftoff.",
+                "It was never a launch pad. It is the scaffolding a launch pad rode down on."
               ],
               [
-                "A bay-sized sheet unrolled from a cassette, under 7 kg, which is a real price in launch mass for foil."
+                "Nothing in law protects it. A 2020 US direction tells American missions to keep their distance; nobody else is bound.",
+                "The real protection is that nobody can afford to come."
               ],
               [
-                "Dust on the face, and one careless glove. Both are why the site was chosen by a human and not a camera."
+                "Millions of years, minus micrometeorites. No water, no oxygen, no wind, no biology - and the only vibration is a quake.",
+                "The plaque on the strut will be legible longer than any book in print."
               ]
             ]
           },
           {
-            "title": "What came after",
+            "title": "What it looks like now",
             "questionOptionsForUser": [
-              "Is there a modern version?",
-              "What does a solar probe do instead?",
-              "Why keep collecting at all?",
-              "What would you measure next?"
+              "What can orbiters actually see?",
+              "What is on the plaque?",
+              "What did they throw away?",
+              "What part of it is most human?"
             ],
             "answerForEachOption": [
               [
-                "Genesis collected solar wind at L1 and came back in 2004, after a parachute failure that cost most of it."
+                "A dark blast halo, the lander and its shadow, the flag lying down, and the discards exactly where they were dropped.",
+                "Half a tonne of hardware, a hundred boots of track, and two men who went home the only way they could."
               ],
               [
-                "Parker flies into the wind itself and measures the fields and particles directly, close to the Sun."
+                "\"Here men from the planet Earth first set foot upon the Moon, July 1969 A.D. We came in peace for all mankind.\"",
+                "It is bolted to a strut of the descent stage, so it is still facing the same way it did in 1969."
               ],
               [
-                "The Sun's composition is the reference point for everything else, and we can touch the wind but not the Sun."
+                "The ladder, the survey camera, overshoes, the portable life support backing, a gas analzer, food, waste.",
+                "The list is in the mission report, and it is a list of people deciding what a return ticket is worth."
               ],
               [
-                "Isotopes of the volatile elements at precision the 1969 foil cannot give, from a longer exposure."
+                "The ladder. It was jettisoned on the way up, because the stage was heavy and the ascent had to be margined.",
+                "So Eagle came down with a way to climb down and left without one."
               ]
             ]
           }
-        ],
-        "planet": "moon",
-        "location": "Mare Tranquillitatis, 32 m north of the LM \u2014 a foil sheet facing the Sun"
+        ]
       }
     },
     {
-      "id": "moon-seismometer",
-      "name": "Passive Seismic Experiment",
-      "3dmodel": "models/moon-seismometer.gltf",
+      "id": "moon-intrepid",
+      "name": "Apollo 12 Lunar Module Intrepid",
+      "3dmodel": "models/apollo-lunar-module.glb",
       "introductoryTalk": [
-        "That box listens to the Moon and has never been switched off by anyone who could reach it.",
-        "We set it on the surface, wired it to the lander, and left it running on one lunar day of sun."
+        "Intrepid. Apollo 12, and the first time anybody aimed a spacecraft at a parked one.",
+        "Two hundred metres past my shoulder sits Surveyor 3, which landed here in 1967. Conrad and Bean took parts off it.",
+        "Ask me about it. Four rounds, one question each."
       ],
       "QA": {
+        "planet": "moon",
+        "location": "Oceanus Procellarum, near Surveyor crater · 3.0128°S 23.4220°W",
         "rounds": [
           {
-            "title": "What it listens for",
+            "title": "The precision landing",
             "questionOptionsForUser": [
-              "Does the Moon have earthquakes?",
-              "What hits it most often?",
-              "What was the surprise?",
-              "Did it hear anything you did not want?"
+              "Why aim at an old probe?",
+              "How close did they get?",
+              "Who picked the site?",
+              "Was landing here harder?"
             ],
             "answerForEachOption": [
               [
-                "Moonquakes, yes, and they come from tides and from a crust that is shrinking as it cools."
+                "To prove a spacecraft could be put down on a target, not just on a region. Without that, no sample return and no long traverse.",
+                "Surveyor had also taught them the soil here was strong enough to hold a leg."
               ],
               [
-                "Meteoroids. Small ones, all day, at 20 km/s. The record is mostly a rain of impacts."
+                "About 180 m. The landing ellipse was 6 km wide, so the crew flew the last part by eye and stopped next to it.",
+                "Four months earlier Apollo 11 had landed 5 km from its target."
               ],
               [
-                "Deep moonquakes, 700 to 1000 km down, driven by the Earth's tide. Nobody expected the interior to answer that far."
+                "Scientists did, over years of arguments and Lunar Orbiter photographs at up to 1 m per pixel.",
+                "Oceanus Procellarum, 370 km south of Copernicus, chosen because it was flat, lit, and already visited."
               ],
               [
-                "Thermal events. The box flexes as sunrise arrives, and the first readings were the instrument waking up."
+                "Harder in one way: they launched into a thunderstorm and the rocket triggered lightning 30 seconds after liftoff.",
+                "Both spacecraft busses blacked out and recovered, and the mission went on."
               ]
             ]
           },
           {
-            "title": "Why the surface",
+            "title": "Visiting Surveyor 3",
             "questionOptionsForUser": [
-              "Why not leave it on the ladder?",
-              "What does regolith do to a signal?",
-              "How was it powered?",
-              "Who chose the site?"
+              "What did they take off it?",
+              "What did the parts show?",
+              "Did anything grow on it?",
+              "Was it still standing?"
             ],
             "answerForEachOption": [
               [
-                "A seismometer needs mechanical contact. It sat on the regolith with its feet packed down by hand."
+                "The television camera, a piece of the surface-sampler scoop, and cable. They cut them off with a handheld saw.",
+                "They put them in a sample box and brought them home - the only return trip to a machine, not a rock."
               ],
               [
-                "It is a dry fractured blanket, so the surface waves it records are slow, scattered and strange."
+                "Two and a half years of sunlight had bleached the white paint tan and embrittled the cable insulation.",
+                "The mirror had been sandblasted by dust. That is the wear model every later lunar design was built against."
               ],
               [
-                "A solar panel and a battery sized for one lunar day, which is why the traverse had to come back."
+                "A bacterium was cultured from the television camera and reported as having survived on the Moon, which was wrong.",
+                "It was Earth contamination from the clean room. The episode is why every later spacecraft is baked or filtered."
               ],
               [
-                "A survey camera on the LM, and then a person walking, looking for level ground and a clear Sun."
+                "Yes, upright, on a 14 degree slope in a shallow crater, with its own trench marks still sharp.",
+                "It had gone quiet in May 1967 and been visited in November 1969, and nobody had touched it in between."
               ]
             ]
           },
           {
-            "title": "What it taught us",
+            "title": "The station that outlived its funding",
             "questionOptionsForUser": [
-              "What is the Moon's core?",
-              "Is the Moon seismically alive?",
-              "Why does that matter to a mission now?",
-              "Was it ever visited again?"
+              "What was ALSEP?",
+              "How long did it run?",
+              "Why did they stop it?",
+              "Is it still out there?"
             ],
             "answerForEachOption": [
               [
-                "Small: a solid iron-rich inner core inside a fluid one, about a fifth of the radius. Seismics and ranging pinned it."
+                "The Apollo Lunar Surface Experiments Package: a nuclear-powered station with six instruments strung out around it on cables.",
+                "This was the first of them, and the first station anyone left running on another world by remote control from Earth."
               ],
               [
-                "Barely. A handful of shallow events a year, big enough for the later Apollo stations to record well."
+                "Eight years. It was designed for one.",
+                "It sent data through the two-week lunar night, which is why the Apollo 12 one was the one that worked."
               ],
               [
-                "Landing near a fault is a safety question, and this is the only long record we own."
+                "Money. In September 1977 NASA switched off the ALSEP network to pay for other programs.",
+                "The transmitters were still healthy. That is the honest version of abandonment."
               ],
               [
-                "The Apollo 12 crew walked back to their own and re-pointed it. Three missions did that by hand."
+                "All of it. The central station, the RTG fuel cask, the seismometer, the magnetometer, the cables coiled where they were laid.",
+                "Nobody maintains it and nothing rots. It is still waiting for a command that will not come."
               ]
             ]
           },
           {
-            "title": "Working by radio",
+            "title": "Leaving the way they came",
             "questionOptionsForUser": [
-              "How did it talk to Earth?",
-              "What happened when the LM left?",
-              "Why was that useful?",
-              "When did it go quiet?"
+              "What happened to the ascent stage?",
+              "Why crash a spacecraft?",
+              "Did it make a crater?",
+              "What was lost on the way home?"
             ],
             "answerForEachOption": [
               [
-                "Through the LM's UHF link while we were on the surface, then through the relay left running behind it."
+                "It was steered into the Moon the day after liftoff, on purpose, 60 km from the ALSEP seismometer.",
+                "Every J-mission did it. It was the only calibration source they had underground."
               ],
               [
-                "The ascent stage impact rang the whole network on purpose: a known explosion, a known mass, a known time."
+                "To ring the ground like a hammer on a bell and read how the seismic wave came back.",
+                "It told them how deep the powdery layer sits above the solid Moon."
               ],
               [
-                "It calibrated the Moon. One blast seen by every station, at a moment known to the second."
+                "No crater appeared, which surprised everybody who had expected one.",
+                "The energy went into crushing the regolith rather than throwing it. That single non-crater changed how the surface was modelled."
               ],
               [
-                "1977, when the network was closed for budget. The boxes are still there, dead and undisturbed."
+                "The television camera, early in the mission: Bean pointed it at the Sun and burned the sensor out.",
+                "Apollo 12 came home with almost no live pictures of its own moonwalks. Some things are lost before the story ends."
               ]
             ]
           }
-        ],
-        "planet": "moon",
-        "location": "Mare Tranquillitatis, 63 m west of the LM \u2014 level ground, feet packed in"
+        ]
       }
     },
     {
-      "id": "moon-retroreflector",
-      "name": "Laser Ranging Retroreflector",
-      "3dmodel": "models/moon-retroreflector.gltf",
+      "id": "moon-surveyor3",
+      "name": "Surveyor 3",
+      "3dmodel": "models/surveyor-3.gltf",
       "introductoryTalk": [
-        "That plate of fused silica is the most useful thing we left up here.",
-        "It has been in the sun since 1969 and nobody has touched it since."
+        "Surveyor 3. Robotic, twelve years before the first human boot, and the only probe a human being has ever walked up to.",
+        "It landed in April 1967 and died of night. Apollo 12 came for it in 1969.",
+        "Four rounds, one question each. Ask."
       ],
       "QA": {
+        "planet": "moon",
+        "location": "Southeast Oceanus Procellarum, inside a 200 m subdued crater · 3.0162°S 23.4180°W",
         "rounds": [
           {
-            "title": "What it is for",
+            "title": "Three landings in one",
             "questionOptionsForUser": [
-              "What does a mirror on the Moon do?",
-              "Why is the precision interesting?",
-              "Does it measure anything but distance?",
-              "Who still shoots lasers at it?"
+              "Why is it leaning?",
+              "Did it bounce?",
+              "Who turned the engines off?",
+              "How did it survive the hop?"
             ],
             "answerForEachOption": [
               [
-                "Range. Observatories fire a laser at it and time the return; the round trip is 2.5 seconds at best."
+                "It came down on a 14 degree slope inside a shallow crater, and its three footpads did not land on the same surface.",
+                "The site had been chosen from orbit as the flattest available ground. It was still not flat."
               ],
               [
-                "Centimetres, over 384,000 km. It is the best-tested distance in solar system astronomy."
+                "Three times. The vernier engines kept firing through the first touchdown and lifted it off again.",
+                "The first and second contacts were 20 m apart; the second and third 11 m. It slid another 30 cm before it settled."
               ],
               [
-                "The orbit. The Moon recedes from us 3.8 cm a year, dragged outward by tides on Earth."
+                "Somebody on Earth. An engine-cutoff command was transmitted 34 seconds after the first touchdown.",
+                "A probe that could not be trusted to switch itself off was landed by a human being pressing a button from 380,000 km away."
               ],
               [
-                "Several observatories, on scheduled nights, at the ephemeris of a 1969 object none of them has visited."
-              ]
-            ]
-          },
-          {
-            "title": "Why glass",
-            "questionOptionsForUser": [
-              "Why not a normal mirror?",
-              "Why does it come back so bright?",
-              "How many are up here?",
-              "Will it stop working?"
-            ],
-            "answerForEachOption": [
-              [
-                "Metal would absorb sunlight and warp. Fused silica survives it and stays flat to a wavelength."
-              ],
-              [
-                "Corner cubes return light parallel to where it came from, so it shines back at its own laser."
-              ],
-              [
-                "Two from Apollo, plus three left by Soviet landers. Only some of them still give a usable return."
-              ],
-              [
-                "Micrometeorites darken it over millions of years. Long after that it will still be sitting there."
-              ]
-            ]
-          },
-          {
-            "title": "Handling it",
-            "questionOptionsForUser": [
-              "Did you have to aim it?",
-              "What was the risk in deploying it?",
-              "Why is dust a problem out here?",
-              "Did it get dirty anyway?"
-            ],
-            "answerForEachOption": [
-              [
-                "No. It is passive, and wide-acceptance, which is the only reason it still works."
-              ],
-              [
-                "Kicking dust across the optical face. The crew deployed it at arm's length, back turned."
-              ],
-              [
-                "Nothing washes it away and nothing settles it. Levitated dust is the local weather."
-              ],
-              [
-                "Slightly, and the return dropped. Later crews photographed it and cleaned one with a glove."
+                "The legs were hollow fibreglass crushable struts, deliberately designed to fail so the body would not.",
+                "They punched the pads in to half their depth and the spacecraft stayed upright for two weeks of daylight."
               ]
             ]
           },
           {
             "title": "What it proved",
             "questionOptionsForUser": [
-              "What did ranging settle?",
-              "Anything surprising?",
-              "Is the equivalence principle in there?",
-              "Why do you care about that?"
+              "Why did the landing matter so much?",
+              "What did the scoop do?",
+              "How many pictures?",
+              "What did it see of the Earth?"
             ],
             "answerForEachOption": [
               [
-                "The orbit, the libration, and a hard number for the Earth-Moon distance that geodesy still uses."
+                "Before Surveyor, serious people thought a spacecraft might sink into lunar dust up to its radio mast.",
+                "The sampler dug trenches 18 cm deep and reported bearing strength. Apollo's legs were sized against that number."
               ],
               [
-                "The orbit behaves differently than the models, and the interior turned out to be partly molten."
+                "A claw on a three-axis arm, scooping and dropping soil in front of the camera to read its texture and cohesion.",
+                "It worked for 18 hours and 22 minutes and it is the ancestor of every robotic arm NASA has landed since."
               ],
               [
-                "Yes. The Sun pulls Earth and Moon, and ranging shows they fall together to one part in 10 to the 13."
+                "6,326, each one a slow scan of a mechanical television system, transmitted as dots to a dish in the desert.",
+                "The last frames were of a sunset and a shadow crossing the frame."
               ],
               [
-                "It is the tightest test of gravity you can run without leaving the Solar System, and it needs no power."
+                "It photographed an eclipse of the Sun by the Earth, in April 1967, from a spacecraft sitting in a crater.",
+                "That is a picture of our planet as a disc taking a bite out of the Sun, taken before any human being left orbit."
+              ]
+            ]
+          },
+          {
+            "title": "How it died",
+            "questionOptionsForUser": [
+              "When was the last signal?",
+              "Why did it not wake up?",
+              "Was it a total loss?",
+              "Did anyone try again?"
+            ],
+            "answerForEachOption": [
+              [
+                "Data stopped on 4 May 1967 at 00:04 UT, at local sunset, exactly as designed.",
+                "It was built to survive one lunar night, and only one."
+              ],
+              [
+                "The batteries and the electronics were not rated for minus 150 degrees, and there was no heater with enough power.",
+                "It did not come back at the next dawn, and nobody expected it to."
+              ],
+              [
+                "No. It returned 6,326 images and the mechanical properties of the lunar surface, which was the mission.",
+                "Abandoned hardware that finished its job is a different thing from a failure, and this one is still standing where it worked."
+              ],
+              [
+                "Seven Surveyors flew between 1966 and 1968; five landed, and Surveyor 3 was the first to soften down intact.",
+                "The programme cost 469 million dollars and was over before Apollo 11's crew had flown."
+              ]
+            ]
+          },
+          {
+            "title": "The only probe with a visitor",
+            "questionOptionsForUser": [
+              "What did the astronauts do to it?",
+              "Where is its camera now?",
+              "Did they leave anything?",
+              "Would we go back for it?"
+            ],
+            "answerForEachOption": [
+              [
+                "Conrad and Bean came over on their second moonwalk, photographed it, opened it, and sawed off the camera and a piece of scoop.",
+                "They handled 1.6 m of their own spacecraft's history with a hand tool."
+              ],
+              [
+                "In a museum on Earth, with lunar dust still in its mechanism, having been flown home and examined in a clean room.",
+                "It is the only object that has been on the Moon, taken off, and put in a display case."
+              ],
+              [
+                "A disc of goodwill messages from 73 nations, left on the Moon by Apollo 11 near here and not near this.",
+                "The nearest thing anyone has ever left up here that was intended as a message rather than equipment."
+              ],
+              [
+                "It would be easier to land a new spacecraft than to drive 4,000 km across the Moon to this one.",
+                "Which is the argument for leaving things where they fell, and pointing a camera at them from orbit instead."
               ]
             ]
           }
-        ],
+        ]
+      }
+    },
+    {
+      "id": "moon-falcon",
+      "name": "Apollo 15 Lunar Module Falcon",
+      "3dmodel": "models/apollo-lunar-module.glb",
+      "introductoryTalk": [
+        "Falcon. Apollo 15, the first of the long missions, and the first spacecraft that brought a vehicle.",
+        "It came down beside Hadley Rille with a rover folded in its belly, and it went up leaving a three-inch metal astronaut.",
+        "Four rounds. Ask one at a time."
+      ],
+      "QA": {
         "planet": "moon",
-        "location": "Mare Tranquillitatis, 0.674\u00b0N 23.473\u00b0E \u2014 58 m east of the footpads"
-      }
-    },
-    {
-      "id": "moon-eagle",
-      "name": "Eagle, Lunar Module descent stage",
-      "3dmodel": "models/moon-eagle.gltf",
-      "introductoryTalk": [
-        "Watch your step. That is the only footpad on the Moon nobody has ever flown again.",
-        "Sixty hours ago this was the only thing between two men and the vacuum."
-      ],
-      "QA": {
+        "location": "Hadley-Apennine, edge of Hadley Rille · 26.1324°N 3.6333°E",
         "rounds": [
           {
-            "title": "What is this machine",
+            "title": "The first of the big ones",
             "questionOptionsForUser": [
-              "What is this machine?",
-              "Why does it look like a spider?",
-              "How big is it?",
-              "Who came down in it?"
+              "What made 15 different?",
+              "Why Hadley Rille?",
+              "How long did they stay?",
+              "What was the margin?"
             ],
             "answerForEachOption": [
               [
-                "Eagle. A Lunar Module, two stages stacked. The descent stage you are standing on stays here permanently.",
-                "The ascent stage above carries two men back to orbit. Nobody ever flew the bottom half again."
+                "It was a J-mission: three days on the surface, three moonwalks, a full ALSEP, and a car.",
+                "The LM was stretched, the engine was upgraded, and the descent stage was carrying something it had never carried before."
               ],
               [
-                "There is no air, so there is no wing, no brake, no runway, no streamlining. Nothing aerodynamic survives here.",
-                "So it grows legs, lands on them, burns its own structure as fuel, and stands up on the top. Ugly is correct."
+                "A rille is a channel cut by lava or a collapsed tube, and the Apennines threw ejecta across it.",
+                "They wanted old rock that had not been mixed, sitting next to a hole in the ground they could look into."
               ],
               [
-                "Nine metres tall, four and a half across the footpads, fifteen thousand kilograms.",
-                "Which on the Moon weighs what two and a half tonnes does on Earth. That is the only reason it flies."
+                "Three moonwalks, seventeen and a half hours outside, and about three and a half hours of driving.",
+                "The last EVA was cut short by a schedule that had no slack in it. Scott still got his rille."
               ],
               [
-                "Armstrong and Aldrin. Four hundred and five thousand people put them in it.",
-                "Collins stayed above in Columbia, alone, twelve minutes out of contact on every orbit."
+                "Falcon lifted off with less ascent margin than any earlier LM, because it was heavier and further from Earth.",
+                "The whole mission was planned against the number of seconds the ascent engine had to burn."
               ]
             ]
           },
           {
-            "title": "Getting down",
+            "title": "The rover is here too",
             "questionOptionsForUser": [
-              "How did you land it?",
-              "How much fuel was left?",
-              "What were the alarms?",
-              "Why is it covered in grey dust?"
+              "How far did the rover go?",
+              "Where is it now?",
+              "What did it carry?",
+              "Why did they need it?"
             ],
             "answerForEachOption": [
               [
-                "Mostly by hand. The computer was flying toward a field of boulders the size of cars.",
-                "Armstrong took the control hand, overshot the crater and flew east until the ground said clear."
+                "28 km in three hours of driving, on a single battery, with two men riding in it.",
+                "It folded into a cubicle in the LM's side and was assembled on the surface by hand."
               ],
               [
-                "About twenty-five seconds of margin at touch-down.",
-                "Below that the procedure was an abort: the ascent engine fires either way and you never come back."
+                "Parked where they left it, with its wheels in the regolith and its antenna still pointed the way it was stowed.",
+                "A plaque on its frame reads: Man's First Wheels on the Moon, Delivered by Falcon, July 30, 1971."
               ],
               [
-                "A 1202 and a 1201, computer overflow, from a rendezvous radar feeding it data nobody needed.",
-                "The fix was already written on the ground. They called it up and the computer kept flying."
+                "A hand drill, a shovel, a raking tool, two camera bodies, a magnetometer and the sample bags.",
+                "And 350 kg of crew, which is why the LM had to be rebuilt to carry it down."
               ],
               [
-                "No weather, so nothing washes away. It is pulverised glass and rock, ground fine for four billion years.",
-                "And it clings, electrostatically. It got inside the suits and smelled like spent gunpowder."
+                "Because on foot, with a suit and 15 minutes of work per stop, a mission explores a hundred metres.",
+                "With a rover it explores thirty kilometres and the geology becomes readable instead of sampleable."
               ]
             ]
           },
           {
-            "title": "Living here",
+            "title": "What they left behind",
             "questionOptionsForUser": [
-              "How long could you stay?",
-              "How do you sleep in that?",
-              "What is the suit doing?",
-              "Why does walking here look like bouncing?"
+              "What is the Fallen Astronaut?",
+              "What else did they leave?",
+              "Did they leave anything careless?",
+              "Which is the most famous rock?"
             ],
             "answerForEachOption": [
               [
-                "Roughly sixty hours on consumables. They spent twenty-one and a half, every minute scheduled.",
-                "Twenty-two seconds of that schedule was the whole margin between a sample return and a scrub."
+                "Three inches of aluminium, with the names of fourteen astronauts and cosmonauts who had died.",
+                "Scott set it up in a small crater beside a memorial plaque and photographed it, then they left."
               ],
               [
-                "Standing up, in a cabin with no seats. One on the engine cover, one curled in the equipment bay.",
-                "It is the worst bed ever designed and it still beat not sleeping before a moonwalk."
+                "The ALSEP station, the rover, the flag, the ladder, the pallets, and about 300 kg of refuse.",
+                "Apollo 15 came home heavier than it went out, so the crew had to leave weight on the surface to get the samples off."
               ],
               [
-                "A personal spacecraft: 21 kilopascals of pure oxygen, a water-cooled undershirt, four hours of nothing else.",
-                "Try opening a jar with oven mitts on, underwater, wearing a fishbowl. That is the glove."
+                "A hundred four-cent postage stamps, carried without authority. Irwin handed them out as favors.",
+                "NASA found out, the astronauts were formally censured, and it cost Scott his command of the 1975 Apollo-Soyuz."
               ],
               [
-                "One sixth of Earth weight, so a step becomes a hop and the crew developed a lope.",
-                "Every tool needs two hands, because a stiff glove gives you no feel at the fingertips."
+                "The Genesis Rock: a pale anorthosite from the Apennine ejecta, 4.1 billion years old, the oldest piece of crust anyone has held.",
+                "It is in a museum in Houston, and the quarry it came from is still on the mountain above this lander."
               ]
             ]
           },
           {
-            "title": "What stays",
+            "title": "The experiment with a hammer",
             "questionOptionsForUser": [
-              "What did you leave behind?",
-              "Is any of this still working?",
-              "What did you take with you?",
-              "Who built this?"
+              "What was the hammer and feather?",
+              "Did the ascent stage survive?",
+              "Did the seismometer hear it?",
+              "Does the site still look used?"
             ],
             "answerForEachOption": [
               [
-                "The descent stage, a flag, and a reflector still used to range the Earth-Moon distance to the centimetre.",
-                "A seismometer, a solar wind collector, and a disc with messages from forty nations."
+                "Galileo's argument, done out loud: in a vacuum a hammer and a falcon feather fall together.",
+                "Scott dropped them both and they hit the ground at the same instant, on television, 26 degrees north."
               ],
               [
-                "The reflector: observatories still range off it. The seismometer recorded until the budget closed it out.",
-                "Everything else is in vacuum, so it does not rust and nothing grows over it. It will outlast the buildings."
+                "No. It was crashed into the Moon deliberately, at a chosen point, after rendezvous.",
+                "Apollo 10's ascent stage is the only one still in orbit around anything; the rest were aimed at the ground."
               ],
               [
-                "Twenty-one point seven kilograms of rock and soil, sealed before anyone opened it.",
-                "Sealed both ways, so nothing from here could get out either."
+                "Yes. The ALSEP seismometer recorded the impact as the sharpest signal it ever got, and used it to calibrate the Moon.",
+                "The impact site was found again from orbit in 2009: an 18-metre hole made by a machine on purpose."
               ],
               [
-                "Grumman, on Long Island. Twelve thousand people who argued for two years over whether the legs should fold.",
-                "Their program manager's own verdict: the ugliest thing he had ever been proud of. It brought them home."
+                "The tracks are all still there. Two rover wheel-lines, three sets of boot prints, and the dark scuff under the engine bell.",
+                "Nothing erases anything up here except another landing, and the nearest one is 700 km away."
               ]
             ]
           }
-        ],
-        "planet": "moon",
-        "location": "Statio Tranquillitatis, 0.674\u00b0N 23.473\u00b0E \u2014 the pad itself"
+        ]
       }
     },
     {
-      "id": "mars-rover",
-      "name": "Perseverance-class rover",
-      "3dmodel": "models/mars-rover.gltf",
+      "id": "mars-spirit",
+      "name": "Spirit",
+      "3dmodel": "models/mer-rover.glb",
       "introductoryTalk": [
-        "That is the field party. It has driven this delta for years with nobody in it.",
-        "It will still be working when the last of us is a name on a plate over there."
+        "Spirit. Mars Exploration Rover, landed in Gusev Crater on 4 January 2004 to look for a lake that may never have been.",
+        "Certified for 90 sols and one kilometre. It drove 7.7 km in six years, and is still parked where it stopped.",
+        "Ask me. Four rounds, one question each."
       ],
       "QA": {
-        "rounds": [
-          {
-            "title": "Why Jezero",
-            "questionOptionsForUser": [
-              "Why land in a crater?",
-              "How was the site chosen?",
-              "What were you looking for?",
-              "What did the delta deliver?"
-            ],
-            "answerForEachOption": [
-              [
-                "Because a river ran into it. Jezero is a delta: sediment sorted by water, in one place, 3.5 billion years ago."
-              ],
-              [
-                "Orbiters, for twenty years, reading minerals and slope. Then one human decision about which boulder field to risk."
-              ],
-              [
-                "Signs of life that survived. Not cells: chemistry and texture, where water left them lying around."
-              ],
-              [
-                "Layered sand and mud, carbonates, and igneous rock you can date. A geologist's whole day in two kilometres."
-              ]
-            ]
-          },
-          {
-            "title": "Living off a robot",
-            "questionOptionsForUser": [
-              "How does it drive itself?",
-              "What is the worst part of the job?",
-              "How long is a sol here?",
-              "Does it ever get stuck?"
-            ],
-            "answerForEachOption": [
-              [
-                "It plans its own path over terrain it has seen, then stops and waits for us to review the day."
-              ],
-              [
-                "Dust on solar panels is the classic killer, so this one carries a nuclear battery and never has to care."
-              ],
-              [
-                "24 hours 39 minutes. The clocks run in sols and the number in the caption is what people read."
-              ],
-              [
-                "It has slipped and tipped. The escape was rehearsed on Earth against a mock-up of that exact wheel."
-              ]
-            ]
-          },
-          {
-            "title": "What it carries",
-            "questionOptionsForUser": [
-              "What is on the mast?",
-              "Why shoot lasers at rocks?",
-              "What is the arm for?",
-              "What would you change?"
-            ],
-            "answerForEachOption": [
-              [
-                "Two pairs of eyes at human separation, so the stereo is genuinely stereoscopic, and a laser that zaps rock."
-              ],
-              [
-                "To read chemistry from 7 m away, which saves the arm, the drill and the tubes for the good targets."
-              ],
-              [
-                "Touch: grinding a rind off rock, caching a core, and taking the picture no orbiter can take."
-              ],
-              [
-                "Mass and time. A human does all of this faster, and the mass budget is why it is a robot."
-              ]
-            ]
-          },
-          {
-            "title": "What it leaves",
-            "questionOptionsForUser": [
-              "Where are the samples?",
-              "Why cache them outside?",
-              "What happens to the wheels?",
-              "Is it lonely?"
-            ],
-            "answerForEachOption": [
-              [
-                "In tubes on the ground, in a depot east of here. A second mission was supposed to come and get them."
-              ],
-              [
-                "Because one lander that drills, caches and returns was never affordable. So it is two missions and a promise."
-              ],
-              [
-                "They are tearing themselves on sharp regolith. Somebody had to learn that on a robot first."
-              ],
-              [
-                "It drives towards nothing, photographs nothing for anyone, and is the best-engineered instrument on the planet."
-              ]
-            ]
-          }
-        ],
         "planet": "mars",
-        "location": "Jezero Crater western rim, 18.4\u00b0N 77.5\u00b0E \u2014 an ancient river delta"
-      }
-    },
-    {
-      "id": "mars-airfield",
-      "name": "Ingenuity-class airfield",
-      "3dmodel": "models/mars-airfield.gltf",
-      "introductoryTalk": [
-        "This flat patch of ground is an airfield, and there is a helicopter buried in it.",
-        "Ninety-two flights. The design life was five."
-      ],
-      "QA": {
+        "location": "Gusev Crater, Columbia Hills · 14.572°S 175.478°E",
         "rounds": [
           {
-            "title": "Flying on Mars",
+            "title": "The landing",
             "questionOptionsForUser": [
-              "How do you fly where there is hardly any air?",
-              "What does one percent air cost?",
-              "Why bother at all?",
-              "Does it fly by remote?"
+              "How did it get down?",
+              "Where exactly is it?",
+              "Why Gusev?",
+              "What broke first?"
             ],
             "answerForEachOption": [
               [
-                "Big blades, fast, light. The atmosphere is one percent of Earth's, so the disc is huge and it turns at 2400 rpm."
+                "Aeroshell, parachute, then a rocket-powered descent stage that cut itself loose above the rover.",
+                "Spirit fell the last few metres inside four airbags and bounced about a kilometre along the plain before it stopped."
               ],
               [
-                "A helicopter the size of a biscuit tin, 1.8 kg, with one percent of an atmosphere to push on."
+                "14.57 degrees south, 175.5 degrees east, in the floor of a 160-km crater that from orbit looks like a dried lakebed.",
+                "The landing site was later named Columbia Memorial Station, for the shuttle and its crew."
               ],
               [
-                "Because an aircraft sees the terrain a rover will commit to, and it decides the route before the wheels do."
+                "Because crater floors on Mars drain inward, and if Mars had standing water, this is where the mud would be.",
+                "It turned out the crater had been filled by lava, not water. The mission found the water somewhere else anyway."
               ],
               [
-                "No. It flies a stored route by itself and lands wherever the ground allowed it to."
+                "The right front wheel's actuator, in January 2006, two years in. It stopped steering, then stopped turning.",
+                "Four years of dragging that wheel through the sand is the reason we know what is under the dust."
               ]
             ]
           },
           {
-            "title": "The hard part",
+            "title": "The broken wheel",
             "questionOptionsForUser": [
-              "What kills a Mars helicopter?",
-              "How did it survive the first winter?",
-              "What is the landing gear?",
-              "What broke in the end?"
+              "What did dragging a wheel do?",
+              "What was under the sand?",
+              "Did it help the science?",
+              "How do rovers drive with five wheels?"
             ],
             "answerForEachOption": [
               [
-                "Night. Minus ninety with no radioisotope heat, so it survives by design rather than by power."
+                "It ploughed. The dead wheel scraped the crust off the ground and exposed material that had been buried.",
+                "Spirit then drove in reverse for months so the working wheels did the steering."
               ],
               [
-                "It was driven onto a south-facing slope so the Sun would warm it, and the plan was rewritten for that."
+                "Bright white deposits of nearly pure silica, in a place where acidic hot water had once moved through the soil.",
+                "The best evidence of past habitable conditions either rover found, dragged up by a wheel that would not turn."
               ],
               [
-                "Four legs and a body, on a rotorcraft, on a planet, with no maintenance and no fuel truck."
+                "It made a six-year mission into a better one. The rover was designed to look at rock; the failure made it look at ground.",
+                "Every mission plan assumes the hardware works. This one is the counterexample."
               ],
               [
-                "A blade, landing on rough ground, two years past anything anyone claimed for it."
+                "A rocker-bogie suspension: three wheels per side hinged so the body stays level, and no wheel has to carry the load alone.",
+                "It is why a rover can climb over an obstacle twice its wheel diameter and why it can still drive with a dead wheel."
               ]
             ]
           },
           {
-            "title": "What it changed",
+            "title": "Getting stuck",
             "questionOptionsForUser": [
-              "Did it do its job?",
-              "What does that unlock?",
-              "Would you send a bigger one?",
-              "What is the lesson?"
+              "How did it die?",
+              "How long did they try?",
+              "What was Troy?",
+              "Was it recoverable?"
             ],
             "answerForEachOption": [
               [
-                "It scouted drives, found a rock that stopped a traverse, and proved powered flight off Earth."
+                "On 23 April 2009 it broke through a thin crust into a pocket of soft sand and could not get out.",
+                "By 1 May it had no mobility at all, and its panels could not be turned toward the sun."
               ],
               [
-                "Reconnaissance for crewed landings, sample retrieval over terrain a rover cannot cross, and cliffs."
+                "A year of it. Trenching, rocking, reverse driving, and a warm-up routine invented for the occasion.",
+                "The last transmission was 22 March 2010. NASA declared the mission complete on 25 May 2011, after winter took the power."
               ],
               [
-                "A helicopter that carries instruments is the obvious next machine, and it is already on a drawing board."
+                "The place it stopped, on the west side of a ledge called Home Plate, at the foot of the Columbia Hills.",
+                "It spent its last two Martian winters tilted in the sand, still sending pictures of the ground it could not leave."
               ],
               [
-                "Overbuild the survival and underbuild the mission. The five-flight plan got ninety-two."
+                "With a machine on the surface, possibly. With a machine 200 million km away and a five-minute light delay, no.",
+                "Every sol it needed to make its own decision about how hard to pull, and it was not built to judge sand."
               ]
             ]
           },
           {
-            "title": "Standing on it",
+            "title": "Still out there",
             "questionOptionsForUser": [
-              "Why is this the airfield?",
-              "Where is the spacecraft?",
-              "Do you walk there?",
-              "Can you see it from there?"
+              "Can orbiters still see it?",
+              "What does it look like from above?",
+              "Will anyone go back?",
+              "Was it a success?"
             ],
             "answerForEachOption": [
               [
-                "Flat, clear of boulders, with a slope the Sun can work on. That is the entire site survey."
+                "Yes. Mars Reconnaissance Orbiter has photographed it many times, including with its wheels still in the trench it made.",
+                "The track marks are legible: 7.7 km of them, ending in a scuff of sand where the last attempt was made."
               ],
               [
-                "Over the ridge, still bolted to its backshell, exactly where the terminal descent put it."
+                "A bright dot with a dark fan of disturbed dust around it, and a long thin path leading back to a crater.",
+                "Nothing about it has weathered, because there is almost no air to weather anything with."
               ],
               [
-                "Not today: a three kilometre round trip in a sol, and the delta is the other way."
+                "It is a hazard to a future landing site, and the interesting geology has samples on it already.",
+                "It will be left exactly where it is, and eventually buried by the same dust that killed it."
               ],
               [
-                "No. Two worlds, one horizon, and a radio link to a machine that cannot look back."
+                "It was designed for 90 sols and 1 km and returned six years and 7.7 km, plus the silica.",
+                "NASA has never had a better return on a Mars rover, and it ran out of nothing but the wheel."
               ]
             ]
           }
-        ],
+        ]
+      }
+    },
+    {
+      "id": "mars-opportunity",
+      "name": "Opportunity",
+      "3dmodel": "models/mer-rover.glb",
+      "introductoryTalk": [
+        "Opportunity. The other one, and the one that is still out there with its wheels in the sand of Jezero's neighbourhood.",
+        "It was certified for 90 sols. It drove 45.16 kilometres in nearly fifteen years and died of a dust storm.",
+        "Four rounds, one question each. Ask."
+      ],
+      "QA": {
         "planet": "mars",
-        "location": "Jezero Crater, 18.5\u00b0N 77.4\u00b0E \u2014 a flat sand sheet with a south-facing edge"
-      }
-    },
-    {
-      "id": "mars-depot",
-      "name": "Sample caching depot",
-      "3dmodel": "models/mars-depot.gltf",
-      "introductoryTalk": [
-        "Those tubes are the start of a return mission that has not launched yet.",
-        "Ten cores of rock and regolith, sealed, sitting on another planet."
-      ],
-      "QA": {
+        "location": "Meridiani Planum, east rim of Endeavour Crater · 2.28°S 5.23°W",
         "rounds": [
           {
-            "title": "What is in the tubes",
+            "title": "A landing with airbags",
             "questionOptionsForUser": [
-              "What is actually in them?",
-              "Why so precise?",
-              "What will they answer?",
-              "What is the risk in leaving them?"
+              "Where did it come down?",
+              "How many bounces?",
+              "What was the first thing it saw?",
+              "Was the landing site chosen for the rocks?"
             ],
             "answerForEachOption": [
               [
-                "Cores: 15 to 20 grams of rock and regolith, drilled, sealed and numbered in titanium tubes."
+                "1.9483 degrees south, 354.4742 degrees east, in a 20-metre crater at Meridiani Planum, 14.9 km from the aim point.",
+                "That site is now called Challenger Memorial Station."
               ],
               [
-                "Because an Earth laboratory is a hundred times better than anything that can land there, and this is the shortcut."
+                "At least 26. It dropped out of the aeroshell at terminal velocity, hit the ground at walking pace and skipped.",
+                "The airbag system was tested by dropping it off a tower until it stopped breaking."
               ],
               [
-                "When Jezero had water, for how long, and whether anything grew in it. Dating needs samples, not pictures."
+                "Ground so full of small grey spheres that the first week was spent explaining that they were concretions, not fossils.",
+                "They had formed in water, which was the point of being there."
               ],
               [
-                "Nobody can check the seals. A future mission finds tubes in dust with no way to know they are shut."
+                "Yes. Orbiters found hematite - which on Earth precipitates out of water - spread over an area too large to sample on foot.",
+                "The problem with landing on a promising plain is that you can walk 45 km and still be on it."
               ]
             ]
           },
           {
-            "title": "Why a depot",
+            "title": "Fifteen years",
             "questionOptionsForUser": [
-              "Why not land the return vehicle now?",
-              "Why ten tubes, not one?",
-              "Is the site marked?",
-              "What if nothing comes?"
+              "How far did it actually drive?",
+              "What was Endeavour Crater?",
+              "Did it beat Spirit?",
+              "How did it keep working so long?"
             ],
             "answerForEachOption": [
               [
-                "Because a Mars sample return is three spacecraft, and it is the most expensive thing planetary science has attempted."
+                "28.06 miles, 45.16 kilometres, at an average of about 35 metres a sol.",
+                "That is still the longest distance any wheeled vehicle has driven on another world."
               ],
               [
-                "Insurance. They are dropped in a scatter so that one bad landing cannot lose the set."
+                "A 22-km crater whose rim had been excavated from under the sand sheet, so it exposed older rock.",
+                "It took Opportunity eight months and a great deal of luck to reach it, and it spent the rest of its life on that rim."
               ],
               [
-                "Photographed from both ends, from orbit and from the ground, to be found by a machine that has never seen it."
+                "On distance, yes. On everything else, no - Spirit found the silica, and both rovers found the same thing that mattered.",
+                "They were twins with one design and one software bug, and each was the other's backup."
               ],
               [
-                "Then they stay exactly as they are for a very long time. Out here only radiation and dust are active."
+                "Its panels stayed cleaner than anyone predicted; dust storms on Mars clean as well as cover.",
+                "And the rover was allowed to sleep through bad weather instead of dying in it."
               ]
             ]
           },
           {
-            "title": "Getting them back",
+            "title": "The last drive",
             "questionOptionsForUser": [
-              "How do you launch off Mars?",
-              "Has anything like that been tried?",
-              "What is the hard part scientifically?",
-              "Why is that worth the money?"
+              "Where did it stop?",
+              "What was its final sol?",
+              "How did the storm kill it?",
+              "What were its last words?"
             ],
             "answerForEachOption": [
               [
-                "A small ascent vehicle built here, fuelled there, off a pad nobody has ever used."
+                "In a gully on the eastern rim of Endeavour, on a slope of 15 to 17 degrees, facing down the hill.",
+                "The team had named it Perseverance Valley a year before it got there, from an orbit photo."
               ],
               [
-                "No. Every gram that has left Mars left because an impact threw it, and a few landed on Earth."
+                "Sol 5111, 10 June 2018. Its last telemetry reported 22 watt-hours made and the dustiest sky ever measured on Mars.",
+                "The opacity reading was 10.8, and it was rising."
               ],
               [
-                "Sealing and certifying. Bringing Mars to Earth means proving nothing alive came with it."
+                "A planet-encircling storm that lasted for months and put enough dust on the panels that the battery never recovered.",
+                "Cold, dark and no power is exactly the failure mode the designers had listed and accepted."
               ],
               [
-                "Because the instruments waiting in clean rooms are a thousand times better than anything that can land."
+                "The last transmission was a set of instrument readings, as always, from a rover that could not see the Sun.",
+                "The sentence everyone remembers - about a low battery and getting dark - was written by a human being as an epitaph."
               ]
             ]
           },
           {
-            "title": "Standing in it",
+            "title": "Found from orbit",
             "questionOptionsForUser": [
-              "What is this ground?",
-              "How old?",
-              "Are the rocks interesting?",
-              "What would a human do first?"
+              "Was it ever found again?",
+              "What did the photo show?",
+              "Why did NASA stop looking?",
+              "Is Jezero relevant?"
             ],
             "answerForEachOption": [
               [
-                "An ancient lake floor: fine sand over cemented pebbles, and carbonate where the water did the sorting."
+                "In September 2018 the Mars Reconnaissance Orbiter photographed the valley floor and found it where the last commands put it.",
+                "Silent, upright, wheels in the sand, panels covered."
               ],
               [
-                "About 3.5 billion years, and it is the best evidence there has ever been for warm wet Mars."
+                "A bright speck the size of a car in a shadowed gully, with the tracks leading into it and stopping.",
+                "It was the first time anyone had confirmed the position of a dead rover by looking down at it."
               ],
               [
-                "Igneous ones you can date and sedimentary ones that hold the chemistry, both within a kilometre."
+                "On 13 February 2019, after more than 800 recovery attempts and a winter of dark skies.",
+                "The heaters were off and the battery was probably frozen. NASA judged a bad command riskier than the chance of a wake-up."
               ],
               [
-                "Turn over a rock nobody has turned over, look underneath it, then go find shade for the suit."
+                "It died inside Jezero Crater's rim, on the valley where Perseverance would later land to look at the same ancient delta.",
+                "Two rovers, twenty years apart, working the same crater wall. One is still there."
               ]
             ]
           }
-        ],
+        ]
+      }
+    },
+    {
+      "id": "mars-insight",
+      "name": "InSight",
+      "3dmodel": "models/insight-lander.glb",
+      "introductoryTalk": [
+        "InSight. Not a rover - it never moved after it landed, and that was the design.",
+        "It listened to the inside of Mars for four years with a seismometer it had to set down by arm, and a mole that would not dig.",
+        "Four rounds, one question each."
+      ],
+      "QA": {
         "planet": "mars",
-        "location": "Jezero Crater, ten sealed tubes scattered on flat ground east of the airfield"
-      }
-    },
-    {
-      "id": "mars-ares",
-      "name": "Ares habitat and ascent vehicle",
-      "3dmodel": "models/mars-ares.gltf",
-      "introductoryTalk": [
-        "Captain. Easy, that dark ring is your own bootprint.",
-        "Everything under your boots is iron oxide. It is the only colour this planet has."
-      ],
-      "QA": {
+        "location": "Western Elysium Planitia · 4.5°N 135.9°E",
         "rounds": [
           {
-            "title": "Getting down",
+            "title": "A lander that stays put",
             "questionOptionsForUser": [
-              "How did you land this time?",
-              "Why is the descent so long?",
-              "What did you see out of the window?",
-              "How much margin was left?"
+              "Why no wheels?",
+              "How did it land?",
+              "Why Elysium Planitia?",
+              "What was on the ground with it?"
             ],
             "answerForEachOption": [
               [
-                "The Moon was flown by hand. Mars is flown by a machine you cannot argue with for seven minutes.",
-                "Aeroshell, a supersonic parachute, then a skycrane that lowers you on a cable and flies off to crash itself."
+                "Because a seismometer cannot measure anything while it is driving. It had to be sitting still, on hard ground, for years.",
+                "Every marsquake it ever recorded came from a machine that had not moved since the day it touched down."
               ],
               [
-                "There is an atmosphere, which is a brake and a threat at once: five kilometres a second of heat, 400 seconds of wind.",
-                "On the Moon there was nothing to fly through, so the whole landing was rocket fuel from orbit down."
+                "Parachute, then a rocket-powered back shell that hovered and set it down on three legs, then flew off and crashed 1 km away.",
+                "That back shell became a free seismometer when it landed. It was heard falling, 1 km from the lander."
               ],
               [
-                "Nothing, on the way in. Four minutes of plasma blackout, instruments only.",
-                "Then the ground appeared already close, which is the part every test pilot complains about."
+                "Low, flat, sunlit and near the equator, so the solar arrays would keep the batteries warm through a cold winter.",
+                "The site is a lava plain, chosen for the boringness. Nothing on it was interesting to look at."
               ],
               [
-                "Fuel, plenty compared with the Moon. Time was the margin here: no window opens twice a month.",
-                "Miss the date and the return is 26 months away, so an abort was never actually an option."
+                "A domed seismometer on the ground, a heat probe on a tether, a radio science package, and a scoop that dug in during week one.",
+                "The seismometer is still sitting there, still level, still listening to nothing."
               ]
             ]
           },
           {
-            "title": "The wrong sky",
+          "title": "The mole that would not dig",
             "questionOptionsForUser": [
-              "Why is the sky the wrong colour?",
-              "Is it cold?",
-              "Does the weather ever change?",
-              "Why is the Sun smaller?"
+              "What was HP3 supposed to do?",
+              "Why did it fail?",
+              "How did they fight it?",
+              "How deep did it get?"
             ],
             "answerForEachOption": [
               [
-                "Fine dust in suspension, all day. It scatters the blue out of the light and leaves butterscotch.",
-                "And it runs backwards at sunset: the same dust piles blue into a halo round the Sun."
+                "A self-hammering probe the length of a forearm, designed to burrow 5 metres and read heat coming up from the interior.",
+                "Five metres is where Mars still holds the record of how it formed."
               ],
               [
-                "Minus sixty on average, and it swings 60 kelvin in one day because there is hardly any air to hold heat.",
-                "Your suit is a thermos in that, and the habitat is a house that is also a pressure vessel."
+                "The regolith here is dry, coarse and has no cohesion, so the mole rebounded instead of biting.",
+                "Every hammer blow pushed it back out of its own hole. On Earth you push down; here there is nothing to push against."
               ],
               [
-                "Dust storms, seasonally: from whirls you photograph to events that wrap the planet for months.",
-                "There is no lightning. There is not enough air, and no water, to make it."
+                "For eighteen months. They built a backstop out of a section of its own tether and pressed it against the mole with the arm.",
+                "It gained a little. Then the deployment arm began to fail, and the instrument was abandoned in place."
               ],
               [
-                "You are 1.52 astronomical units out, so the light is 43 percent of what it was at Earth.",
-                "The disc is a third across, and the panels are sized for that number rather than for the one you remember."
+                "Forty centimetres of a five-metre design goal, after more than a year of hammering.",
+                "It is the most expensive hole ever dug on Mars, and it taught the next mission how to anchor."
               ]
             ]
           },
           {
-            "title": "Twice the weight",
+            "title": "What it heard",
             "questionOptionsForUser": [
-              "Is walking harder than on the Moon?",
-              "Can you lift anything?",
-              "What does the air do for you?",
-              "How long are your days?"
+              "Did it find marsquakes?",
+              "How big was the largest?",
+              "What did it learn about the core?",
+              "Did it feel anything else?"
             ],
             "answerForEachOption": [
               [
-                "Thirty-eight percent of Earth against the Moon's sixteen. The hop is gone, you walk like a person again.",
-                "Same suit, so every movement you trained for is wrong. The lope that worked out there looks ridiculous here."
+                "More than a thousand, over four years, in a place where nobody had heard anything before.",
+                "Most were tiny. A handful were large enough to make the whole planet ring."
               ],
               [
-                "Yes, and that is the good news: a 100 kg tool is a 38 kg tool, which is why the site work is human at all.",
-                "What gravity gives back, the dust takes straight away."
+                "A magnitude-five event on 25 May 2022 - the largest tremor ever measured on another world, two years past its design life.",
+                "It was recorded by a seismometer that had been left in the open on purpose, because a mole had failed."
               ],
               [
-                "Almost nothing for pressure, and everything for heat: you can shed waste heat into it, which the Moon never let us do.",
-                "It is also why the samples do not have to be protected from the outside, only from us."
+                "Mars has a liquid core, about 1,830 km in radius, and less dense than anyone expected.",
+                "That single number settled a debate that had run from Viking to the orbiters, and it came from sound."
               ],
               [
-                "Twenty-four hours thirty-nine minutes, so the crew keep Earth hours and call the count sols.",
-                "Two of the three watch systems in that habitat exist to put a shift in daylight."
+                "Wind. Constantly - the dome was not sealed against it, so the ground noise is part of every record.",
+                "And it detected meteoroid impacts on the surface, which nobody had measured before."
               ]
             ]
           },
           {
-            "title": "Who else is here",
+            "title": "The end, by dust",
             "questionOptionsForUser": [
-              "Who else is out here with us?",
-              "What does the crew do first?",
-              "What do you fear out here?",
-              "Why is there a flag here?"
+              "Why did it stop?",
+              "When was the last signal?",
+              "Is anything still working?",
+              "Was the mission a success?"
             ],
             "answerForEachOption": [
               [
-                "Robots. One has driven this rim for years, longer than anyone has been off Earth.",
-                "It will still be working when the last of us is a name here, and that is the design requirement, not a joke."
+                "Dust built up on the arrays until the battery could not keep the electronics warm, and the power fell below the radio's needs.",
+                "It was the failure mode written into the mission design from the start, and the one thing nobody could clean."
               ],
               [
-                "Look up. Then pressure, then dust, then samples, in that order, every sol.",
-                "A human geologist does in a week what the rover managed in a year."
+                "15 December 2022. Two failed attempts to reach it later, on 21 December, the mission was declared over.",
+                "The last command had been a two-week silence to wait out the dust. The dust did not clear."
               ],
               [
-                "The suit, the dust and the return date, in that order, and not the cold.",
-                "Every loss in this business has come from something that was supposed to be routine."
+                "Nothing is switched on, but nothing has fallen over either. The deck, the dome, the mole and the tether are all still in place.",
+                "InSight will sit in Elysium Planitia for millions of years. If a mission needs flat ground to stand on, it is still there."
               ],
               [
-                "Because the one over there took 400,000 people to plant, and the sunlight bleached it white.",
-                "It marks the site for whoever comes next, and it will outlast the building we arrived in."
+                "It delivered the size and state of a planet's core from one fixed spot, on a Discovery-programme budget.",
+                "It was abandoned because the panels got dirty, not because it stopped answering."
               ]
             ]
           }
-        ],
+        ]
+      }
+    },
+    {
+      "id": "mars-viking1",
+      "name": "Viking 1",
+      "3dmodel": "models/viking-lander.glb",
+      "introductoryTalk": [
+        "Viking 1. The first machine that landed on Mars and kept talking, on 20 July 1976 - the country's bicentennial.",
+        "It lasted six years and died because of something we sent it.",
+        "Ask. Four rounds, one question each."
+      ],
+      "QA": {
         "planet": "mars",
-        "location": "Jezero Crater western rim, 18.4\u00b0N 77.5\u00b0E \u2014 Sol 1"
-      }
-    },
-    {
-      "id": "solar-l2-observatory",
-      "name": "Sun-Earth L2 observatory",
-      "3dmodel": "models/solar-l2-observatory.gltf",
-      "introductoryTalk": [
-        "Take your time with the handholds. That mirror has been cold for years and it is still looking.",
-        "There is nobody out here. That is the entire point of the place."
-      ],
-      "QA": {
+        "location": "Chryse Planitia · 22.27°N 47.95°W",
         "rounds": [
           {
-            "title": "Why L2",
+            "title": "The first one that worked",
             "questionOptionsForUser": [
-              "Why come all the way out here?",
-              "Is it a place you can park?",
-              "What does the shield do?",
-              "What is on the cold side?"
+              "Why is this a first?",
+              "How did it get down?",
+              "What was the site like?",
+              "What was the plan for life?"
             ],
             "answerForEachOption": [
               [
-                "Because L2 is the one direction where the Sun, Earth and Moon are all behind you, and you can radiate away from all three."
+                "Earlier American landers were all lost. Viking 1 came down on 20 July 1976, a month after its orbiter chose the site.",
+                "It was still operating in 1982, longer than anyone had promised."
               ],
               [
-                "No. L2 is unstable, so it rides a halo orbit around nothing and station-keeps about once a month."
+                "Entry, a supersonic parachute, then 24 thrusters flying the last kilometre before the lander dropped out from under them.",
+                "The lander then had to right itself, deploy three legs and wait for dust to clear before it took a picture."
               ],
               [
-                "It is the design: one sunshield the size of a tennis court, permanently between the Sun and the cold side."
+                "Chryse Planitia: a stony, wind-scoured plain at 22 degrees north, in ground that looks water-carved from orbit.",
+                "It was chosen from orbit after the site originally picked was found to be too rough to land on."
               ],
               [
-                "Forty kelvin of telescopes and detectors, in the shade, pointed away from the brightest thing nearby."
+                "Three biology experiments run at once, so no single result could be over-read: label release, gas exchange, gas chromatograph.",
+                "That design is the reason the argument about the answer has never finished."
               ]
             ]
           },
           {
-            "title": "Floating out here",
+            "title": "The biology argument",
             "questionOptionsForUser": [
-              "What is it like, being out here?",
-              "Can you go for a walk?",
-              "What does a spacesuit do here?",
-              "How long is an EVA out here?"
+              "Did it find life?",
+              "What did the soil do?",
+              "Why is it still argued about?",
+              "What changed the verdict?"
             ],
             "answerForEachOption": [
               [
-                "Quiet. The Sun is always behind you, so your own shadow is permanently in front of your feet."
+                "It found something like metabolism and something like sterilisation, in the same sample, in the same hour.",
+                "NASA's own biologists could not agree, so the official result was: inconclusive, and probably chemistry."
               ],
               [
-                "There is nothing to walk on. You are on a tether, in a suit, working off handholds on a machine."
+                "The labeled-release test gave off carbon dioxide as if the dirt were eating what was poured on it - then stopped when baked.",
+                "The gas chromatograph found no organic carbon at all, which is what killed the biological reading."
               ],
               [
-                "Not enough. With no air to cool against, a suit in sunlight here is a survival problem, not a workspace."
+                "Nobody had measured oxidants in Martian soil. When Phoenix found perchlorate in 2008, Viking's results made sense without life.",
+                "And perchlorate also destroys organics when you bake it, which is exactly what the chromatograph did."
               ],
               [
-                "On the station, six to eight hours. A repair like this one was planned as seven sorties and took weeks."
+                "Fifty years later the answer is still that we do not know, and that the instrument was not the wrong one - it was the first one.",
+                "Every mission since has been designed to not have this problem."
               ]
             ]
           },
           {
-            "title": "What it sees",
+            "title": "Six years on the surface",
             "questionOptionsForUser": [
-              "What does it look at?",
-              "Why infrared?",
-              "Why not build bigger on Earth?",
-              "What has it broken?"
+              "What did it do all that time?",
+              "How did it survive the winter?",
+              "What did it photograph?",
+              "Did it ever move?"
             ],
             "answerForEachOption": [
               [
-                "Everything faint and everything old: the first galaxies, and the air of planets around other stars."
+                "It dug, analysed, weighed the soil, measured wind and temperature, and returned tens of thousands of images.",
+                "It recorded two full Martian years of weather at one fixed point, and that record is still the reference for the site."
               ],
               [
-                "Because expansion stretches early light into wavelengths the ground cannot see at all."
+                "Heaters, on a plutonium power source, and a mission team that learned to schedule by the Martian calendar before it started.",
+                "Its electronics were designed for a 90-day surface mission and were expected to die in the first winter. They did not."
               ],
               [
-                "Because the atmosphere glows in the infrared and it twinkles. Both are fixed by going 1.5 million km away."
+                "The first colour picture taken on another planet: pink sand, a rock and a calibration swatch, deliberately staged.",
+                "And a bright object crossing the sky in 1978, which was Earth and Phobos in the same frame."
               ],
               [
-                "Nothing, and that is the surprise. The mirror came into focus better than the ground tests predicted."
+                "Not one centimetre. It had no wheels and no intention of any.",
+                "Its tracks were made by its own footpads and by nothing else until the wind moved sand around them."
               ]
             ]
           },
           {
-            "title": "Living there",
+            "title": "Killed by a command",
             "questionOptionsForUser": [
-              "How long does it last?",
-              "What kills it eventually?",
-              "Where does it go when it dies?",
-              "Would you work out here?"
+              "How did it end?",
+              "Whose mistake was it?",
+              "Could it have been recovered?",
+              "Is it still there?"
             ],
             "answerForEachOption": [
               [
-                "Until the propellant runs out, which was sized for ten years and bought by launch vehicle margin."
+                "On 11 November 1982 a software uplink meant to help a tired battery overwrote the data that pointed its antenna at Earth.",
+                "The dish swung away from Earth, the batteries drained, and the lander went silent at 22 degrees north."
               ],
               [
-                "Micrometeoroids on the shield, and one part in a service module nobody can reach."
+                "Nobody's, in the sense that matters: the procedure was correct, the tape was long, and a check digit did not exist.",
+                "It ended the record for the longest surface mission on another planet that Viking had held for six years."
               ],
               [
-                "Nowhere. It cannot be deorbited from L2, so it is pushed into a disposal orbit that never returns."
+                "The lander was healthy. Pointing it back at Earth needed a dish and a command, and after two months neither was going to arrive.",
+                "The spacecraft did not wear out. It was switched off by its own ground crew."
               ],
               [
-                "Once. On a tether, in a suit, with no way down and a two week light delay on every answer."
+                "Yes. Orbiters have seen it, and its footprints and the trench from its sampler are still visible in the sand.",
+                "It is the oldest thing on Mars that a human being operated, and the first thing anyone will see when they get there."
               ]
             ]
           }
-        ],
+        ]
+      }
+    },
+    {
+      "id": "solar-mgs",
+      "name": "Mars Global Surveyor",
+      "3dmodel": "models/mars-global-surveyor.glb",
+      "introductoryTalk": [
+        "Mars Global Surveyor. An orbiter, so there is no ground here - it is still going round Mars, behind you and above.",
+        "It mapped the entire planet for ten years and then went silent in 2006 after a command from Earth.",
+        "Four rounds. Ask one at a time."
+      ],
+      "QA": {
         "planet": "solar",
-        "location": "Sun-Earth L2, 1.5 million km from Earth away from the Sun \u2014 halo orbit"
-      }
-    },
-    {
-      "id": "solar-sun-probe",
-      "name": "Inner heliocentric solar probe",
-      "3dmodel": "models/solar-sun-probe.gltf",
-      "introductoryTalk": [
-        "Look at the heat shield, then at the Sun. Only one of those two is designed to be there.",
-        "This is the closest anything has come to a star, and it is unmanned on purpose."
-      ],
-      "QA": {
+        "location": "Near-polar Mars orbit, about 450 km up · periapsis 372.8 km, apoapsis 436.5 km",
         "rounds": [
           {
-            "title": "Flying into a star",
+            "title": "The map",
             "questionOptionsForUser": [
-              "How do you get that close to the Sun?",
-              "What is the temperature out there?",
-              "Why is the corona hot?",
-              "What holds it up?"
+              "What did it actually make?",
+              "How sharp were the cameras?",
+              "What did the altimeter do?",
+              "Why did it matter for rovers?"
             ],
             "answerForEachOption": [
               [
-                "You do not fall in, you give up speed: seven Venus passes to shed the Earth's 30 km/s of orbital motion."
+                "The first global topographic map of another planet, at a resolution that made Mars a place with elevations instead of outlines.",
+                "Plus a magnetic map, a thermal map and a gravity field good enough to weigh the deep interior."
               ],
               [
-                "Fourteen hundred degrees on the shield face. Behind it the instruments sit near room temperature."
+                "About 1.4 metres per pixel, and the imaging team picked its own targets: a camera flown by scientists rather than a pilot.",
+                "Its pictures found gullies so fresh that they had to have formed within the last few years."
               ],
               [
-                "That is the mission. The surface is 5500 and the air above it is a million degrees, and nobody knows why."
+                "A laser rangefinder that fired 5 Hz at the ground for nine years, building a digital elevation model of the whole planet.",
+                "Every elevation you have ever seen quoted for Mars - Olympus, Hellas, Jezero's rim - is measured against MGS."
               ],
               [
-                "Twelve centimetres of carbon composite, with the instruments behind it in a shade that never moves."
+                "It picked the landing sites. Gusev and Meridiani - where Spirit and Opportunity sit - were chosen out of its data.",
+                "It also imaged the ellipses for the rovers that came after, including the one you just walked past."
               ]
             ]
           },
           {
-            "title": "What it samples",
+            "title": "The magnetism",
             "questionOptionsForUser": [
-              "What does it fly through?",
-              "What can you measure that Earth cannot?",
-              "What did it already find?",
-              "Does it touch the Sun?"
+              "What was the surprise?",
+              "What does it mean?",
+              "Did it find water?",
+              "Did it see anything moving?"
             ],
             "answerForEachOption": [
               [
-                "The solar wind itself, every 88 days, in the region where the wind is still being made."
+                "Stripes. Crustal remanent magnetisation in banded patterns in the southern highlands, billions of years old.",
+                "Mars had a global magnetic field early in its history, and lost it - which is why the atmosphere went and the water left."
               ],
               [
-                "Fields and particles at the same instant, in the plasma, instead of 150 million km downstream."
+                "It means a planet's dynamo can start and stop, and the surface keeps the record of when.",
+                "Earth looks like this too. We just cannot read ours through thirty kilometres of rock and ocean."
               ],
               [
-                "Magnetic switchbacks, zig-zags in the field that turn out to start at structures on the surface."
+                "Layered and gullied terrain that reads as liquid water in geologic recent times, plus polar caps with real structure.",
+                "Not the discovery of water so much as the proof that the argument about water on Mars was the wrong argument."
               ],
               [
-                "It touches what comes off it. Nothing solid survives the corona and nothing solid needs to."
+                "It watched dust storms merge until one wrapped the planet, and watched the carbon-dioxide frost advance and retreat each season.",
+                "The seasonal carbon-dioxide wind field it mapped is what every lander since has had to survive."
               ]
             ]
           },
           {
-            "title": "Surviving it",
+            "title": "Ten years of overtime",
             "questionOptionsForUser": [
-              "What is the hardest engineering problem?",
-              "How does it keep pointing?",
-              "What happens if a thruster fails?",
-              "How much sunlight is that?"
+              "How long was it meant to last?",
+              "How did it stay up so long?",
+              "What is aerobraking?",
+              "Did it do anything else?"
             ],
             "answerForEachOption": [
               [
-                "Autonomy. The Sun blocks the radio path, so a lost link means a lost craft before anyone down here notices."
+                "One Mars year of mapping. It ran nearly ten, on three extended missions.",
+                "Everything on it was expected to die before the second winter."
               ],
               [
-                "Six small thrusters and a star tracker asked to work 40 degrees from the brightest object in the sky."
+                "It used the upper atmosphere as a brake. For six months it dipped its periapsis to 110 km and let Mars drag on its solar wings.",
+                "That turned a 54,000 km elliptical capture orbit into a 450 km circle without burning the fuel away."
               ],
               [
-                "The two that matter have redundancy, and there is a propellant budget that quietly decides the end."
+                "Aerobraking: trading a little heat and a lot of altitude for a cheaper orbit, over hundreds of passes.",
+                "It is the reason MGS could carry instruments instead of propellant, and why nearly every orbiter since does it."
               ],
               [
-                "Fifteen times what a panel gets at Earth, which is why the arrays retract into the shield's shadow."
+                "It relayed the landers. Rovers on Mars talk to a spacecraft overhead, and MGS carried the traffic for three of them.",
+                "It was a phone line across 200 million km and it never dropped the connection longer than the Sun allowed."
               ]
             ]
           },
           {
-            "title": "Standing where you are",
+            "title": "Going silent",
             "questionOptionsForUser": [
-              "Why not send a person?",
-              "What does the Sun look like here?",
-              "How do you float out here?",
-              "What comes next?"
+              "When did it stop?",
+              "What went wrong?",
+              "Where is it now?",
+              "Would we try to fix it?"
             ],
             "answerForEachOption": [
               [
-                "A human needs a hundred tonnes of radiator to last ten minutes. This needs a shield and a battery."
+                "Early November 2006, after a routine yaw manoeuvre during a software update. The telemetry stopped mid-maneuver.",
+                "The last images had been returned two days earlier, showing the south polar spring."
               ],
               [
-                "Fourteen times the disc you left behind, and the sky is still black, because there is no air to light up."
+                "Most likely a memory glitch that spun the spacecraft and pointed its arrays the wrong way, so the batteries ran down.",
+                "A command from Earth was involved. Viking's death, thirty-odd years earlier, was the same shape."
               ],
               [
-                "You do not. You watch from a distance that keeps the numbers honest, through instruments built for this."
+                "Still in a near-polar orbit at about 450 km, and it will stay there for decades.",
+                "It is expected to fall out of the sky and reach the surface some time after 2047, wherever its orbit happens to decay."
               ],
               [
-                "The same shield, bigger, with a sampler that brings coronal material home."
+                "It is a dead spacecraft with no thrusters, no fuel and no way to receive a command, in an orbit it cannot change.",
+                "There is nothing to fix. There is a map it made, which is the part that stays."
               ]
             ]
           }
-        ],
+        ]
+      }
+    },
+    {
+      "id": "solar-pioneer10",
+      "name": "Pioneer 10",
+      "3dmodel": "models/pioneer-10.glb",
+      "introductoryTalk": [
+        "Pioneer 10. It went out, and it is still going, and it has been silent since 2003.",
+        "There is a gold plate bolted to its side with a man and a woman on it, and nobody is coming to read it.",
+        "Four rounds, one question each. Last stop on the walk."
+      ],
+      "QA": {
         "planet": "solar",
-        "location": "0.05 AU perihelion, inside Mercury's orbit \u2014 inside the solar corona"
+        "location": "Interstellar space toward Taurus · 80 AU from the Sun at its last signal",
+        "rounds": [
+          {
+            "title": "The first way out",
+            "questionOptionsForUser": [
+              "What did it do first?",
+              "What happened at Jupiter?",
+              "How did it survive the belt?",
+              "How fast is it going?"
+            ],
+            "answerForEachOption": [
+              [
+                "It was the first spacecraft to cross the asteroid belt, the first to fly Jupiter, and the first to leave the planets behind.",
+                "Launched in March 1972, at Jupiter by December 1973, and beyond the orbit of Neptune by the mid-1980s."
+              ],
+              [
+                "It passed 132,000 km above the cloud tops and took the first close pictures of the largest planet in the Solar System.",
+                "It also found a radiation belt at Jupiter intense enough to fry electronics, which nearly killed Pioneer 11."
+              ],
+              [
+                "By pointing its antenna at Earth and driving through the middle, with 12 known asteroids on its track and no way to swerve.",
+                "Engineers calculated the chance of a catastrophic hit at about one in a million. Nobody argued with the arithmetic afterwards."
+              ],
+              [
+                "About 12 km per second relative to the Sun - roughly 2.5 AU a year, and it has been doing it for 50 years.",
+                "At that rate a signal takes over eleven hours to reach us, which is why the last one was such a small event."
+              ]
+            ]
+          },
+          {
+            "title": "The plate",
+            "questionOptionsForUser": [
+              "What is on the plaque?",
+              "Why a man and a woman?",
+              "Did they intend it to be found?",
+              "Is the other one similar?"
+            ],
+            "answerForEachOption": [
+              [
+                "Two human figures, the Solar System drawn from where the craft is, a hydrogen atom, and the Sun located by fourteen pulsars.",
+                "Carl Sagan pushed for it, drew it with Frank Drake, and it was machined onto gold-anodised aluminium 152 by 229 mm."
+              ],
+              [
+                "The figures are drawn neutral, with no clothing, because clothing is cultural and they had no idea who would see it.",
+                "Sagan's wife Ann Druyan was told the nakedness would be a problem and refused to change it."
+              ],
+              [
+                "No. It was a gesture, and dated: the launch year is encoded in binary pulses so any reader could work out how old it was.",
+                "It will outlast every language it could have been written in."
+              ],
+              [
+                "Pioneer 11 carries the same plate. Both are now silent, both are heading out of the ecliptic, and neither will be recovered.",
+                "Voyager's records are newer and more generous. Pioneer's plate is the one with a drawing of us on it."
+              ]
+            ]
+          },
+          {
+            "title": "The drift",
+            "questionOptionsForUser": [
+              "What was the Pioneer anomaly?",
+              "How was it explained?",
+              "When did it go quiet?",
+              "How long will the signal last?"
+            ],
+            "answerForEachOption": [
+              [
+                "A small persistent Doppler drift in the tracking between 20 and 70 AU, as if the Sun were pulling the spacecraft back.",
+                "It survived every check for 20 years and became a genuine puzzle, with papers written about modified gravity."
+              ],
+              [
+                "Heat. The radioisotope generators radiate unevenly, mostly aft, and that photon thrust is exactly the missing acceleration.",
+                "Reconstructing the spacecraft's thermal state from its own telemetry closed the case in 2012. It was engineering all along."
+              ],
+              [
+                "The mission was officially ended in 1997 at 67 AU; a faint carrier was still being picked up until 23 January 2003, at 80 AU.",
+                "The last decodeable telemetry was a partial frame received from 80.22 AU, in April 2002."
+              ],
+              [
+                "It cannot wake up. The plutonium is cold and the transmitter needs more power than is left.",
+                "The plaque, though, does not need power. It is good for a billion years, in shade."
+              ]
+            ]
+          },
+          {
+            "title": "Where it is going",
+            "questionOptionsForUser": [
+              "Will it hit anything?",
+              "What will it be near next?",
+              "Is it the farthest thing we made?",
+              "What should we do about it?"
+            ],
+            "answerForEachOption": [
+              [
+                "No. Space is empty on the scale it is moving through, and it is not decelerating for anything.",
+                "The chance of intersecting a star in the next million years is essentially zero."
+              ],
+              [
+                "In about 90,000 years it passes within three quarters of a light year of a small orange star called HIP 117795.",
+                "That is the nearest approach it will make to anything for two million years."
+              ],
+              [
+                "It was, for decades, until Voyager 1 went past it and kept accelerating away.",
+                "Pioneer 10 is now third, behind Voyagers 1 and 2, and it will never catch either."
+              ],
+              [
+                "Nothing. It is unreachable by design, and it was not built to be recovered.",
+                "It is a monument the way a buoy in an ocean is: out there marking the fact that somebody came this far."
+              ]
+            ]
+          }
+        ]
       }
     }
   ]

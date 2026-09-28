@@ -10,7 +10,7 @@ import { SURFACE_STOPS } from "../src/journey/timeline.js";
 import { MOON, MARS } from "../src/journey/worlds.js";
 import { groundPose, scratchGround } from "../src/journey/ground.js";
 import { buildTerrain, buildCraters, levelTerrain, flattenAlongCorridor, heightAt, NEAR_R } from "../src/lib/terrain.js";
-import { CORRIDOR_BY_WORLD } from "../src/journey/corridor.js";
+import { CORRIDOR_BY_WORLD, LEVEL_BAND_BY_WORLD } from "../src/journey/corridor.js";
 import { ROCK_N, ROCK_CLEARANCE, scatterRocks } from "../src/lib/rocks.js";
 import { nearestOnCorridor } from "../src/lib/path-clearance.js";
 import { SEAM_A, SEAM_B, DEPART, TRANSFER_END, MARS_SEAM, MARS_DEPART, MOON_LEGS, MARS_LEGS, rumble, walkWeight } from "../src/journey/timeline.js";
@@ -29,7 +29,7 @@ const UP = new Vector3(0, 1, 0);
 const terrains = {};
 for (const world of [MOON, MARS]) {
   const t = buildTerrain({ seg: 96, avoid: CORRIDOR_BY_WORLD[world.id], relief: world.relief });
-  flattenAlongCorridor(t, CORRIDOR_BY_WORLD[world.id]);
+  flattenAlongCorridor(t, LEVEL_BAND_BY_WORLD[world.id]);
   const off = levelTerrain(t, world.cut[0], world.cut[2]);
   ok(Math.abs(heightAt(t.heights, world.cut[0], world.cut[2])) < 1e-6, `${world.id}: field not levelled at the hand-off spot`);
   console.log(`${world.id}: terrain levelled ${off.toFixed(2)}m at the cut, built in ${t.ms.toFixed(0)}ms, sun ${world.sunElevation.toFixed(0)}deg up`);
@@ -272,15 +272,21 @@ const SPACE_BY_PLANET = { moon: MOON_GROUND, mars: MARS_GROUND, solar: EVA_SPACE
 //
 // Occlusion is measured per corner, along that corner's own sight line: comparing the ground against the
 // lowest corner of the box on the centre line called a hidden object whenever a prop stood in a dip, even
-// though every visible part of it was clear of the ridge.
+// though every visible part of it was clear of the ridge. The top of the box has to be clear of the ground
+// absolutely - that is the silhouette. The bottom may be grazed by a degree, which at 17 m is 30 cm of
+// regolith in front of a footpad, because a wide vehicle standing on ground that is level along the walk
+// still has bumps the size of its own footprint.
 const subject = (heights, site, box) => {
-  const groundAt = (x, z) => (heights ? heightAt(heights, x, z) : 0);
+  // On a surface the box sits on the regolith; in deep space it sits at the elevation the stop authored.
+  const groundAt = (x, z) => (heights ? heightAt(heights, x, z) : site[1]);
   const y0 = groundAt(site[0], site[2]);
   const elOf = (v) => Math.atan2(v.y, Math.hypot(v.x, -v.z));
   const halfT = Math.tan(camera.fov / 2 / DEG);
   const pts = [];
-  for (const sx of [-box.half, box.half]) for (const sz of [-box.half, box.half]) for (const sy of [y0, y0 + box.top]) {
+  const dz = box.deep ?? box.half;
+  for (const sx of [-box.half, box.half]) for (const sz of [-dz, dz]) for (const sy of [y0, y0 + box.top]) {
     const world = new Vector3(site[0] + sx, sy, site[2] + sz);
+      const graze = sy === y0 ? 1.0 / DEG : 0;
     const v = world.clone().sub(eyeSlot.v).applyQuaternion(eyeSlot.q.clone().invert());
     const d = world.clone().sub(eyeSlot.v);
     const range = Math.hypot(d.x, d.z);
@@ -292,7 +298,7 @@ const subject = (heights, site, box) => {
       const f = k / range;
       const terr = Math.atan2(groundAt(eyeSlot.v.x + d.x * f, eyeSlot.v.z + d.z * f) - eyeSlot.v.y, k);
       if (terr * DEG > peak) peak = terr * DEG;
-      if (terr > corner + 1e-6) { blocked = true; break; }
+      if (terr > corner + graze) { blocked = true; break; }
     }
     pts.push({ v, blocked, peak, range });
   }
@@ -339,17 +345,31 @@ for (const planet of ["moon", "mars", "solar"]) {
       eyeSlot.q.setFromEuler(new Euler(Math.asin(dv.y / dv.length()), Math.atan2(-dv.x, -dv.z), 0, "YXZ"));
     }
     eyeSlot.v.copy(local);
-    const thing = subject(heights, stop.obj, { half: 1.2, top: stop.top });
-    const crew = subject(heights, stop.crew, { half: 0.45, top: 1.95 });
+    const thing = subject(heights, stop.obj, { half: stop.half, deep: stop.deep, top: stop.top });
+    const crew = subject(heights, stop.crew, { half: 0.45, deep: 0.45, top: 1.95 });
     for (const [name, x] of [["object", thing], ["crew", crew]]) {
       ok(x.ax <= 0.98 && x.ay <= 0.98, `${planet} stop ${stop.index}: ${name} leaves the portrait frame (ndc ${x.ax.toFixed(2)},${x.ay.toFixed(2)})`);
-      if (heights) ok(x.blocked === 0, `${planet} stop ${stop.index}: ${name} is behind the ground: ${x.blocked} of 8 corners, worst ridge ${x.peak.toFixed(1)}deg`);
+      if (heights) ok(x.blocked === 0, `${planet} stop ${stop.index}: ${name} is behind the ground: ${x.blocked} of 8 corners clear of even a 1deg graze, worst ridge ${x.peak.toFixed(1)}deg`);
     }
     const sep = Math.abs(thing.az - crew.az);
     ok(sep > 2.5 && sep < 20, `${planet} stop ${stop.index}: object and crew are ${sep.toFixed(1)}deg apart in azimuth`);
     ok(crew.range > 3.5 && crew.range < 18, `${planet} stop ${stop.index}: the crew member is ${crew.range.toFixed(1)}m off; the conversation does not work at that distance`);
     ok(thing.range > crew.range * 0.5, `${planet} stop ${stop.index}: the object (${thing.range.toFixed(1)}m) is nearer than the crew (${crew.range.toFixed(1)}m) and would hide him`);
+    ok(thing.range > 3 && thing.range < 32, `${planet} stop ${stop.index}: the hardware is ${thing.range.toFixed(1)}m away, which is neither beside you nor close enough to brief`);
     console.log(`${planet} stop ${stop.index} ${stop.id}: held ${drift.toFixed(2)}m off route | object ${thing.range.toFixed(1)}m at ${thing.az.toFixed(1)}deg, ${thing.arc.toFixed(1)}deg tall | crew ${crew.range.toFixed(1)}m at ${crew.az.toFixed(1)}deg | fov ${p.fov.toFixed(0)} tilt ${tilt.toFixed(1)}`);
+  }
+  // Footprint clearance. Every stop parks the camera in front of its own vehicle, and the next stop's park
+  // point must fall outside that vehicle's footprint - a 6.4 m lunar module on a 12 m route would otherwise
+  // leave the visitor standing under a footpad being briefed about the machine around them.
+  for (const thing of SURFACE_STOPS[planet]) {
+    for (const park of SURFACE_STOPS[planet]) {
+      if (thing.index === park.index) continue;
+      const d = Math.hypot(park.cam[0] - thing.obj[0], park.cam[2] - thing.obj[2]);
+      ok(d > thing.half + 2, `${planet} stop ${park.index} parks ${d.toFixed(1)}m from stop ${thing.index}'s hardware, which has a ${(thing.half * 2).toFixed(1)}m footprint`);
+    }
+    // And the object is far enough away to be looked *at* rather than walked through.
+    const own = Math.hypot(thing.cam[0] - thing.obj[0], thing.cam[2] - thing.obj[2]);
+    ok(own > Math.max(thing.half, thing.deep) + 3, `${planet} stop ${thing.index} stands ${own.toFixed(1)}m from hardware ${(thing.half * 2).toFixed(1)}m across`);
   }
 }
 

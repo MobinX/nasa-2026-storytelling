@@ -40,3 +40,6 @@ report.*.json
 
 # .vscode Debugging
 .vscode/*-debug-profile
+
+# downloaded NASA source assets, inputs to tools/prepare-models.mjs
+/.dl-scratch/

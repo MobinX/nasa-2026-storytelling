@@ -26,6 +26,9 @@ globalThis.document = {
   addEventListener: () => {},
 };
 globalThis.self = globalThis;
+// three turns an embedded image into a Blob and loads it back through a blob: URL, which Node does not have.
+URL.createObjectURL = () => "blob:harness";
+URL.revokeObjectURL = () => {};
 globalThis.window = { location: { search: "" }, addEventListener: () => {} };
 Object.defineProperty(globalThis, "navigator", { value: { hardwareConcurrency: 8, deviceMemory: 8, devicePixelRatio: 3 }, configurable: true });
 // three's FileLoader wraps a streamed response in ProgressEvent for onProgress. Node has no such class,
@@ -58,6 +61,7 @@ const { MOON, MARS } = await import("../src/journey/worlds.js");
 const { CORRIDOR_BY_WORLD } = await import("../src/journey/corridor.js");
 const GROUND_CORRIDOR = CORRIDOR_BY_WORLD.moon;
 const MARS_CORRIDOR = CORRIDOR_BY_WORLD.mars;
+const { LEVEL_BAND_BY_WORLD: LEVEL_BAND } = await import("../src/journey/corridor.js");
 const { groundPose, scratchGround } = await import("../src/journey/ground.js");
 const { poseAt, scratchPose } = await import("../src/journey/pose.js");
 const { clamp01, SEAM_B } = await import("../src/journey/timeline.js");
@@ -90,11 +94,11 @@ for (const p of modelPaths()) {
 console.log(`objects.json bound: ${OBJECTS.length} objects, ${modelPaths().length} models parsed, ${Math.round(walkTris)} triangles of walk hardware`);
 
 const terrain = buildTerrain({ seg: 96, avoid: GROUND_CORRIDOR, relief: MOON.relief });
-flattenAlongCorridor(terrain, GROUND_CORRIDOR);
+flattenAlongCorridor(terrain, LEVEL_BAND.moon);
 const off = levelTerrain(terrain, MOON.cut[0], MOON.cut[2]);
 terrain.normalMap = deriveNormalMap(terrain.heights, 512);
 const marsTerrain = buildTerrain({ seg: 96, avoid: MARS_CORRIDOR, relief: MARS.relief });
-flattenAlongCorridor(marsTerrain, MARS_CORRIDOR);
+flattenAlongCorridor(marsTerrain, LEVEL_BAND.mars);
 levelTerrain(marsTerrain, MARS.cut[0], MARS.cut[2]);
 marsTerrain.normalMap = deriveNormalMap(marsTerrain.heights, 512);
 console.log("mars field: levelled, eye at hand-off", marsTerrain.heights.grid.length, "samples, normalMap", marsTerrain.normalMap.image.width + "px");

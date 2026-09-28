@@ -21,15 +21,12 @@ const holdLegOf = (i, planet = "moon") => firstLegOf(planet) + i * 2 + 1;
 const walkLegOf = (i, planet = "moon") => firstLegOf(planet) + i * 2;
 const legsFor = (n, planet = "moon") => firstLegOf(planet) + n * 2 + (planet === "solar" ? 0 : PAD_LEG);
 
-// The rule every ground stop obeys, authored as two angles because angles are what the frame is made of.
-// The object sits three degrees off the walking line - nearly dead ahead, since the visitor is meant to be
-// looking at it - and the crew member stands on the other side at five, so neither hides the other and both
-// stay inside a portrait frame, whose horizontal half-angle is only about fifteen degrees at 9:19.5.
-//
-// This used to be authored in metres, and it failed on the tall things: a fixed 1.15 m offset is 13 degrees
-// at five metres and five at thirteen, so walking further from a machine to fit it in frame pushed its crew
-// member clean out of the picture. Derived from the standoff instead, the separation is the same whatever
-// the scale of the object, and tools/check-journey.mjs measures it for all ten stops.
+// The rule every ground stop obeys, authored as two angles off the walking line rather than metres, because
+// angles are what the frame is made of: the object sits three degrees to one side - nearly dead ahead, since
+// the visitor is meant to be looking at it - and the crew member five degrees to the other. A portrait phone
+// frame is only about 15 degrees wide, so a fixed lateral offset that keeps a man beside a seismometer puts
+// him clean out of picture at a lunar module. Derived from the standoff instead, the separation is the same
+// whatever the scale of the vehicle.
 const TAN = Math.PI / 180;
 const AHEAD = 3;
 const ASIDE = 5;
@@ -45,9 +42,12 @@ const spread = (r) => {
   };
 };
 
-// `top` is the model's own height, which the checker draws a box around; the camera centres on `aim`, a
-// little under two thirds of the way up, so a 5.9 m ascent vehicle is framed rather than stared at through
-// its roof.
+// `top`, `half` and `deep` are the shipped model's own bounding box - height, half its width across the
+  // line of sight and half its extent along it, both measured after the yaw the vehicle is parked at -
+// taken from the file rather than remembered, because the checker frames every stop against them: a
+// vehicle that grows is then a failing build instead of a clipped footpad. `stand` is what the widest of
+// those two numbers forces: at twelve degrees off the walking line, a 6.4 m lunar module wants to be seen
+// from seventeen metres, and a 1.3 m rover from seven.
 const toStop = (planet, raw, i) => {
   const r = spread(raw);
   const aim = r.obj[1] + r.top * 0.6;
@@ -63,33 +63,38 @@ const toStop = (planet, raw, i) => {
     obj: r.obj,
     crew: r.crew,
     top: r.top,
+    half: r.half,
+    deep: r.deep ?? r.half,
+    yaw: r.objYaw ?? 0,
     aim,
     leg: holdLegOf(i, planet),
     walkLeg: walkLegOf(i, planet),
   };
 };
 
-// One screen of scroll per leg, so the spacing between stops is the length of the walk the visitor feels
-// between two conversations. The last stop of each world is the tall hardware the landing leaves behind:
-// the LM on the Moon, the ascent vehicle at Jezero.
+// One screen of scroll per leg. The spacing between cameras is not free: it has to be longer than the
+// standoff plus the footprint, or the walk parks the visitor underneath the previous stop's hardware - which
+// is what a 6.4 m lander with 17 m of standoff does to an 11 m route. The standoffs and the camera line
+// together are what tools/check-journey.mjs calls footprint clearance, per stop, against every other stop.
 const ROUTE = {
   moon: [
-    { id: "moon-solar-wind", cam: [0.6, 1.7, 11], side: 1, stand: 8.5, top: 1.5 },
-    { id: "moon-seismometer", cam: [0.2, 1.7, 22], side: -1, stand: 8.5, top: 0.76 },
-    { id: "moon-retroreflector", cam: [1.4, 1.7, 34], side: 1, stand: 9, top: 0.65 },
-    { id: "moon-eagle", cam: [3.2, 1.7, 46], side: -1, stand: 13, top: 3.65 },
+    { id: "moon-eagle", cam: [0.6, 1.7, 12], side: 1, stand: 17, top: 4.99, half: 3.25, objYaw: -0.5 },
+    { id: "moon-intrepid", cam: [-0.4, 1.7, 36], side: -1, stand: 17, top: 4.99, half: 3.25, objYaw: 0.7 },
+    { id: "moon-surveyor3", cam: [0.8, 1.7, 60], side: 1, stand: 13, top: 3.1, half: 2.55, deep: 2.4, objYaw: 0.4 },
+    { id: "moon-falcon", cam: [-1.2, 1.7, 79], side: -1, stand: 17, top: 4.99, half: 3.25, objYaw: 2.4 },
   ],
   mars: [
-    { id: "mars-rover", cam: [0.6, 1.7, 11], side: 1, stand: 10, top: 2.07 },
-    { id: "mars-airfield", cam: [0.2, 1.7, 22], side: -1, stand: 8.5, top: 0.67 },
-    { id: "mars-depot", cam: [1.4, 1.7, 34], side: 1, stand: 9.5, top: 1.1 },
-    { id: "mars-ares", cam: [3.2, 1.7, 46], side: -1, stand: 14, top: 5.9 },
+    { id: "mars-spirit", cam: [0.6, 1.7, 12], side: 1, stand: 7, top: 1.31, half: 1.4, deep: 1.25, objYaw: 1.1 },
+    { id: "mars-opportunity", cam: [-0.4, 1.7, 24], side: -1, stand: 7, top: 1.31, half: 1.3, deep: 1.4, objYaw: 2.6 },
+    { id: "mars-insight", cam: [0.8, 1.7, 36], side: 1, stand: 16, top: 1.56, half: 3.25, deep: 1.85, objYaw: 0.15 },
+    { id: "mars-viking1", cam: [-1.2, 1.7, 60], side: -1, stand: 9.5, top: 1.61, half: 1.85, deep: 1.9, objYaw: -0.9 },
   ],
-  // The two deep-space stops are metres in the EVA frame, and authored: there is no walking line to take an
-  // angle from when the camera drifts, and a thing on a tether hangs above or below you as often as ahead.
+  // The two deep-space stops are metres in the EVA frame and authored outright: there is no walking line to
+  // take an angle from when the camera drifts, nothing is planted on anything, and a spacecraft on a tether
+  // hangs above or below the visitor as often as ahead of it.
   solar: [
-    { id: "solar-l2-observatory", cam: [0, 0, 0], obj: [0.9, -0.5, 22], crew: [-1.2, 0.9, 15], top: 4.15 },
-    { id: "solar-sun-probe", cam: [0, 0, 30], obj: [-1.6, 0.8, 52], crew: [1.5, -0.6, 44], top: 2.55 },
+    { id: "solar-mgs", cam: [0, 0, 0], obj: [1.4, -2.4, 26], crew: [-1.0, 1.3, 12], top: 5.15, half: 5.35, deep: 2.05, objYaw: 1.35 },
+    { id: "solar-pioneer10", cam: [0, 0, 36], obj: [-1.2, -1.6, 58], crew: [1.1, 0.9, 47], top: 8.25, half: 2.6, deep: 2.25, objYaw: 0.5 },
   ],
 };
 

@@ -58,7 +58,8 @@ export default function Companion({ stop, site, heights, graph, ground }) {
   const soft = useRef({ talk: 0, headYaw: 0, float: 0 });
   useMemo(() => _siteToLocal.copy(site.quaternion).invert(), [site]);
 
-  const y = useMemo(() => ground(stop.crew[0], stop.crew[2]), [stop, ground]);
+  // On a surface he stands on the regolith; in deep space he hangs at the elevation the stop author for him.
+  const y = useMemo(() => (heights ? ground(stop.crew[0], stop.crew[2]) : stop.crew[1]), [stop, ground, heights]);
   const facing = useMemo(() => Math.atan2(stop.cam[0] - stop.crew[0], stop.cam[2] - stop.crew[2]), [stop]);
 
   useFrame((state, dt) => {

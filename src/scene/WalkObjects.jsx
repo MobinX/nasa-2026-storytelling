@@ -19,18 +19,20 @@ export default function WalkObjects({ stops, site, heights, graph }) {
 
 function WalkObject({ stop, site, heights, graph }) {
   const root = useMemo(() => new THREE.Group(), []);
+  // Nothing is planted in deep space: the object hangs at its authored offset, and on a surface it sits on
+  // the terrain. Both cases put the model's own base (y=0 in the file) where the stop says it belongs.
   const ground = heights ? (x, z) => heightAt(heights, x, z) : () => 0;
   const proxy = useMemo(() => {
-    const g = new THREE.BoxGeometry(1.1, Math.max(0.4, stop.top * 0.7), 1.1);
+    const g = new THREE.BoxGeometry(Math.max(0.6, stop.half * 1.4), Math.max(0.4, stop.top * 0.7), Math.max(0.6, stop.half * 1.4));
     g.translate(0, Math.max(0.4, stop.top * 0.35), 0);
     return new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: "#9c9ca4", roughness: 0.85, metalness: 0.15 }));
   }, [stop]);
 
   const model = useMemo(() => instance(stop.model, proxy), [stop, proxy]);
-  const y = ground(stop.obj[0], stop.obj[2]);
+  const y = ground(stop.obj[0], stop.obj[2]) + (heights ? 0 : stop.obj[1]);
   useMemo(() => {
     root.position.set(stop.obj[0], y, stop.obj[2]);
-    root.rotation.y = stop.objYaw ?? (stop.obj[0] < 0 ? 0.6 : -0.6);
+    root.rotation.y = stop.yaw;
     root.add(model);
   }, [root, model, y]);
 

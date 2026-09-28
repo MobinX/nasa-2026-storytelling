@@ -21,6 +21,15 @@ globalThis.document = {
 function noop2() {}
 globalThis.window = { location: { search: "" }, addEventListener: noop2, removeEventListener: noop2 };
 Object.defineProperty(globalThis, "navigator", { value: { hardwareConcurrency: 8, deviceMemory: 8, devicePixelRatio: 3 }, configurable: true });
+// three's GLTFLoader turns an embedded image into a Blob and loads it back through a blob: URL, so the
+// harness needs the two globals a browser gives you for free. The Image stub above ignores the URL, which is
+// fine: this harness counts geometry and materials, not pixels.
+globalThis.self = globalThis;
+URL.createObjectURL = () => "blob:harness";
+URL.revokeObjectURL = () => {};
+globalThis.ProgressEvent = class ProgressEvent {
+  constructor(type, init = {}) { Object.assign(this, { type, lengthComputable: false, loaded: 0, total: 0 }, init); }
+};
 globalThis.requestAnimationFrame = () => 0;
 globalThis.cancelAnimationFrame = () => {};
 globalThis.Image = class {

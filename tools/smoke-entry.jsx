@@ -4,13 +4,14 @@ import App from "../src/App.jsx";
 import * as hub from "./stubs/hub.js";
 import { fakeState } from "./stubs/hub-bridge.js";
 import { preloadMaps, maps } from "../src/lib/textures.js";
-import { apply, OBJECTS, allStops } from "../src/data/objects.js";
+import { apply, OBJECTS, allStops, modelPaths } from "../src/data/objects.js";
+import { models } from "../src/lib/models.js";
 import { buildTerrain, levelTerrain, flattenAlongCorridor, deriveNormalMap, heightAt } from "../src/lib/terrain.js";
 import { poseAt, scratchPose, walkRate, MARS_GROUND } from "../src/journey/pose.js";
 import { MOON, MARS, BY_ID } from "../src/journey/worlds.js";
 import { groundPose, scratchGround } from "../src/journey/ground.js";
 import { MARS_WALK_IN, MARS_DEPART, SURFACE_STOPS, SEAM_A, SEAM_B, DEPART, TRANSFER_END, MARS_SEAM } from "../src/journey/timeline.js";
-import { CORRIDOR_BY_WORLD } from "../src/journey/corridor.js";
+import { CORRIDOR_BY_WORLD, LEVEL_BAND_BY_WORLD } from "../src/journey/corridor.js";
 import { journey } from "../src/state/journey.js";
 import { auditMaterials } from "./lib-shader-audit.mjs";
 import { seenMaterials } from "./stubs/hub.js";
@@ -23,10 +24,21 @@ export async function run() {
   const out = { errors: [], notes: [] };
   await preloadMaps(4);
   for (const m of apply(OBJECTS)) out.errors.push("objects.json: " + m);
+  // The budget the ceilings exist to protect has only ever been measured against proxy boxes. Load the
+  // shipped walk models from disk - the same bytes the phone fetches, parsed by the same loader - so the
+  // draw-call and triangle counts below are NASA geometry rather than a stand-in for it.
+  const fs = await import("node:fs");
+  const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js");
+  const loader = new GLTFLoader();
+  for (const p of modelPaths()) {
+    const buf = fs.readFileSync(new URL("../public/" + p, import.meta.url));
+    models.set(p, await new Promise((res, rej) => loader.parse(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength), "", res, rej)));
+  }
+  out.notes.push("loaded " + models.size + " walk models from public/, from disk, through the app's own loader");
   const terrains = {};
   for (const world of [MOON, MARS]) {
     const t = buildTerrain({ seg: 96, avoid: CORRIDOR_BY_WORLD[world.id], relief: world.relief });
-    flattenAlongCorridor(t, CORRIDOR_BY_WORLD[world.id]);
+    flattenAlongCorridor(t, LEVEL_BAND_BY_WORLD[world.id]);
     out.notes.push(world.id + " levelled " + levelTerrain(t, world.cut[0], world.cut[2]).toFixed(3) + "m");
     t.normalMap = deriveNormalMap(t.heights, 256);
     terrains[world.id] = t;
@@ -282,7 +294,8 @@ export async function run() {
   out.notes.push("map sizes " + [...new Set(sized)].sort().join(" "));
   for (const planet of ["moon", "mars"]) {
     const last = SURFACE_STOPS[planet].at(-1);
-    out.notes.push(planet + " walk ends at " + last.name + " (" + last.model + "), 12.5 m of rail between stops");
+    const gaps = SURFACE_STOPS[planet].slice(1).map((b, i) => Math.hypot(b.cam[0] - SURFACE_STOPS[planet][i].cam[0], b.cam[2] - SURFACE_STOPS[planet][i].cam[2]));
+    out.notes.push(planet + " walk ends at " + last.name + " (" + last.model + "), stops " + gaps.map((g) => g.toFixed(0) + "m").join(", "));
   }
   audit.notes.forEach((n) => out.notes.push("note: " + n));
   return out;

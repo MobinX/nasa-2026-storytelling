@@ -6,7 +6,7 @@ import { apply, OBJECTS, modelPaths } from "./data/objects.js";
 import { loadModels } from "./lib/models.js";
 import { buildTerrain, deriveNormalMap, levelTerrain, flattenAlongCorridor } from "./lib/terrain.js";
 import { MOON, MARS } from "./journey/worlds.js";
-import { CORRIDOR_BY_WORLD } from "./journey/corridor.js";
+import { CORRIDOR_BY_WORLD, LEVEL_BAND_BY_WORLD } from "./journey/corridor.js";
 import { journey } from "./state/journey.js";
 
 const boot = document.getElementById("boot");
@@ -28,7 +28,7 @@ async function start() {
     for (const world of [MOON, MARS]) {
       say("shaping " + world.id + " from space");
       const t = buildTerrain({ seg: 96, avoid: CORRIDOR_BY_WORLD[world.id], relief: world.relief });
-      flattenAlongCorridor(t, CORRIDOR_BY_WORLD[world.id]);
+      flattenAlongCorridor(t, LEVEL_BAND_BY_WORLD[world.id]);
       levelTerrain(t, world.cut[0], world.cut[2]);
       t.normalMap = deriveNormalMap(t.heights, 512);
       terrains[world.id] = t;

@@ -9,7 +9,7 @@ carrying you forward. On the ground it keeps driving the same way along a route 
 each one the scroll stops working: a crew member is standing there, and he talks until you have asked him
 your four questions. Then the ascent, a trans-Mars coast, the same landing played again at Jezero West
 against a butterscotch sky and a different gait, four more machines, and finally the two that nobody stands
-next to — an observatory and a probe, met on a tether in the dark. The whole journey is 46 screens of
+next to — an orbiter that mapped the planet, and a probe with a message bolted to its dish, met on a tether in the dark. The whole journey is 46 screens of
 scroll, which is long on purpose — at 10 a single flick swept a tenth of the story and blew past the landing.
 
 Built to run in a phone browser (it is developed on a Termux/Android box and viewed over the LAN), so the
@@ -22,6 +22,8 @@ npm install
 npm run dev --host        # http://<box-ip>:5173/
 npm run build && npm run preview --host   # :4173 — measure performance here, not in dev
 npm run check             # eight headless suites: auditor self-test, content, models, dialogue, boot, journey, UVs, frame
+node tools/build-surveyor.mjs   # regenerates the one model NASA does not publish (Surveyor 3)
+node tools/prepare-models.mjs .dl-scratch public/models   # re-reduces the NASA downloads; see the file header
 ```
 
 Add `?debug`-style params: `?plain` hides the diagnostics readout, `?tier=0..3` forces a quality tier (the budget is pinned to the top tier at boot and nothing degrades it live),
@@ -97,8 +99,7 @@ and colour per world, never its direction.
 
 Both fields are also flattened along the walked corridor before they are levelled at the hand-off point,
 because a landing site is chosen for being flat. Levelling a single point fixes the eye height at the cut but
-leaves the regional swell tilting the field under the walk, and that tilt was what hid the Martian habitat
-behind a rise the mission would never have parked on.
+leaves the regional swell tilting the field under the walk, and that tilt was what hid hardware behind a rise the mission would never have parked on.
 
 The lunar surface act renders brighter than the sphere act, and not by the same light: the sun is 20° up, so a
 horizontal field only catches a third of it and a frame that is all ground and no sky read as under-exposed
@@ -126,17 +127,28 @@ unhooks `ScrollControls`' scroll listener and permanently freezes the journey �
 [Solar System Scope](https://www.solarsystemscope.com/textures/), licensed CC BY 4.0 — see
 `public/credits.txt`. They are vendored rather than loaded from a CDN because that host sends no CORS
 header, and the per-body resolutions are chosen at decode time because only 2k and 8k tiers exist.
-`public/preview.gif` is left over from the starter this repo began as.
+`public/preview.gif` is left over from the starter this repo began as, and `.dl-scratch/` holds the
+unreduced NASA downloads that `tools/prepare-models.mjs` reads - inputs, not assets, and not committed.
 
-`public/models/*.gltf` are not real hardware models: `tools/build-demo-models.mjs` writes them as triangle
-soup from analytic boxes and drums, two primitives each (a grey structure and a gold foil), 56 to 324
-triangles, buffers inlined as base64 so a walk object is one request. They exist so every stop is the thing
-objects.json says it is, at roughly the right height, and so the load path is exercised — a stand-in can be
-swapped by changing one string in the content file, and nothing in the render path knows the difference.
-`tools/check-models.mjs` validates the byte level (buffer length against the base64, 4-aligned views,
-accessor bounds, primitive wiring), `tools/check-boot.mjs` then parses each through the same `GLTFLoader`
-the browser uses, and `src/lib/models.js` falls back to a proxy box the same size as the authored object if
-a file ever fails to arrive, so a missing model cannot make an object invisible.
+`public/models/*` are the real vehicles, from [NASA's 3D Resources](https://science.nasa.gov/3d-resources/) -
+the Apollo Lunar Module, the Mars Exploration Rover, InSight, a Viking lander, Mars Global Surveyor and
+Pioneer 10 - reduced by `tools/prepare-models.mjs`, because as published none of them is usable here: every
+NASA file is Draco-compressed (three would need a wasm decoder before the first frame), the LM arrives as
+134 nodes and 157 primitives, InSight as 143, and both carry 1024² maps. The tool decodes the Draco, bakes
+the scene graph into one mesh, buckets materials by colour so the primitives join, simplifies with
+meshoptimizer, applies each file's authored unit scale, drops the result onto `y=0`, and re-encodes the
+maps to 512² WebP. Six vehicles ship at 2-6k triangles and 3-10 draw calls apiece, which puts the lunar
+act at 52 of the 60 draws it is allowed and the Martian act at 49. One exception is on the record: **NASA
+publishes no model of a Surveyor** - the whole 1,583-entry catalog was enumerated - so
+`tools/build-surveyor.mjs` builds Surveyor 3 from its published dimensions instead, in the same flat
+material language.
+
+`tools/check-models.mjs` validates the containers (self-contained, 4-aligned, `min`/`max` present, every
+mesh reachable from a node), refuses any file needing an extension three cannot decode without a loader,
+and totals the per-act draw and triangle budgets from the shipped files; `tools/check-boot.mjs` parses each
+one through the same `GLTFLoader` the browser uses; and `src/lib/models.js` falls back to a proxy box the
+size of the authored object if a file ever fails to arrive, so a missing model cannot make an object
+invisible.
 
 ## Notes
 

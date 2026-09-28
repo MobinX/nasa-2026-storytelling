@@ -103,6 +103,8 @@ export function apply(objects) {
   return problems;
 }
 
-// Everything the boot has to hand to GLTFLoader before the first frame.
-export const modelPaths = () => Object.values(STOPS).flat().map((s) => s.model).filter(Boolean);
+// Everything the boot has to hand to GLTFLoader before the first frame. Three of the lunar stops are the
+// same vehicle and two of the Martian ones are too, so this is a set: fetching the LM three times would be
+// three parses of the same bytes for one model on screen.
+export const modelPaths = () => [...new Set(Object.values(STOPS).flat().map((s) => s.model).filter(Boolean))];
 export const allStops = () => Object.values(STOPS).flat();
