@@ -44,25 +44,44 @@ can be re-lived by scrolling back up. The gait amplitude is the one thing derive
 it is a shaping curve, not a filter; it reads the rail's real metres-per-second, so the parked contact leg
 that the rumble runs on gets no bob at all.
 
-Three scene graphs, never co-rendered, because one continuous zoom is arithmetically impossible: a unit
-goes from ~145 km (Moon sphere, r = 12) to 1 m (the walking field), which needs a near/far ratio of ~10⁸
-and destroys float32 vertex precision. So position is **cut** at two boundaries and only orientation —
-which is unitless — is handed off. Both cuts land on frames that are 100 % regolith: on the sphere side
-that means every frame of the descent aims down and stays inside the limb even at the portrait corners,
-which is also why the sphere act cannot show a horizon at all. The corollary is what sets the second cut
-apart: from 0.4u above the sphere, a frame that is only ground is an aim 35° off the vertical, and
-inheriting that as an eye height of 0.42 m means staring at 40 cm of albedo the texture crop cannot resolve
-at any scale — dark, featureless, and nothing for an impact to visibly shake. So seam B cuts position by
-seven metres as well, handing off eight metres above the field, and the last eight metres of the landing
-are flown in the surface graph where the terrain has relief, rocks and a horizon. The star field and the
-sun disc live in a camera-following rig that is identical either side, and the sun direction is re-expressed
-into the landing-site frame so the terminator matches. `tools/check-journey.mjs` asserts the hand-off
-matches on heading (dot > 0.999), fov and roll rather than on position, that neither side of it shows a
-horizon, that the descent never reverses its travel, and that the field is levelled where the landing starts.
+Five scene graphs, never co-rendered, because one continuous zoom is arithmetically impossible: a unit
+goes from ~145 km (the Moon sphere, r = 12) to 1 m (a walking field), which needs a near/far ratio of ~10⁸
+and destroys float32 vertex precision. So position is **cut** at four boundaries and only orientation —
+which is unitless — is handed off. Every cut lands on a frame that is 100 % regolith: on the sphere side that
+means aiming down and staying inside the limb even at the portrait corners, which is also why no sphere act
+can show a horizon. The corollary is what sets the surface hand-offs apart from the dot/sphere swap: from
+0.42u a frame that is only ground is an aim 35° off the vertical, and inheriting that as an eye height of
+0.42 metres means staring at 40 cm of albedo the map crop cannot resolve at any scale — dark, featureless,
+and nothing for an impact to visibly shake. So the last eight metres of each landing are flown in the surface
+graph, where the terrain has relief, rocks and a horizon, and the cut jumps position by seven metres to make
+that possible. `tools/check-journey.mjs` holds every boundary to heading, fov and roll rather than to position,
+measures the limb margin at the tightest frame of both descents (2.5° and 2.5°), and fails if either descent
+reverses its travel — which is the assertion that keeps a lap of the planet from creeping back in.
 
-The ground act renders brighter than the sphere act, and not by the same light: the sun is 20° up, so a
+Everything after the first landing is the same machinery pointed at a second descriptor. `src/journey/worlds.js`
+owns the pair: sphere radius, site frame, relief preset, gait profile, colours, prop sites and the offset of
+each milestone. The Martian descent rail is the lunar one multiplied by the radius ratio, which is why its
+limb coverage is not re-derived but inherited — the ratios are identical by construction. Jezero is placed by
+solving for the longitude that puts the single shared sun 22° above its western rim (the latitude is fixed and
+real; the longitude is the hour of arrival), and the globe's spin is the quaternion that makes the crop the
+ground samples and the sphere the camera flew into agree about which patch of Mars that is — asserted in
+`tools/check-texture-continuity.mjs`, which now runs per world.
+
+Lighting is the one place the two worlds must disagree, and they do it honestly. The Moon keeps the airless
+setup: a hard directional and effectively no fill. Mars has a thin CO2 atmosphere with suspended dust, so the
+directional drops, the ambient climbs, the sky dome goes butterscotch with a blue-white halo around the sun,
+the ridge band becomes hills dissolving into haze, and the footprint decals turn light instead of dark because
+on Mars a fresh track is bright dust, not compacted shadow. There is one sun: `SunLight` changes its strength
+and colour per world, never its direction.
+
+Both fields are also flattened along the walked corridor before they are levelled at the hand-off point,
+because a landing site is chosen for being flat. Levelling a single point fixes the eye height at the cut but
+leaves the regional swell tilting the field under the walk, and that tilt was what hid the Martian habitat
+behind a rise the mission would never have parked on.
+
+The lunar surface act renders brighter than the sphere act, and not by the same light: the sun is 20° up, so a
 horizontal field only catches a third of it and a frame that is all ground and no sky read as under-exposed
-on the phone. `SunLight` lifts the directional for that act only, and `MoonSurface` carries one more
+on the phone. The surface act lifts the directional for that reason, and `GroundWorld` carries one more
 directional light pointed upward from below the site — regolith bounce, the only fill an airless body has,
 which raises the shadow sides of the hardware without moving the terminator.
 

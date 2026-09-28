@@ -47,7 +47,7 @@ export default function OrbitRings() {
   const built = useRef(false);
   useFrame(({ clock }) => {
     mat.uniforms.uTime.value = clock.elapsedTime;
-    mesh.current.visible = journey.spaceId === "solar";
+    mesh.current.visible = journey.graphId === "solar";
     if (built.current || !mesh.current) return;
     const m = new THREE.Matrix4();
     const s = new THREE.Vector3();

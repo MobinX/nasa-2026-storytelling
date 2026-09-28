@@ -73,7 +73,7 @@ export default function Labels({ holders }) {
 
   const _v = useMemo(() => new THREE.Vector3(), []);
   useFrame(({ camera, viewport }) => {
-    const show = journey.spaceId === "solar" && journey.tier >= 2;
+    const show = journey.graphId === "solar" && journey.tier >= 2;
     mesh.current.visible = show;
     if (!show) return;
     mat.uniforms.uPxToW.value = (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))) / viewport.height;

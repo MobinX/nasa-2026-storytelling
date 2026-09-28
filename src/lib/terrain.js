@@ -2,10 +2,19 @@ import * as THREE from "three";
 import { reachesCorridor } from "./path-clearance.js";
 
 export const R_MOON_M = 1737400;
+export const R_MARS_M = 3389500;
 export const NEAR_R = 240;
 export const MID_R = 900;
 export const FAR_R = 4000;
 export const EYE = 1.7;
+
+// The relief of each landing field, so the second world is a preset rather than a copy of the generator.
+// Mars is the rougher, dust-softened one: bigger regional swells, more small craters, each one shallower,
+// because aeolian infill buries fresh relief on a planet with wind and nothing buries it on the Moon.
+export const RELIEF = {
+  moon: { seed: 20260926, swell: [2.4, 6.2], curvature: R_MOON_M, bands: [[3, 25, 60, 0.16], [9, 6, 18, 0.18], [26, 1.2, 4, 0.22]] },
+  mars: { seed: 20260927, swell: [1.8, 2.6], curvature: R_MARS_M, bands: [[2, 30, 70, 0.09], [9, 5, 16, 0.11], [42, 1.0, 3.4, 0.15]] },
+};
 
 // Deterministic scatter so the rail, the rocks and the height query can never disagree.
 function rng(seed) {
@@ -15,8 +24,8 @@ function rng(seed) {
 
 // The corridor reach test uses 1.25 x the crater radius rather than 1.0 because the raised rim, not the
 // bowl, is what a walker sees: buildTerrain adds a rim bump at dr = 1.08 and it dies out by dr = 1.9.
-export function buildCraters(avoid) {
-  const r = rng(20260926);
+export function buildCraters(avoid, relief = RELIEF.moon) {
+  const r = rng(relief.seed);
   const out = [];
   const add = (n, min, max, depth) => {
     for (let i = 0; i < n; i++) {
@@ -31,28 +40,26 @@ export function buildCraters(avoid) {
       out.push({ x, z, r: rad, depth: rad * depth });
     }
   };
-  add(3, 25, 60, 0.16);
-  add(9, 6, 18, 0.18);
-  add(26, 1.2, 4, 0.22);
+  for (const [n, min, max, depth] of relief.bands) add(n, min, max, depth);
   return out;
 }
 
 // Real LOLA/DEM is 500 m/pixel: 300x coarser than the camera height, so it contributes nothing here.
 // Local relief has to be synthetic; the NASA map is used for albedo and the mare/highland swells.
-export function buildTerrain({ seg = 96, avoid } = {}) {
+export function buildTerrain({ seg = 96, avoid, relief = RELIEF.moon } = {}) {
   const t0 = performance.now();
   const geo = new THREE.PlaneGeometry(NEAR_R * 2, NEAR_R * 2, seg, seg);
   geo.rotateX(-Math.PI / 2);
   const p = geo.attributes.position;
   const grid = new Float32Array((seg + 1) * (seg + 1));
   const cell = (NEAR_R * 2) / seg;
-  const craters = buildCraters(avoid);
+  const craters = buildCraters(avoid, relief);
   for (let i = 0; i < p.count; i++) {
     const x = p.getX(i), z = p.getZ(i);
     const d = Math.hypot(x, z);
     let h = 0;
-    h += Math.sin(x * 0.011) * Math.cos(z * 0.0093) * 2.4;
-    h += Math.sin(x * 0.0031 + 1.7) * Math.cos(z * 0.0027 - 0.6) * 6.2;
+    h += Math.sin(x * 0.011) * Math.cos(z * 0.0093) * relief.swell[0];
+    h += Math.sin(x * 0.0031 + 1.7) * Math.cos(z * 0.0027 - 0.6) * relief.swell[1];
     for (let c = 0; c < craters.length; c++) {
       const k = craters[c];
       const dr = Math.hypot(x - k.x, z - k.z) / k.r;
@@ -60,7 +67,7 @@ export function buildTerrain({ seg = 96, avoid } = {}) {
       if (dr < 1) h -= k.depth * Math.pow(Math.cos((dr * Math.PI) / 2), 1.4);
       h += k.depth * 0.24 * Math.exp(-Math.pow(dr - 1.08, 2) / 0.014);
     }
-    h -= (d * d) / (2 * R_MOON_M);
+    h -= (d * d) / (2 * relief.curvature);
     const fade = 1 - THREE.MathUtils.smoothstep(d, NEAR_R * 0.75, NEAR_R);
     const v = h * fade;
     grid[i] = v;
@@ -120,16 +127,48 @@ export function uvFromDirection(v) {
 
 // Local frame at a selenographic site. (east, n, north) is left-handed and would turn the site frame
 // into a reflection, so the third axis is east x n: walking local +z heads south on the map.
-export function siteFrame(lat, lon, radius) {
+export function siteFrame(lat, lon, radius, centre = new THREE.Vector3()) {
   const n = new THREE.Vector3(Math.cos(lat) * Math.sin(lon), Math.sin(lat), Math.cos(lat) * Math.cos(lon));
   const east = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), n).normalize();
   const fwd = new THREE.Vector3().crossVectors(east, n).normalize();
   const basis = new THREE.Matrix4().makeBasis(east, n, fwd);
-  return { n, east, fwd, basis, pos: n.clone().multiplyScalar(radius), quaternion: new THREE.Quaternion().setFromRotationMatrix(basis) };
+  return { n, east, fwd, basis, pos: centre.clone().addScaledVector(n, radius), quaternion: new THREE.Quaternion().setFromRotationMatrix(basis) };
 }
 
 // Level the field at the spot the orbit act hands off, so the eye height the descent authored is the eye
 // height above real ground. Without this the cut inherits whatever crater swell happens to be there.
+// A landing site is chosen because the ground is flat there. Levelling one point fixes the eye height at
+// the hand-off but leaves the regional swell tilting the field under the walk, so the horizon drifts by
+// degrees over 30 m and the ending's subjects sit behind a rise no mission would have picked. This fits
+// the height along the walked corridor against z and takes that curve out of the whole field, which leaves
+// craters, rocks and the planet's own curvature and removes only the regional tilt.
+export function flattenAlongCorridor(terrain, corridor) {
+  const BINS = 20;
+  const lo = Math.min(...corridor.map(([, z]) => z));
+  const hi = Math.max(...corridor.map(([, z]) => z));
+  const sum = new Float64Array(BINS), count = new Float64Array(BINS);
+  for (const [x, z] of corridor) {
+    const b = Math.max(0, Math.min(BINS - 1, Math.floor(((z - lo) / (hi - lo || 1)) * BINS)));
+    sum[b] += heightAt(terrain.heights, x, z);
+    count[b]++;
+  }
+  const mean = Array.from({ length: BINS }, (_, b) => (count[b] ? sum[b] / count[b] : NaN));
+  for (let b = 0; b < BINS; b++) if (!Number.isFinite(mean[b])) mean[b] = mean[b - 1] ?? 0;
+  const trend = (z) => {
+    const t = Math.max(0, Math.min(BINS - 1.001, ((z - lo) / (hi - lo || 1)) * BINS));
+    const i = Math.floor(t);
+    return mean[i] + (mean[i + 1] - mean[i]) * (t - i);
+  };
+  const p = terrain.geo.attributes.position;
+  for (let i = 0; i < p.count; i++) {
+    const v = p.getY(i) - trend(p.getZ(i));
+    p.setY(i, v);
+    terrain.heights.grid[i] = v;
+  }
+  p.needsUpdate = true;
+  return trend(lo);
+}
+
 export function levelTerrain(terrain, x = 0, z = 0) {
   const off = heightAt(terrain.heights, x, z);
   const p = terrain.geo.attributes.position;

@@ -74,7 +74,10 @@ export function StarDome() {
   useFrame(({ viewport, camera }) => {
     mat.uniforms.uPx.value = viewport.dpr;
     geo.setDrawRange(0, TIERS[journey.tier].stars);
-    if (pts.current) pts.current.position.copy(camera.position);
+    if (!pts.current) return;
+    pts.current.position.copy(camera.position);
+    // Under an atmosphere with dust in it the sky is the daylight, and stars would be a lie.
+    pts.current.visible = journey.air === 0;
   });
 
   return <points ref={pts} geometry={geo} material={mat} frustumCulled={false} renderOrder={-2} />;
@@ -121,11 +124,15 @@ export function SunGlow({ direction }) {
   );
 
   useFrame(({ camera }) => {
-    const show = journey.spaceId !== "solar" && TIERS[journey.tier].glow > 0;
+    const show = journey.graphId !== "solar" && TIERS[journey.tier].glow > 0;
     group.current.visible = show;
     if (!show) return;
     group.current.position.copy(camera.position).addScaledVector(direction, 900);
     group.current.quaternion.copy(camera.quaternion);
+    // Mars is 1.52 AU out: the sun is two thirds the width it has at the Moon, and the dust flattens the
+    // corona into the sky instead of letting it bloom against black.
+    const scale = journey.air > 0 ? 0.62 : 1;
+    group.current.scale.setScalar(scale);
   });
 
   return (

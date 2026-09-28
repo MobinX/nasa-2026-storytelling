@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { MathUtils, RingGeometry } from "three";
 import { useFrame } from "@react-three/fiber";
 import { BODIES, SUN_U, EARTH, MOON_DOT_U, MOON_ORBIT_U, MOON_THETA, thetaAt } from "../lib/bodies.js";
@@ -17,9 +17,14 @@ const RING_IN = SATURN.radius * 1.11;
 const RING_OUT = SATURN.radius * 2.27;
 
 export default function SolarSystem() {
+  const root = useRef();
   const ringGeo = useMemo(() => radializeRing(new RingGeometry(RING_IN, RING_OUT, 96, 1), RING_IN, RING_OUT), []);
   const glows = useMemo(() => [makeGlow({ color: "#fff2d6", power: 9 }), makeGlow({ color: "#ffcf94", power: 2.2, corona: "0.3", limb: "5.0" })], []);
   useFrame(({ clock }) => {
+    // The diagram is a different scale of world, not a backdrop: the sun sits at the origin, which is the
+    // Moon's centre for the next four acts, so the whole graph has to go out rather than be occluded.
+    root.current.visible = journey.graphId === "solar";
+    if (!root.current.visible) return;
     const o = journey.offset;
     const t = clock.elapsedTime;
     for (let i = 0; i < BODIES.length; i++) {
@@ -32,7 +37,7 @@ export default function SolarSystem() {
   });
 
   return (
-    <>
+    <group ref={root}>
       <OrbitRings />
       <Labels holders={holders} />
       <group>
@@ -69,7 +74,7 @@ export default function SolarSystem() {
           )}
         </group>
       ))}
-    </>
+    </group>
   );
 }
 

@@ -33,8 +33,8 @@ for (const b of BODIES) {
 }
 
 // Revolution must stop before the rail commits to an approach, or the authored terminus misses the body.
-export const REVOLVE_UNTIL = 0.16;
-export const revolve = (offset) => 1 - smoothstep(offset, 0.06, REVOLVE_UNTIL);
+export const REVOLVE_UNTIL = 0.09;
+export const revolve = (offset) => 1 - smoothstep(offset, 0.03, REVOLVE_UNTIL);
 export const thetaAt = (b, offset) => b.theta0 + b.rev * revolve(offset);
 export const MOON_THETA = 0.42;
 

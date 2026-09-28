@@ -37,13 +37,13 @@ const onCreated = ({ gl, viewport, setDpr, setFrameloop }) => {
   if (setFrameloop) document.addEventListener("visibilitychange", () => setFrameloop(document.hidden ? "never" : "always"));
 };
 
-export default function App({ terrain }) {
+export default function App({ terrains }) {
   return (
     <>
       <Canvas dpr={DPR} gl={GL} camera={CAM} resize={RESIZE} shadows={false} frameloop='always' onCreated={onCreated}>
         <color attach='background' args={["#000000"]} />
         <ScrollControls pages={PAGES} distance={DISTANCE} damping={DAMPING} style={SCROLL_STYLE}>
-          <Experience terrain={terrain} />
+          <Experience terrains={terrains} />
         </ScrollControls>
       </Canvas>
       <Hud />

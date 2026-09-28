@@ -2,7 +2,7 @@ import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { COMPANION_LOCAL, SITE } from "../journey/pose.js";
+
 import { heightAt } from "../lib/terrain.js";
 import { journey } from "../state/journey.js";
 import { dialogue } from "../state/dialogue.js";
@@ -10,10 +10,9 @@ import { dialogue } from "../state/dialogue.js";
 const box = (w, h, d, x, y, z) => new THREE.BoxGeometry(w, h, d).translate(x, y, z);
 const cyl = (r1, r2, h, x, y, z, seg = 8) => new THREE.CylinderGeometry(r1, r2, h, seg, 1).translate(x, y, z);
 
-const _siteToLocal = new THREE.Quaternion(SITE.quaternion.x, SITE.quaternion.y, SITE.quaternion.z, SITE.quaternion.w).invert();
+const _siteToLocal = new THREE.Quaternion();
 const _cam = new THREE.Vector3();
 const _above = new THREE.Vector3();
-const PARKED = [3.2, 29];
 
 // A second suited figure, built the way the LM is: merged primitives, with only the joints that actually
 // move broken out into their own mesh. Skinning is not on the table - no rig, no asset, and nothing to
@@ -38,7 +37,10 @@ const buildForeArm = () => mergeGeometries([cyl(0.085, 0.075, 0.30, 0, -0.15, 0)
 const ease = (x, y, k, dt) => x + (y - x) * Math.min(1, k * dt);
 const clamp = (x, lo, hi) => (x < lo ? lo : x > hi ? hi : x);
 
-export default function Companion({ heights }) {
+export default function Companion({ heights, world }) {
+  const COMPANION_LOCAL = world.companion;
+  const PARKED = world.park;
+  useMemo(() => _siteToLocal.copy(world.site.quaternion).invert(), [world]);
   const group = useRef();
   const head = useRef();
   const shoulderL = useRef();
@@ -66,7 +68,7 @@ export default function Companion({ heights }) {
   useFrame((state, dt) => {
     const g = group.current;
     if (!g) return;
-    const on = journey.spaceId === "ground";
+    const on = journey.graphId === world.graph;
     g.visible = on;
     if (!on) return;
     const d = Math.min(dt, 1 / 20);
@@ -74,7 +76,7 @@ export default function Companion({ heights }) {
     // Gestures only come alive as the walk arrives, and only while he is mid-sentence. Eased rather than
     // switched: a raised hand popping up on the first caption character reads as a jump cut. This is not
     // the camera path, so a local ease is allowed here where the scroll budget forbids one.
-    soft.current.talk = ease(soft.current.talk, dialogue.talking ? journey.encounter : 0, 3.5, d);
+    soft.current.talk = ease(soft.current.talk, dialogue.talking ? journey.talk : 0, 3.5, d);
     const talk = soft.current.talk;
 
     g.rotation.z = 0.012 * Math.sin(t * 0.55);
@@ -83,7 +85,7 @@ export default function Companion({ heights }) {
     // Head tracking, in his own body frame: the site-frame delta un-rotated by `facing`. Because he was
     // placed facing the parked camera, this reads ~0 where the conversation happens and grows as you
     // walk past him.
-    _cam.copy(state.camera.position).sub(SITE.pos).applyQuaternion(_siteToLocal);
+    _cam.copy(state.camera.position).sub(world.site.pos).applyQuaternion(_siteToLocal);
     const wx = _cam.x - COMPANION_LOCAL[0];
     const wz = _cam.z - COMPANION_LOCAL[2];
     const c = Math.cos(parts.facing);
@@ -102,10 +104,10 @@ export default function Companion({ heights }) {
 
     // Where to hang the caption. Projected per frame rather than pinned to a screen corner, so the words
     // belong to him; the HUD clamps it back inside the safe area.
-    _above.set(COMPANION_LOCAL[0], parts.y + 2.62, COMPANION_LOCAL[2]).applyQuaternion(SITE.quaternion).add(SITE.pos).project(state.camera);
+    _above.set(COMPANION_LOCAL[0], parts.y + 2.62, COMPANION_LOCAL[2]).applyQuaternion(world.site.quaternion).add(world.site.pos).project(state.camera);
     journey.companion.x = _above.x * 0.5 + 0.5;
     journey.companion.y = 0.5 - _above.y * 0.5;
-    journey.companion.on = journey.encounter > 0.5 && _above.z < 1;
+    journey.companion.on = journey.talk > 0.5 && _above.z < 1;
   });
 
   return (

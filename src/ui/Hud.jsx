@@ -81,7 +81,9 @@ export default function Hud() {
   const act = ACTS.find((a) => a.id === journey.actId) || ACTS[0];
   const walk = journey.walkActive;
   const talk = dialogueView();
-  const caption = act.id === "system" ? "The Solar System" : act.id === "walk" ? "Sea of Tranquillity — 0.67°N 23.5°E" : act.caption;
+  // The caption is the act's own string; the site coordinates live in the text rather than being
+  // appended here, because the two landings have different ones and neither belongs in the renderer.
+  const caption = act.caption;
 
   return (
     <div className='hud'>
@@ -103,7 +105,7 @@ export default function Hud() {
       {talk && talk.chips.length ? (
         <div className='chips'>
           <em>
-            round {talk.round} · {talk.title} · {talk.asked}/16 answered
+            round {talk.round} · {talk.title} · {talk.asked}/{talk.total} answered
           </em>
           {talk.chips.map((q) => (
             <button key={q.id} type='button' onClick={() => askDialogue(q.id)}>

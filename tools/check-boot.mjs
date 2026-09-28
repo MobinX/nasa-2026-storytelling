@@ -44,9 +44,11 @@ globalThis.Image = class {
 };
 
 const { preloadMaps, maps } = await import("../src/lib/textures.js");
-const { buildTerrain, deriveNormalMap, levelTerrain, heightAt } = await import("../src/lib/terrain.js");
-const { CUT_LOCAL } = await import("../src/journey/pose.js");
-const { GROUND_CORRIDOR } = await import("../src/journey/corridor.js");
+const { buildTerrain, deriveNormalMap, levelTerrain, flattenAlongCorridor, heightAt } = await import("../src/lib/terrain.js");
+const { MOON, MARS } = await import("../src/journey/worlds.js");
+const { CORRIDOR_BY_WORLD } = await import("../src/journey/corridor.js");
+const GROUND_CORRIDOR = CORRIDOR_BY_WORLD.moon;
+const MARS_CORRIDOR = CORRIDOR_BY_WORLD.mars;
 const { groundPose, scratchGround } = await import("../src/journey/ground.js");
 const { poseAt, scratchPose } = await import("../src/journey/pose.js");
 const { clamp01, SEAM_B } = await import("../src/journey/timeline.js");
@@ -62,14 +64,20 @@ console.log("maps:", keys.join(" "));
 const missing = ["sun", "mercury", "venus", "earth", "mars", "jupiter", "saturn", "uranus", "neptune", "moon", "saturnRing", "detail"].filter((k) => !maps[k]);
 console.log(missing.length ? "MISSING MAPS: " + missing.join(",") : "all 12 maps decoded, anisotropy=" + maps.moon.anisotropy + " colorSpace=" + maps.moon.colorSpace);
 
-const terrain = buildTerrain({ seg: 96, avoid: GROUND_CORRIDOR });
-const off = levelTerrain(terrain, CUT_LOCAL[0], CUT_LOCAL[2]);
+const terrain = buildTerrain({ seg: 96, avoid: GROUND_CORRIDOR, relief: MOON.relief });
+flattenAlongCorridor(terrain, GROUND_CORRIDOR);
+const off = levelTerrain(terrain, MOON.cut[0], MOON.cut[2]);
 terrain.normalMap = deriveNormalMap(terrain.heights, 512);
+const marsTerrain = buildTerrain({ seg: 96, avoid: MARS_CORRIDOR, relief: MARS.relief });
+flattenAlongCorridor(marsTerrain, MARS_CORRIDOR);
+levelTerrain(marsTerrain, MARS.cut[0], MARS.cut[2]);
+marsTerrain.normalMap = deriveNormalMap(marsTerrain.heights, 512);
+console.log("mars field: levelled, eye at hand-off", marsTerrain.heights.grid.length, "samples, normalMap", marsTerrain.normalMap.image.width + "px");
 const p = scratchPose();
 const gp = scratchGround();
 poseAt(SEAM_B + 1e-5, p);
 groundPose(SEAM_B + 1e-5, terrain.heights, p, gp, 0);
-console.log("levelled", off.toFixed(3) + "m at the cut; seam-frame eye", gp.local.y.toFixed(3) + "m; heightAt(cut) now", heightAt(terrain.heights, CUT_LOCAL[0], CUT_LOCAL[2]).toFixed(4));
+console.log("levelled", off.toFixed(3) + "m at the cut; seam-frame eye", gp.local.y.toFixed(3) + "m; heightAt(cut) now", heightAt(terrain.heights, MOON.cut[0], MOON.cut[2]).toFixed(4));
 console.log("normalMap", terrain.normalMap.image.width + "px colorSpace=" + terrain.normalMap.colorSpace + " wrap=" + terrain.normalMap.wrapS);
 console.log("detail wrap=" + maps.detail.wrapS + " colorSpace=" + maps.detail.colorSpace, "| moon repeat", maps.moon.repeat.toArray().join("x"));
 console.log(`boot path OK in ${(performance.now() - t0).toFixed(0)}ms, ${created} canvases`);

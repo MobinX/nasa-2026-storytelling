@@ -5,7 +5,6 @@ import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js
 import { heightAt } from "../lib/terrain.js";
 import { stepEvent } from "../lib/gait.js";
 import { journey } from "../state/journey.js";
-import { LM_LOCAL, FLAG_LOCAL, PANEL_LOCAL, MASTS_LOCAL } from "../journey/pose.js";
 
 const box = (w, h, d, x, y, z) => (new THREE.BoxGeometry(w, h, d)).translate(x, y, z);
 const cyl = (r1, r2, h, x, y, z, seg = 10) => (new THREE.CylinderGeometry(r1, r2, h, seg, 1)).translate(x, y, z);
@@ -23,9 +22,25 @@ function buildLander() {
   return { grey: mergeGeometries(grey), gold: mergeGeometries([cone(1.9, 1.1, 0, 2.3, 0), box(1.1, 0.7, 1.0, 0, 2.6, 0)]) };
 }
 
-export default function Props({ heights }) {
-  const { grey, gold } = useMemo(buildLander, []);
+// A second shape for a world with weather: same merged-primitive method, but a habitat with a mast and a
+// six-wheeled rover, because nothing lands on Mars without wheels and nothing stays that has no wind to
+// blame for the dust on it.
+function buildHabitat() {
+  const grey = [cyl(1.5, 1.5, 3.4, 0, 1.7, 0, 12), box(1.2, 1.0, 1.2, 0, 3.7, 0), cyl(0.08, 0.08, 2.2, 0.0, 4.6, 0), box(2.6, 0.16, 1.8, 0, 0.1, 0)];
+  for (let i = 0; i < 3; i++) grey.push(box(0.5, 0.42, 0.5, -2.2 - i * 0.05, 0.42, 1.2 - i * 1.2));
+  return { grey: mergeGeometries(grey), gold: mergeGeometries([cyl(1.56, 1.56, 1.0, 0, 2.9, 0, 12)]) };
+}
+function buildRover() {
+  const body = [box(1.5, 0.55, 1.0, 0, 0.78, 0), box(0.34, 0.34, 0.34, 0.9, 1.2, 0), cyl(0.05, 0.05, 1.1, -0.2, 1.5, 0), box(0.7, 0.04, 0.5, -0.2, 2.05, 0)];
+  for (let i = 0; i < 3; i++) for (const side of [-1, 1]) body.push(cyl(0.28, 0.28, 0.18, -0.62 + i * 0.62, 0.28, side * 0.56, 10));
+  return mergeGeometries(body);
+}
+
+export default function Props({ heights, world }) {
+  const LM_LOCAL = world.lm, FLAG_LOCAL = world.flag, PANEL_LOCAL = world.panel, MASTS_LOCAL = world.masts;
+  const { grey, gold } = useMemo(world.air > 0 ? buildHabitat : buildLander, [world]);
   const flag = useMemo(() => mergeGeometries([cyl(0.035, 0.035, 2.3, 0, 1.15, 0, 6), box(0.86, 0.03, 0.57, 0.43, 2.05, 0)]), []);
+  const roverGeo = useMemo(() => (world.rover ? buildRover() : null), [world]);
   const y = (x, z) => heightAt(heights, x, z);
   return (
     <group>
@@ -37,6 +52,13 @@ export default function Props({ heights }) {
           <meshStandardMaterial color='#b9862f' roughness={0.45} metalness={0.7} />
         </mesh>
       </group>
+      {world.rover && (
+        <group position={[world.rover[0], y(world.rover[0], world.rover[2]), world.rover[2]]} rotation={[0, 0.7, 0]}>
+          <mesh geometry={roverGeo}>
+            <meshStandardMaterial color='#c9ccd2' roughness={0.6} metalness={0.3} />
+          </mesh>
+        </group>
+      )}
       <group position={[FLAG_LOCAL[0], y(FLAG_LOCAL[0], FLAG_LOCAL[2]), FLAG_LOCAL[2]]} rotation={[0, -0.5, 0]}>
         <mesh geometry={flag}>
           <meshStandardMaterial color='#c8c8cd' roughness={0.9} />
@@ -74,7 +96,7 @@ const alphaMap = () => {
 
 // Regolith records every step and there is no wind, so tracks are physically required. A fresh print is
 // DARKER (compaction kills the backscatter surge), hence MultiplyBlending rather than a lightened decal.
-export function Footprints({ heights }) {
+export function Footprints({ heights, world }) {
   const mesh = useRef();
   const last = useRef(-1);
   const i = useRef(0);
@@ -85,7 +107,10 @@ export function Footprints({ heights }) {
       geo: g,
       mat: new THREE.MeshBasicMaterial({
         alphaMap: alphaMap(),
-        color: "#000000",
+        // A fresh lunar print is DARKER - compaction kills the backscatter surge - so it multiplies. On
+        // Mars the opposite happens: the wind covers the shadowed crust with bright dust, so a track is a
+        // light scar that fades over sols rather than staying for four billion years.
+        color: world.air > 0 ? "#d8b193" : "#000000",
         transparent: true,
         depthWrite: false,
         blending: THREE.MultiplyBlending,
@@ -99,7 +124,7 @@ export function Footprints({ heights }) {
   useFrame(() => {
     const m = mesh.current;
     if (!m) return;
-    m.visible = journey.spaceId === "ground";
+    m.visible = journey.graphId === world.graph;
     if (!m.visible) return;
     const step = stepEvent(journey.walked);
     if (step === last.current) return;
@@ -120,7 +145,7 @@ export function Footprints({ heights }) {
 // One multiply-blended oval stretched along the sun vector: real shadows would cost a full depth pass and
 // 4-12 PCF taps for a contact shadow nobody resolves at 1.7 m. It is also the only object whose motion
 // is unambiguously the viewer's, so it doubles as a speed gauge.
-export function BlobShadow({ heights, sunDirLocal }) {
+export function BlobShadow({ heights, world }) {
   const mesh = useRef();
   const { geo, mat } = useMemo(() => {
     const g = new THREE.PlaneGeometry(1, 1);
@@ -130,14 +155,16 @@ export function BlobShadow({ heights, sunDirLocal }) {
   useFrame(() => {
     const m = mesh.current;
     if (!m) return;
-    const on = journey.spaceId === "ground";
+    const on = journey.graphId === world.graph;
     m.visible = on;
     if (!on) return;
     const p = journey.camLocal;
-    const el = Math.max(0.2, sunDirLocal.y);
+    const sun = world.sunLocal;
+    const el = Math.max(0.2, sun.y);
     m.position.set(p.x, heightAt(heights, p.x, p.z) + 0.03, p.z);
-    m.rotation.y = Math.atan2(-sunDirLocal.x, -sunDirLocal.z);
+    m.rotation.y = Math.atan2(-sun.x, -sun.z);
     m.scale.set(0.5 + 1.4 / el, 1, 0.6 + 1.8 / el);
+    m.material.opacity = world.air > 0 ? 0.22 : 0.6;
   });
   return <mesh ref={mesh} geometry={geo} material={mat} renderOrder={2} />;
 }

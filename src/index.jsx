@@ -2,9 +2,9 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./styles.css";
 import { preloadMaps } from "./lib/textures.js";
-import { buildTerrain, deriveNormalMap, levelTerrain } from "./lib/terrain.js";
-import { CUT_LOCAL } from "./journey/pose.js";
-import { GROUND_CORRIDOR } from "./journey/corridor.js";
+import { buildTerrain, deriveNormalMap, levelTerrain, flattenAlongCorridor } from "./lib/terrain.js";
+import { MOON, MARS } from "./journey/worlds.js";
+import { CORRIDOR_BY_WORLD } from "./journey/corridor.js";
 import { journey } from "./state/journey.js";
 
 const boot = document.getElementById("boot");
@@ -19,13 +19,18 @@ async function start() {
   const t0 = performance.now();
   try {
     await preloadMaps(8, (p) => say("loading surface maps " + Math.round(p * 100) + "%"));
-    say("shaping the terrain");
-    const terrain = buildTerrain({ seg: 96, avoid: GROUND_CORRIDOR });
-    levelTerrain(terrain, CUT_LOCAL[0], CUT_LOCAL[2]);
-    terrain.normalMap = deriveNormalMap(terrain.heights, 512);
+    const terrains = {};
+    for (const world of [MOON, MARS]) {
+      say("shaping " + world.id + " from space");
+      const t = buildTerrain({ seg: 96, avoid: CORRIDOR_BY_WORLD[world.id], relief: world.relief });
+      flattenAlongCorridor(t, CORRIDOR_BY_WORLD[world.id]);
+      levelTerrain(t, world.cut[0], world.cut[2]);
+      t.normalMap = deriveNormalMap(t.heights, 512);
+      terrains[world.id] = t;
+    }
     journey.bootMs = performance.now() - t0;
     if (boot) boot.remove();
-    createRoot(document.getElementById("root")).render(<App terrain={terrain} />);
+    createRoot(document.getElementById("root")).render(<App terrains={terrains} />);
   } catch (err) {
     say("failed to start: " + err.message);
     throw err;

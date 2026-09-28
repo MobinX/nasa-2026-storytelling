@@ -4,11 +4,12 @@ import App from "../src/App.jsx";
 import * as hub from "./stubs/hub.js";
 import { fakeState } from "./stubs/hub-bridge.js";
 import { preloadMaps, maps } from "../src/lib/textures.js";
-import { buildTerrain, levelTerrain, deriveNormalMap, heightAt } from "../src/lib/terrain.js";
-import { CUT_LOCAL, LM_LOCAL, FLAG_LOCAL, SITE, poseAt, scratchPose, walkRate } from "../src/journey/pose.js";
+import { buildTerrain, levelTerrain, flattenAlongCorridor, deriveNormalMap, heightAt } from "../src/lib/terrain.js";
+import { poseAt, scratchPose, walkRate, MARS_GROUND } from "../src/journey/pose.js";
+import { MOON, MARS, SITE, BY_ID } from "../src/journey/worlds.js";
 import { groundPose, scratchGround } from "../src/journey/ground.js";
-import { WALK_IN } from "../src/journey/timeline.js";
-import { GROUND_CORRIDOR } from "../src/journey/corridor.js";
+import { MARS_WALK_IN } from "../src/journey/timeline.js";
+import { CORRIDOR_BY_WORLD } from "../src/journey/corridor.js";
 import { journey } from "../src/state/journey.js";
 import { auditMaterials } from "./lib-shader-audit.mjs";
 import { seenMaterials, hosts } from "./stubs/hub.js";
@@ -19,11 +20,17 @@ import { seenMaterials, hosts } from "./stubs/hub.js";
 export async function run() {
   const out = { errors: [], notes: [] };
   await preloadMaps(4);
-  const terrain = buildTerrain({ seg: 96, avoid: GROUND_CORRIDOR });
-  out.notes.push("levelled " + levelTerrain(terrain, CUT_LOCAL[0], CUT_LOCAL[2]).toFixed(3) + "m");
-  terrain.normalMap = deriveNormalMap(terrain.heights, 256);
+  const terrains = {};
+  for (const world of [MOON, MARS]) {
+    const t = buildTerrain({ seg: 96, avoid: CORRIDOR_BY_WORLD[world.id], relief: world.relief });
+    flattenAlongCorridor(t, CORRIDOR_BY_WORLD[world.id]);
+    out.notes.push(world.id + " levelled " + levelTerrain(t, world.cut[0], world.cut[2]).toFixed(3) + "m");
+    t.normalMap = deriveNormalMap(t.heights, 256);
+    terrains[world.id] = t;
+  }
+  const terrain = terrains.moon;
 
-  const res = hub.renderTree(createElement(App, { terrain }));
+  const res = hub.renderTree(createElement(App, { terrains }));
   Object.assign(out, { passes: res.passes, hosts: res.hosts, frames: hub.frames.length });
 
   const canvasProps = fakeState.__canvasProps || {};
@@ -78,15 +85,20 @@ export async function run() {
   const p = scratchPose();
   const gp = scratchGround();
   poseAt(0.95, p);
-  groundPose(0.95, terrain.heights, p, gp, 0);
+  groundPose(0.95, terrains[p.world.id].heights, p, gp, 0);
   const siteQuat = SITE.quaternion;
-  const expected = gp.local.clone().applyQuaternion(siteQuat).add(SITE.pos);
+  const expected = gp.local.clone().applyQuaternion(p.world.site.quaternion).add(p.world.site.pos);
   const drift = cam.position.distanceTo(expected);
   out.notes.push("rig vs groundPose at o=0.95 idle: " + (drift * 1000).toFixed(4) + "mm of drift");
   if (drift > 1e-9) out.errors.push("the rig is not a pure function of the offset: " + drift.toExponential(2) + "m off groundPose");
 
   // The gait is driven by scroll velocity now. Parked must be dead still; a deliberate scroll must bob.
-  const eyeAbove = () => cam.position.distanceTo(new Vector3(journey.camLocal.x, heightAt(terrain.heights, journey.camLocal.x, journey.camLocal.z), journey.camLocal.z).applyQuaternion(siteQuat).add(SITE.pos));
+  const eyeAbove = () => {
+    const site = BY_ID[journey.worldId].site;
+    const h = heightAt(terrains[journey.worldId].heights, journey.camLocal.x, journey.camLocal.z);
+    return cam.position.distanceTo(new Vector3(journey.camLocal.x, h, journey.camLocal.z).applyQuaternion(site.quaternion).add(site.pos));
+  };
+
   hub.setScroll(0.95);
   hub.scrollState.delta = 0;
   const parked = [];
@@ -98,8 +110,8 @@ export async function run() {
 
   // The rail does not move uniformly - the landing legs crawl and the walk legs run - so the scroll rate
   // that means 2.2 m/s is read off the leg the test actually walks in, not off an average of the act.
-  let o2 = WALK_IN + 0.01;
-  const scrollDeltaFor = (mps) => (mps / walkRate(o2)) * dt;
+  let o2 = MARS_WALK_IN + 0.01;
+  const scrollDeltaFor = (mps) => (mps / walkRate(MARS_GROUND, o2)) * dt;
   const moving = [];
   for (let i = 0; i < 240; i++) {
     hub.scrollState.delta = scrollDeltaFor(2.2);
@@ -125,7 +137,7 @@ export async function run() {
   hub.setScroll(0.95);
   hub.scrollState.delta = 0;
   for (let k = 0; k < hub.frames.length; k++) hub.frames[k].cb(fakeState, dt);
-  const railX = GROUND_CORRIDOR.map(([x]) => x);
+  const railX = CORRIDOR_BY_WORLD.moon.map(([x]) => x);
   const xLo = Math.min(...railX) - 0.5;
   const xHi = Math.max(...railX) + 0.5;
   out.notes.push("camera parked at local x=" + journey.camLocal.x.toFixed(2) + "m z=" + journey.camLocal.z.toFixed(2) + "m, authored band " + xLo.toFixed(2) + ".." + xHi.toFixed(2) + "m");
@@ -133,7 +145,7 @@ export async function run() {
 
   out.hosts = hub.hosts.map((h) => h.tag);
 
-  for (const probe of [["solar", 0.02], ["lunar", 0.5], ["ground", 0.98]]) {
+  for (const probe of [["solar", 0.02], ["moonSphere", 0.2], ["moonGround", 0.42], ["transfer", 0.62], ["marsGround", 0.95]]) {
     hub.setScroll(probe[1]);
     for (let k = 0; k < hub.frames.length; k++) hub.frames[k].cb(fakeState, dt);
     const b = hub.budgetAt();
@@ -192,7 +204,7 @@ export async function run() {
   if (textured.length < 10) out.errors.push("only " + textured.length + " textured materials; expected the 8 planets + moon dot + moon sphere + Earth");
   const sized = [...seenMaterials].filter((m) => m.map?.image).map((m) => m.map.image.width + "x" + m.map.image.height);
   out.notes.push("map sizes " + [...new Set(sized)].sort().join(" "));
-  out.notes.push("walk ends at local (" + LM_LOCAL[0].toFixed(1) + ", " + LM_LOCAL[2].toFixed(1) + ") LM and (" + FLAG_LOCAL[0].toFixed(1) + ", " + FLAG_LOCAL[2].toFixed(1) + ") flag");
+  for (const w of [MOON, MARS]) out.notes.push(w.id + " walk ends at local (" + w.lm.join(", ") + ") craft and (" + w.companion.join(", ") + ") crew");
   audit.notes.forEach((n) => out.notes.push("note: " + n));
   return out;
 }

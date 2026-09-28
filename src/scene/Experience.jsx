@@ -1,13 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useScroll } from "@react-three/drei";
 import { journey } from "../state/journey.js";
 import { actAt, clamp01 } from "../journey/timeline.js";
-import { spaceAt, SUN_DIR } from "../journey/pose.js";
+import { SUN_DIR } from "../journey/pose.js";
+import { MOON, MARS } from "../journey/worlds.js";
 import CameraRig from "./CameraRig.jsx";
 import SolarSystem from "./SolarSystem.jsx";
-import MoonOrbit from "./MoonOrbit.jsx";
-import MoonSurface from "./MoonSurface.jsx";
+import SphereWorld from "./SphereWorld.jsx";
+import GroundWorld from "./GroundWorld.jsx";
 import SunLight from "../lights/SunLight.jsx";
 import { StarDome, SunGlow } from "./Sky.jsx";
 
@@ -77,20 +78,16 @@ const FrameMeter = () => {
   return null;
 };
 
-const SpaceWatcher = ({ onChange }) => {
+// The DOM-side snapshot. Nothing here can be React state: the graph that is drawn is decided inside the
+// frame loop by each component reading journey.graphId, and a setState on a space change would re-render
+// the Canvas, which is exactly how the scroll listener used to get unhitched.
+const Snapshot = () => {
   const scroll = useScroll();
-  const last = useRef("solar");
   useFrame(() => {
     const o = clamp01(scroll.offset);
     journey.offset = o;
     journey.raw = clamp01(scroll.scroll.current);
     journey.actId = actAt(o).id;
-    const id = spaceAt(o).id;
-    if (id !== last.current) {
-      last.current = id;
-      journey.spaceId = id;
-      onChange(id);
-    }
   });
   return null;
 };
@@ -108,22 +105,22 @@ const ScrollFreeze = () => {
   return null;
 };
 
-export default function Experience({ terrain }) {
-  const [space, setSpace] = useState("solar");
+export default function Experience({ terrains }) {
   return (
     <>
       <ScrollGuard />
       <ShaderWarmup />
       <FrameMeter />
-      <SpaceWatcher onChange={setSpace} />
+      <Snapshot />
       <ScrollFreeze />
-      <CameraRig heights={terrain.heights} />
+      <CameraRig terrains={terrains} />
       <SunLight direction={SUN_DIR} />
       <StarDome />
       <SunGlow direction={SUN_DIR} />
-      {space === "solar" && <SolarSystem />}
-      <MoonOrbit />
-      <MoonSurface terrain={terrain} />
+      <SolarSystem />
+      <SphereWorld />
+      <GroundWorld world={MOON} terrain={terrains.moon} />
+      <GroundWorld world={MARS} terrain={terrains.mars} />
     </>
   );
 }

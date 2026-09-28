@@ -2,8 +2,8 @@ import { useRef } from "react";
 import { Euler, Matrix4, Quaternion, Vector3 } from "three";
 import { useFrame } from "@react-three/fiber";
 import { useScroll } from "@react-three/drei";
-import { SITE, poseAt, scratchPose, walkRate } from "../journey/pose.js";
-import { WALK_IN, clamp01, smoothstep } from "../journey/timeline.js";
+import { poseAt, scratchPose, walkRate } from "../journey/pose.js";
+import { MOON_TALK_IN, MOON_TALK_OUT, MARS_TALK_IN, clamp01, smoothstep } from "../journey/timeline.js";
 import { groundPose, scratchGround } from "../journey/ground.js";
 import { journey } from "../state/journey.js";
 
@@ -13,17 +13,22 @@ const _e = new Euler(0, 0, 0, "YXZ");
 const _q = new Quaternion();
 
 // Scroll speed to gait amplitude. The speed is the rail's real one - metres per unit of offset times the
-// scroll rate - so the touchdown leg, which advances a quarter of the act against two tenths of a metre,
-// gets no bob at all and the walking legs get the full lope. With the physical 1.62 m lunar stride an
-// ordinary one-screen-per-second flick would run at ~9 Hz, which reads as a vibration rather than a walk,
-// so the band-pass tapers a violent flick back to a glide. Footprint spacing still comes from stepEvent()
-// at the true stride, so the tracks never lie about distance.
+// scroll rate - so the parked touchdown and conversation legs, which advance eighths of the act against
+// centimetres, get no bob at all and the walking legs get the full lope. With the physical 1.62 m lunar
+// stride that is a 9 Hz vibration at a fast flick, so the band-pass tapers it back to a glide. Footprint
+// spacing still comes from stepEvent() at the true stride, so the tracks never lie about distance.
 const gaitAmplitude = (metresPerSecond) => smoothstep(metresPerSecond, 0.15, 0.9) * (1 - smoothstep(metresPerSecond, 6, 18));
 
-// The only writer of the camera, and now a pure function of scroll.offset: scrubbing backwards reproduces
+// A conversation window, not a step: the lunar one has to close again, because the ascent continues past
+// it and a speech bubble hovering over a crew member who is 30 m and falling behind is worse than none.
+const window_ = (o, open, close) => Math.min(smoothstep(o, open, open + 0.012), 1 - smoothstep(o, close - 0.005, close + 0.005));
+
+// The only writer of the camera, and a pure function of scroll.offset: scrubbing backwards reproduces
 // every pose exactly. drei's internal ScrollControls damp is the whole smoothing budget - anything
 // derived from the offset that gets damped a second time feels rubber-bandy.
-export default function CameraRig({ heights }) {
+// The height field is per world, and the rig is the only thing that knows which one the offset is
+// standing on, so it takes both and picks per frame.
+export default function CameraRig({ terrains }) {
   const scroll = useScroll();
   const pose = scratchPose();
   const ground = useRef(scratchGround());
@@ -32,23 +37,28 @@ export default function CameraRig({ heights }) {
     const d = Math.min(delta, 1 / 20);
     const o = clamp01(scroll.offset);
     poseAt(o, pose);
-    journey.walkActive = pose.space.local && o > WALK_IN;
-    // The crew member starts talking when the walk has actually finished. Gated at 0.97 rather than 1 so
-    // an overscroll bounce at the bottom of the page cannot flicker the whole dialogue panel.
-    journey.encounter = smoothstep(o, 0.97, 0.985);
+    const local = pose.space.local;
+    const world = pose.world;
+    journey.graphId = pose.space.graph;
+    journey.worldId = world.id;
+    journey.air = local ? world.air : 0;
+    journey.moon.talk = window_(o, MOON_TALK_IN, MOON_TALK_OUT);
+    journey.mars.talk = Math.min(1, smoothstep(o, MARS_TALK_IN, MARS_TALK_IN + 0.012));
+    journey.walkActive = local && o > world.walkIn;
+    journey.talk = local ? (world.id === "mars" ? journey.mars.talk : journey.moon.talk) : 0;
 
-    if (!pose.space.local) {
+    if (!local) {
       camera.position.copy(pose.position);
-      // Near the cut the camera is standing on the site, so the reference up is the site normal rather
-      // than the world's. The ground act inherits orientation from here, and world +y is ~89 degrees
-      // from the landing site's normal - handing that off would put the horizon sideways.
-      _m.lookAt(pose.position, pose.target, pose.space.id === "lunar" ? SITE.n : UP);
+      // The reference up is the site normal of the body the camera is looking down at, not the world's.
+      // Every hand-off into a surface act is a frame of nothing but regolith, so a frame that rolls with
+      // the wrong vertical would rotate the ground pattern across the cut.
+      _m.lookAt(pose.position, pose.target, pose.space.id === "solar" ? UP : world.site.n);
       camera.quaternion.setFromRotationMatrix(_m);
     } else {
-      const gp = groundPose(o, heights, pose, ground.current, gaitAmplitude(walkRate(o) * (scroll.delta / d)));
+      const gp = groundPose(o, terrains[world.id].heights, pose, ground.current, gaitAmplitude(walkRate(pose.space, o) * (scroll.delta / d)));
       camera.position.copy(gp.world);
       _e.set(gp.pitch, gp.yaw, gp.roll, "YXZ");
-      camera.quaternion.copy(_q.setFromEuler(_e).premultiply(SITE.quaternion));
+      camera.quaternion.copy(_q.setFromEuler(_e).premultiply(world.site.quaternion));
       journey.camLocal.x = gp.local.x;
       journey.camLocal.z = gp.local.z;
       journey.yaw = gp.yaw;
