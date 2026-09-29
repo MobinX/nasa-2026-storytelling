@@ -1,6 +1,6 @@
 import { journey } from "../state/journey.js";
 import { dialogue } from "../state/dialogue.js";
-import { createScript, questionsOf, pick, advance, tapped, visibleText, isTalking, roundTitle, questionTotal } from "../lib/dialogue.js";
+import { createScript, questionsOf, pick, advance, tapped, visibleText, isTalking, roundTitle, questionTotal, conversationProgress } from "../lib/dialogue.js";
 import { STOPS } from "../journey/stops.js";
 
 // The caption and question chip of whichever crew member is currently holding the scroll. Lives in the HUD,
@@ -22,16 +22,22 @@ for (const stop of Object.values(STOPS).flat()) BY_ID[stop.id] = stop;
 const scripts = {};
 const scriptFor = (id) => (scripts[id] ??= createScript(BY_ID[id].convo));
 
+const sync = (s, id) => {
+  dialogue.talking = isTalking(s) ? 1 : 0;
+  dialogue.progress = conversationProgress(s);
+  if (s.phase === "end") journey.done[id] = true;
+};
+
 export function stepDialogue(dt) {
   const id = journey.talkStop;
   if (!id) {
     dialogue.talking = 0;
+    dialogue.progress = 0;
     return false;
   }
   const s = scriptFor(id);
   advance(s, dt);
-  dialogue.talking = isTalking(s) ? 1 : 0;
-  if (s.phase === "end") journey.done[id] = true;
+  sync(s, id);
   return true;
 }
 
@@ -40,8 +46,7 @@ function useActive(fn) {
   if (!id) return;
   const s = scriptFor(id);
   fn(s);
-  dialogue.talking = isTalking(s) ? 1 : 0;
-  if (s.phase === "end") journey.done[id] = true;
+  sync(s, id);
 }
 
 export function advanceDialogue() {

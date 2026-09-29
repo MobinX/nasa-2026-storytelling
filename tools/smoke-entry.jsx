@@ -132,6 +132,10 @@ export async function run() {
   // written against the offset the visitor is *allowed* to reach, not the one they asked for.
   for (let k = 0; k < hub.frames.length; k++) hub.frames[k].cb(fakeState, dt);
   heldPose = cam.position.clone();
+  // Sample the conversation orbit as the visitor is walked through the stop: the angle the rig has swung
+  // the pair by, and how far that has carried the camera round the machine, away from the pose it arrived
+  // at. The offset is pinned for all of this, so any displacement here is the orbit and nothing else.
+  let thetaMax = 0, orbitCarry = 0;
   while (guard++ < 4000 && journey.offset <= conversed.lock + 1e-3) {
     stepDialogue(1 / 30);
     view = dialogueView();
@@ -144,12 +148,24 @@ export async function run() {
       advanceDialogue();
     }
     for (let k = 0; k < hub.frames.length; k++) hub.frames[k].cb(fakeState, dt);
+    thetaMax = Math.max(thetaMax, Math.abs(journey.orbitTheta));
+    orbitCarry = Math.max(orbitCarry, cam.position.distanceTo(heldPose));
   }
   out.notes.push("conversation at " + conversed.id + ": " + bubbles + " caption taps, " + asked + " questions asked, released after " + guard + " ticks");
+  out.notes.push("orbit at " + conversed.id + ": swung to " + thetaMax.toFixed(2) + "rad, carrying the camera " + orbitCarry.toFixed(2) + "m round the object while the scroll stayed pinned");
   if (asked !== 4) out.errors.push("the visitor asked " + asked + " questions at " + conversed.id + "; a stop is four rounds of one question each");
   if (view && view.total !== 4) out.errors.push(conversed.id + " reports " + view.total + " questions for its progress line");
+  // The orbit is the whole feature: it has to actually happen (a stop with no movement is the old hold),
+  // it has to carry the camera a real distance round the object, and it has to be home by the time the
+  // scroll is released or the release jumps.
+  if (thetaMax < 0.3) out.errors.push("the conversation orbit barely moved at " + conversed.id + ": peak " + thetaMax.toFixed(3) + "rad");
+  if (orbitCarry < 1) out.errors.push("the orbit did not carry the camera round the object at " + conversed.id + ": " + orbitCarry.toFixed(2) + "m");
+  if (Math.abs(conversed.side) < 0.5) out.errors.push(conversed.id + " has no side to orbit by");
   if (journey.offset <= conversed.lock + 1e-3) out.errors.push("answering every question did not release the scroll at " + conversed.id);
   if (heldPose && cam.position.distanceTo(heldPose) < 1e-3) out.errors.push("the scroll released but the camera stayed where it was");
+  // And once released the orbit is zero: the walking rail has the pose back exactly, so sliding on is a walk.
+  for (let k = 0; k < hub.frames.length; k++) hub.frames[k].cb(fakeState, dt);
+  if (Math.abs(journey.orbitTheta) > 1e-9) out.errors.push("the orbit was still swinging " + journey.orbitTheta.toFixed(4) + "rad after the conversation released the scroll");
   for (const stop of allStops()) journey.done[stop.id] = true;
 
   // With no input state left to integrate, the rig must be exactly groundPose. Anything else that ever

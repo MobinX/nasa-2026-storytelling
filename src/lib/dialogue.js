@@ -115,6 +115,30 @@ export function tapped(s) {
   return true;
 }
 
+// How far through the conversation we are, as a monotone 0..1, for the one thing outside the phase machine
+// that reads it: the walking orbit in journey/orbit.js, so a man and the visitor circle the machine they are
+// talking about rather than standing still across it. Every phase boundary either advances this or holds it
+// where it was - the greeting parked at 0, each answer typed out carrying its round's share, the wrap-up
+// pinned at 1 - because a curve that stepped backwards would spin the pair back the way they came.
+//
+// The share is counted off `asked` rather than off `round`, and off the outro rather than off "every round
+// answered", because `pick` records the question the moment a chip is tapped: keying completion to
+// asked.length === total would spin the orbit home at the top of the final answer, before a word of it had
+// been said. `pendingEnd` is set only when the wrap-up line starts, which is the real end of the walk.
+export function conversationProgress(s) {
+  const total = questionTotal(s.convo) || 1;
+  if (s.phase === "end" || s.pendingEnd) return 1;
+  if (s.round < 0) return 0; // still greeting: nobody has moved yet
+  const beats = s.beats ?? [];
+  if (s.phase !== "line") return Math.min(1, s.asked.length / total);
+  // Mid-answer: the question being answered is already the last one in `asked`, so the round index is that
+  // count minus one and the fraction typed through the current beat walks the pair to the next step.
+  const cur = beats[s.beat];
+  const within = cur && cur.length ? Math.min(1, s.chars / cur.length) : 0;
+  const line = beats.length ? Math.min(1, (s.beat + within) / beats.length) : 0;
+  return Math.min(1, (Math.max(0, s.asked.length - 1) + line) / total);
+}
+
 export const visibleText = (s) => (s.beats[s.beat] ?? "").slice(0, Math.floor(s.chars));
 export const isTalking = (s) => s.phase === "line" && (s.beats[s.beat] ?? "").length > Math.floor(s.chars);
 export const roundTitle = (s) => (s.round >= 0 && s.round < s.convo.rounds.length ? s.convo.rounds[s.round].title : "");

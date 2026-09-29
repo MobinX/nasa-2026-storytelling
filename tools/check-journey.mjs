@@ -9,6 +9,7 @@ import { apply } from "../src/data/objects.js";
 import { SURFACE_STOPS } from "../src/journey/timeline.js";
 import { MOON, MARS } from "../src/journey/worlds.js";
 import { groundPose, scratchGround } from "../src/journey/ground.js";
+import { orbitAngle, orbitPose, spinAboutY, ORBIT_ARC } from "../src/journey/orbit.js";
 import { buildTerrain, buildCraters, levelTerrain, flattenAlongCorridor, heightAt, NEAR_R } from "../src/lib/terrain.js";
 import { CORRIDOR_BY_WORLD, LEVEL_BAND_BY_WORLD } from "../src/journey/corridor.js";
 import { ROCK_N, ROCK_CLEARANCE, scatterRocks } from "../src/lib/rocks.js";
@@ -410,6 +411,52 @@ for (const planet of ["moon", "mars", "solar"]) {
     ok(thing.range > crew.range * 0.5, `${planet} stop ${stop.index}: the object (${thing.range.toFixed(1)}m) is nearer than the crew (${crew.range.toFixed(1)}m) and would hide him`);
     ok(thing.range > 3 && thing.range < 32, `${planet} stop ${stop.index}: the hardware is ${thing.range.toFixed(1)}m away, which is neither beside you nor close enough to brief`);
     console.log(`${planet} stop ${stop.index} ${stop.id}: held ${drift.toFixed(2)}m off route, reached by a ${turns[stop.id].toFixed(0)}deg turn, object ${thing.range.toFixed(1)}m at ${thing.az.toFixed(1)}deg, ${thing.arc.toFixed(1)}deg tall | crew ${crew.range.toFixed(1)}m at ${crew.az.toFixed(1)}deg | fov ${p.fov.toFixed(0)} tilt ${tilt.toFixed(1)}`);
+  }
+
+  // ---- the conversation orbit -------------------------------------------------------------------------
+  // While a stop holds the scroll the pair walk around the machine (journey/orbit.js). The offset is pinned
+  // for the whole of it, so nothing else moves the camera and this sweep is the entire motion. It runs the
+  // real orbitPose and measures the same framing the stop was authored for, at every sample: the subject has
+  // to stay in the portrait frame and clear of the ground for the whole arc, not just at the parked pose -
+  // otherwise the man walks round his own machine and off the side of the phone. Because the camera, the
+  // look target and the crew member all rotate about the object's own vertical, the picture should be
+  // invariant but for the terrain beneath the moving eye, which is exactly what this catches.
+  const wrist = new Vector3();
+  for (const stop of SURFACE_STOPS[planet]) {
+    let worst = 0, at = 0, lo = 1e9, blocked = 0, moved = 0;
+    const arc = 2 * ORBIT_ARC * Math.hypot(stop.cam[0] - stop.obj[0], stop.cam[2] - stop.obj[2]) * 0.5;
+    for (let i = 0; i <= 24; i++) {
+      const prog = i / 24;
+      const theta = orbitAngle(prog, stop.side);
+      poseAt(stop.lock + 1e-4, p);
+      const before = p.position.clone();
+      orbitPose(p, stop, theta);
+      moved = Math.max(moved, p.position.distanceTo(before));
+      const g = heights ? groundPose(stop.lock + 1e-4, heights, p, gp, 0) : null;
+      const local = g ? g.local : localOf(p.position, world);
+      if (heights) lo = Math.min(lo, g.local.y - heightAt(heights, g.local.x, g.local.z));
+      // The crew member travels the same rigid arc, so his box is measured where he actually is.
+      wrist.set(stop.crew[0], 0, stop.crew[2]);
+      spinAboutY(wrist, stop.obj[0], stop.obj[2], theta);
+      if (g) eyeSlot.q.setFromEuler(new Euler(gp.pitch, gp.yaw, gp.roll, "YXZ"));
+      else {
+        const dv = p.target.clone().sub(p.position).applyQuaternion(localToSite(world));
+        eyeSlot.q.setFromEuler(new Euler(Math.asin(dv.y / dv.length()), Math.atan2(-dv.x, -dv.z), 0, "YXZ"));
+      }
+      eyeSlot.v.copy(local);
+      const thing = subject(heights, stop.obj, { half: stop.half, deep: stop.deep, top: stop.top });
+      const buddy = subject(heights, [wrist.x, stop.crew[1], wrist.z], { half: 0.45, deep: 0.45, top: 1.95 });
+      const m = Math.max(thing.ax, thing.ay, buddy.ax, buddy.ay);
+      if (m > worst) { worst = m; at = prog; }
+      blocked = Math.max(blocked, thing.blocked, buddy.blocked);
+    }
+    ok(moved > 3, `${planet} stop ${stop.index}: the conversation orbit barely moves the camera (${moved.toFixed(2)}m at the peak)`);
+    ok(worst <= 0.98, `${planet} stop ${stop.index}: the orbit carries the subject out of the portrait frame (ndc ${worst.toFixed(2)} at progress ${at.toFixed(2)})`);
+    if (heights) {
+      ok(blocked === 0, `${planet} stop ${stop.index}: the orbit puts a subject behind the ground (${blocked} corners blocked somewhere in the arc)`);
+      ok(lo > 0.15 && lo < 9, `${planet} stop ${stop.index}: the orbiting eye height leaves the walk band (${lo.toFixed(2)}m)`);
+    }
+    console.log(`${planet} stop ${stop.index} ${stop.id}: orbit peak ${(ORBIT_ARC * DEG).toFixed(0)}deg, camera travels ${moved.toFixed(1)}m off the park (~${arc.toFixed(0)}m of arc), frame ndc <= ${worst.toFixed(2)} (at ${at.toFixed(2)})${heights ? `, eye >= ${lo.toFixed(2)}m` : ""}`);
   }
   // Footprint clearance. Every stop parks the camera in front of its own vehicle, and the next stop's park
   // point must fall outside that vehicle's footprint - a 6.4 m lunar module on a 12 m route would otherwise

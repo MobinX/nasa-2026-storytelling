@@ -4,6 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { journey } from "../state/journey.js";
 import { dialogue } from "../state/dialogue.js";
+import { spinAboutY, facingToward } from "../journey/orbit.js";
 import { reveal } from "../lib/surface.js";
 
 const box = (w, h, d, x, y, z) => new THREE.BoxGeometry(w, h, d).translate(x, y, z);
@@ -12,6 +13,7 @@ const cyl = (r1, r2, h, x, y, z, seg = 8) => new THREE.CylinderGeometry(r1, r2, 
 const _siteToLocal = new THREE.Quaternion();
 const _cam = new THREE.Vector3();
 const _above = new THREE.Vector3();
+const _pos = new THREE.Vector3();
 
 // A suited figure beside every object the visitor walks up to, built the way the hardware is: merged
 // primitives, with only the joints that actually move broken out into their own mesh. Skinning is not on
@@ -84,15 +86,38 @@ export default function Companion({ stop, site, heights, graph, ground }) {
     const floater = soft.current.float;
 
     g.rotation.z = 0.012 * Math.sin(t * 0.55) + floater * 0.1 * Math.sin(t * 0.33);
-    g.position.y = y + 0.006 * Math.sin(t * 1.1) + floater * 0.5 * Math.sin(t * 0.21);
 
-    // Head tracking, in his own body frame: the site-frame delta un-rotated by `facing`. Because he was
-    // placed facing the parking spot, this reads ~0 where the conversation happens and grows past it.
+    // The visitor, in the site's own metres, and the crew member carried round the object by the same arc
+    // the rig applied to the camera (journey.orbitTheta). Both are spun about the object's [x,z] in the site
+    // frame, so he stays across the machine from the visitor for the whole conversation rather than being
+    // overtaken by them - which is the whole point of moving the pair together. `face` is recomputed every
+    // frame from the visitor's real position, so he turns to keep briefing whoever he is talking to.
     _cam.copy(state.camera.position).sub(site.pos).applyQuaternion(_siteToLocal);
-    const wx = _cam.x - stop.crew[0];
-    const wz = _cam.z - stop.crew[2];
-    const c = Math.cos(facing);
-    const s = Math.sin(facing);
+    // Only the crew member whose conversation is holding the scroll travels the arc; his neighbours stand
+    // still, because journey.orbitTheta is the held stop's angle and every figure in this graph would
+    // otherwise swing round its own machine in sympathy.
+    const theta = mine ? journey.orbitTheta : 0;
+    _pos.set(stop.crew[0], 0, stop.crew[2]);
+    spinAboutY(_pos, stop.obj[0], stop.obj[2], theta);
+    const crewX = _pos.x;
+    const crewZ = _pos.z;
+    g.position.x = crewX;
+    g.position.z = crewZ;
+    // His feet follow the ground he is actually standing on, not the ground he was parked on: the orbit
+    // walks him a few metres across the regolith, and on a field with real relief that is enough to float
+    // him or bury him by several centimetres if the height is frozen at the arrival spot.
+    const stand = heights ? ground(crewX, crewZ) : stop.crew[1];
+    g.position.y = stand + 0.006 * Math.sin(t * 1.1) + floater * 0.5 * Math.sin(t * 0.21);
+    const face = facingToward(crewX, crewZ, _cam.x, _cam.z);
+    g.rotation.y = face;
+
+    // Head tracking, in his own body frame: the site-frame delta un-rotated by `face`. Because the body has
+    // already turned to the visitor, this reads ~0 while they are talking and grows as the head leads the
+    // turn - which is the head-turn the orbit is meant to read as.
+    const wx = _cam.x - crewX;
+    const wz = _cam.z - crewZ;
+    const c = Math.cos(face);
+    const s = Math.sin(face);
     const want = Math.atan2(c * wx - s * wz, s * wx + c * wz);
     soft.current.headYaw = ease(soft.current.headYaw, clamp(want, -0.75, 0.75), 2.2, d);
     head.current.rotation.set(-0.05 + 0.03 * Math.sin(t * 0.9) - floater * 0.12, soft.current.headYaw, floater * 0.2);
@@ -107,8 +132,9 @@ export default function Companion({ stop, site, heights, graph, ground }) {
 
     if (!mine) return;
     // Where to hang the caption. Projected per frame rather than pinned to a screen corner, so the words
-    // belong to him; the HUD clamps it back inside the safe area.
-    _above.set(stop.crew[0], y + 2.62, stop.crew[2]).applyQuaternion(site.quaternion).add(site.pos).project(state.camera);
+    // belong to him; the HUD clamps it back inside the safe area. Taken from his orbiting position rather
+    // than the parked one, so the bubble stays above him as he walks round the machine.
+    _above.set(crewX, stand + 2.62, crewZ).applyQuaternion(site.quaternion).add(site.pos).project(state.camera);
     journey.companion.x = _above.x * 0.5 + 0.5;
     journey.companion.y = 0.5 - _above.y * 0.5;
     journey.companion.on = journey.talk > 0.5 && _above.z < 1;

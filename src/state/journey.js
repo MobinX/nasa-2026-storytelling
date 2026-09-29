@@ -17,6 +17,9 @@ export const journey = {
   done: {},
   lock: { engaged: false, offset: 0, id: null },
   yaw: 0,
+  // How far the conversation orbit has swung the visitor around the object this frame, in radians. Read by
+  // the crew member so he travels with the same arc; zero except while a stop is holding the scroll.
+  orbitTheta: 0,
   camLocal: { x: 0, z: -20 },
   graphId: "solar",
   worldId: "moon",

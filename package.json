@@ -30,7 +30,7 @@
     "dev": "vite --host",
     "build": "vite build",
     "preview": "vite preview",
-    "check": "node tools/self-test-auditor.mjs && node tools/check-objects.mjs && node tools/check-models.mjs && node tools/check-dialogue.mjs && node tools/check-boot.mjs && node tools/check-journey.mjs && node tools/check-light.mjs && node tools/check-texture-continuity.mjs && node tools/render-smoke.mjs"
+    "check": "node tools/self-test-auditor.mjs && node tools/check-objects.mjs && node tools/check-models.mjs && node tools/check-dialogue.mjs && node tools/check-orbit.mjs && node tools/check-boot.mjs && node tools/check-journey.mjs && node tools/check-light.mjs && node tools/check-texture-continuity.mjs && node tools/render-smoke.mjs"
   },
   "browserslist": [
     ">0.2%",

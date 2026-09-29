@@ -5,7 +5,9 @@ import { useScroll } from "@react-three/drei";
 import { poseAt, scratchPose, walkRate } from "../journey/pose.js";
 import { SURFACE_STOPS, clamp01, smoothstep } from "../journey/timeline.js";
 import { groundPose, scratchGround } from "../journey/ground.js";
+import { orbitAngle, orbitPose } from "../journey/orbit.js";
 import { journey } from "../state/journey.js";
+import { dialogue } from "../state/dialogue.js";
 
 const UP = new Vector3(0, 1, 0);
 const _m = new Matrix4();
@@ -41,9 +43,14 @@ export default function CameraRig({ terrains }) {
     const list = STOPS_OF[pose.space.id];
     let held = 0;
     let stopId = null;
+    let stopRef = null;
     if (list) {
       for (const stop of list) {
-        if (raw >= stop.lock && !journey.done[stop.id]) { held = Math.max(held, stop.lock); stopId = stop.id; }
+        if (raw >= stop.lock && !journey.done[stop.id]) {
+          if (stop.lock >= held) stopRef = stop;
+          held = Math.max(held, stop.lock);
+          stopId = stop.id;
+        }
       }
     }
     const o = held ? Math.min(raw, held) : raw;
@@ -57,6 +64,20 @@ export default function CameraRig({ terrains }) {
       }
     }
     if (o !== raw) poseAt(o, pose);
+
+    // The conversation orbit. The offset is pinned for the whole hold, so the picture could not move on
+    // its own; while a man is talking, the crew member and the visitor circle the machine they are talking
+    // about together, and the amount is a function of how far through the conversation they are (see
+    // journey/orbit.js). orbitPose rotates the arrival pose - camera, look target and standing position -
+    // about the object's own vertical by that angle; because the target is authored to sit on the axis the
+    // machine stays dead centre, and because the rotation is zero at both ends of the conversation the
+    // walking rail is handed back the exact pose it arrived with. This is the rig's second deviation from a
+    // pure function of the offset, and like the first it stays out of the pose maths: it rotates the pose,
+    // it never edits the rail.
+    const orbitTheta = stopRef ? orbitAngle(dialogue.progress, stopRef.side) : 0;
+    if (orbitTheta) orbitPose(pose, stopRef, orbitTheta);
+    journey.orbitTheta = orbitTheta;
+
     const local = pose.space.local;
     const world = pose.world;
     journey.graphId = pose.space.graph;

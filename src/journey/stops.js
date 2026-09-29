@@ -77,6 +77,11 @@ const toStop = (planet, raw, i) => {
     top: r.top,
     half: r.half,
     deep: r.deep ?? r.half,
+    // Which way round the object this stop's conversation walks. Authored per stop as `side` (the same
+    // number that puts the machine alternately left and right of the walking line, checked in
+    // tools/check-journey.mjs), so two stops in a row orbit in opposite senses and the walk does not read as
+    // one long spiral. The deep-space stops have no `side` and default to the same sense.
+    side: r.side ?? 1,
     yaw: r.objYaw ?? 0,
     aim,
     leg: holdLegOf(i, planet),
