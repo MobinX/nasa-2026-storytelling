@@ -4,13 +4,12 @@ import { useFrame } from "@react-three/fiber";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { journey } from "../state/journey.js";
 import { dialogue } from "../state/dialogue.js";
-import { spinAboutY, facingToward } from "../journey/orbit.js";
+import { siteLocal, crewStation } from "../journey/orbit.js";
 import { reveal } from "../lib/surface.js";
 
 const box = (w, h, d, x, y, z) => new THREE.BoxGeometry(w, h, d).translate(x, y, z);
 const cyl = (r1, r2, h, x, y, z, seg = 8) => new THREE.CylinderGeometry(r1, r2, h, seg, 1).translate(x, y, z);
 
-const _siteToLocal = new THREE.Quaternion();
 const _cam = new THREE.Vector3();
 const _above = new THREE.Vector3();
 const _pos = new THREE.Vector3();
@@ -19,9 +18,10 @@ const _pos = new THREE.Vector3();
 // primitives, with only the joints that actually move broken out into their own mesh. Skinning is not on
 // the table - no rig, no asset, and nothing to fetch it from on a phone connection.
 //
-// He faces the spot the rail parks at, which is the stop's camera position, so the conversation is
-// eye-to-eye without anyone steering. Only the crew member whose stop is currently holding the scroll
-// claims the caption anchor; two bubbles fighting over the same DOM node is worse than none.
+// He turns to face the visitor every frame, wherever the conversation orbit has carried them, which is the
+// only way a man talking for a minute straight reads as talking to *you*. Only the crew member whose stop is
+// currently holding the scroll claims the caption anchor; two bubbles fighting over the same DOM node is
+// worse than none.
 const buildBody = () =>
   mergeGeometries([
     box(0.54, 0.66, 0.40, 0, 1.15, 0),
@@ -62,7 +62,6 @@ export default function Companion({ stop, site, heights, graph, ground }) {
   const elbowL = useRef();
   const elbowR = useRef();
   const soft = useRef({ talk: 0, headYaw: 0, float: 0 });
-  useMemo(() => _siteToLocal.copy(site.quaternion).invert(), [site]);
 
   // On a surface he stands on the regolith; in deep space he hangs at the elevation the stop author for him.
   const y = useMemo(() => (heights ? ground(stop.crew[0], stop.crew[2]) : stop.crew[1]), [stop, ground, heights]);
@@ -88,17 +87,18 @@ export default function Companion({ stop, site, heights, graph, ground }) {
     g.rotation.z = 0.012 * Math.sin(t * 0.55) + floater * 0.1 * Math.sin(t * 0.33);
 
     // The visitor, in the site's own metres, and the crew member carried round the object by the same arc
-    // the rig applied to the camera (journey.orbitTheta). Both are spun about the object's [x,z] in the site
-    // frame, so he stays across the machine from the visitor for the whole conversation rather than being
-    // overtaken by them - which is the whole point of moving the pair together. `face` is recomputed every
-    // frame from the visitor's real position, so he turns to keep briefing whoever he is talking to.
-    _cam.copy(state.camera.position).sub(site.pos).applyQuaternion(_siteToLocal);
-    // Only the crew member whose conversation is holding the scroll travels the arc; his neighbours stand
-    // still, because journey.orbitTheta is the held stop's angle and every figure in this graph would
-    // otherwise swing round its own machine in sympathy.
-    const theta = mine ? journey.orbitTheta : 0;
-    _pos.set(stop.crew[0], 0, stop.crew[2]);
-    spinAboutY(_pos, stop.obj[0], stop.obj[2], theta);
+    // the rig applied to the camera (journey.orbitTheta). crewStation spins him about the object's [x,z] in
+    // the site frame and then turns him to face wherever the eye has got to, so he stays across the machine
+    // from the visitor and briefs them head-on for the whole 270 degrees rather than being overtaken by them
+    // - which is the whole point of moving the pair together.
+    siteLocal(site, state.camera.position, _cam);
+    // Only the crew member of the stop the arc is actually swinging about travels with it; his neighbours
+    // stand still, because journey.orbitTheta is that stop's angle and every figure in this graph would
+    // otherwise swing round its own machine in sympathy. It is the arc's own stop rather than the one holding
+    // the scroll, so coming off a stop early carries the right man back to the trail with the camera.
+    const carried = journey.orbitStop === stop.id;
+    const theta = carried ? journey.orbitTheta : 0;
+    const face = crewStation(stop, theta, _cam, _pos);
     const crewX = _pos.x;
     const crewZ = _pos.z;
     g.position.x = crewX;
@@ -108,12 +108,12 @@ export default function Companion({ stop, site, heights, graph, ground }) {
     // him or bury him by several centimetres if the height is frozen at the arrival spot.
     const stand = heights ? ground(crewX, crewZ) : stop.crew[1];
     g.position.y = stand + 0.006 * Math.sin(t * 1.1) + floater * 0.5 * Math.sin(t * 0.21);
-    const face = facingToward(crewX, crewZ, _cam.x, _cam.z);
     g.rotation.y = face;
 
     // Head tracking, in his own body frame: the site-frame delta un-rotated by `face`. Because the body has
-    // already turned to the visitor, this reads ~0 while they are talking and grows as the head leads the
-    // turn - which is the head-turn the orbit is meant to read as.
+    // already turned to the visitor, this reads ~0 while they are talking, and it is the small amount it
+    // does not read - a visitor who has stopped dead on the far side of the machine, a stop that is not the
+    // one talking - that shows as a glance across the hardware rather than a body swivel.
     const wx = _cam.x - crewX;
     const wz = _cam.z - crewZ;
     const c = Math.cos(face);
@@ -140,8 +140,10 @@ export default function Companion({ stop, site, heights, graph, ground }) {
     journey.companion.on = journey.talk > 0.5 && _above.z < 1;
   });
 
+  // Named for tools/render-smoke.mjs, which walks the mounted figure's own world transform to check that he
+  // is facing the visitor - the one thing about a conversation that no pure-function checker can see.
   return (
-    <group ref={group} position={[stop.crew[0], y, stop.crew[2]]} rotation={[0, facing, 0]}>
+    <group ref={group} name={"crew:" + stop.id} position={[stop.crew[0], y, stop.crew[2]]} rotation={[0, facing, 0]}>
       <mesh geometry={shared.body} material={shared.suitMat} />
       <group ref={head} position={[0, 1.52, 0]}>
         <mesh geometry={shared.helmet} material={shared.suitMat} position={[0, 0.12, 0]} />

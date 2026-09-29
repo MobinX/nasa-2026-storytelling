@@ -1,5 +1,5 @@
 import { createElement } from "react";
-import { Vector3 } from "three";
+import { Quaternion, Vector3 } from "three";
 import App from "../src/App.jsx";
 import * as hub from "./stubs/hub.js";
 import { fakeState } from "./stubs/hub-bridge.js";
@@ -115,9 +115,17 @@ export async function run() {
   if (journey.talkStop !== held.id) out.errors.push("the rig reported " + journey.talkStop + " as the held stop, not " + held.id);
   const escaped = cam.position.clone();
   journey.done[held.id] = true;
-  for (let k = 0; k < hub.frames.length; k++) hub.frames[k].cb(fakeState, dt);
-  if (cam.position.distanceTo(escaped) < 1e-3) out.errors.push("finishing the conversation did not release the scroll");
-  out.notes.push("released at o=" + journey.offset.toFixed(4) + " after the conversation was answered");
+  // Answering him does not let go of the scroll on that frame: the arc has to come back to the pose the rail
+  // handed over first, and the hold drops the frame after it lands. A few frames is the whole wait, because
+  // this stop was never actually talking - the conversation below is the one that is.
+  let freeFrames = 0, released = false;
+  while (freeFrames++ < 40 && !released) {
+    for (let k = 0; k < hub.frames.length; k++) hub.frames[k].cb(fakeState, dt);
+    released = journey.offset > held.lock + 1e-4;
+  }
+  if (!released) out.errors.push("finishing the conversation did not release the scroll, " + freeFrames + " frames after the end card");
+  if (cam.position.distanceTo(escaped) < 1e-3) out.errors.push("the camera did not move when " + held.id + " let go of the scroll");
+  out.notes.push("released at o=" + journey.offset.toFixed(4) + " " + freeFrames + " frames after the conversation was answered, arc home first");
 
   // The same hold, but released the way a visitor releases it: tap the caption, choose a question, tap
   // through the answer, four rounds, and the outro. Nothing below writes journey.done, so this is the whole
@@ -132,12 +140,50 @@ export async function run() {
   // written against the offset the visitor is *allowed* to reach, not the one they asked for.
   for (let k = 0; k < hub.frames.length; k++) hub.frames[k].cb(fakeState, dt);
   heldPose = cam.position.clone();
-  // Sample the conversation orbit as the visitor is walked through the stop: the angle the rig has swung
-  // the pair by, and how far that has carried the camera round the machine, away from the pose it arrived
-  // at. The offset is pinned for all of this, so any displacement here is the orbit and nothing else.
-  let thetaMax = 0, orbitCarry = 0;
-  while (guard++ < 4000 && journey.offset <= conversed.lock + 1e-3) {
-    stepDialogue(1 / 30);
+  // The crew member's own promise, measured on the mounted figure rather than on the maths behind it: his
+  // chest points at the camera, because that is what makes a minute of talking read as somebody talking to
+  // *you*. No pure-function checker can see a component reading the visitor's position through the wrong site
+  // frame - and that is exactly what used to happen to the four lunar crew members, who faced away from the
+  // visitor while the Martian ones looked right. "Some objects work and some do not" is the shape of a shared
+  // scratch value, and only a mounted test can catch it.
+  const DEG = 180 / Math.PI;
+  const look = { worst: 0, who: "", at: 0, seen: 0 };
+  const shown = (o) => { for (let q = o; q; q = q.parent) if (!q.visible) return false; return true; };
+  const _q = new Quaternion(), _fwd = new Vector3(), _wp = new Vector3(), _to = new Vector3();
+  const crewLooksAtYou = () => {
+    const n = BY_ID[journey.worldId].site.n;
+    for (const root of hub.tree) if (root.isObject3D) root.traverse((o) => {
+      if (typeof o.name !== "string" || !o.name.startsWith("crew:") || !shown(o)) return;
+      _fwd.set(0, 0, 1).applyQuaternion(o.getWorldQuaternion(_q));
+      _to.copy(cam.position).sub(o.getWorldPosition(_wp));
+      // Both flattened against the ground he is standing on: he turns about the site's own vertical, and the
+      // few hundredths of sway in his shoulders are not a failure to look at somebody.
+      _fwd.addScaledVector(n, -_fwd.dot(n)).normalize();
+      _to.addScaledVector(n, -_to.dot(n)).normalize();
+      const err = (Math.acos(Math.max(-1, Math.min(1, _fwd.dot(_to)))) * 180) / Math.PI;
+      look.seen++;
+      if (err > look.worst) { look.worst = err; look.who = o.name.slice(5); look.at = Math.abs(journey.orbitTheta); }
+    });
+  };
+  // Sample the conversation orbit the way a visitor goes through a stop: a third of a second of wall clock
+  // between taps, because that is roughly what reading a caption costs. The offset is pinned for all of this,
+  // so any displacement here is the orbit and nothing else - and the two numbers that matter are that it is
+  // already swinging while the man is still introducing the machine, and that it is home before the scroll
+  // lets go. The shape of the arc is journey/orbit.js's own problem, checked in tools/check-orbit.mjs; this is
+  // the one place it is checked through the mounted rig, the HUD and the scroller together.
+  let thetaMax = 0, orbitCarry = 0, thetaGreet = 0, walked2 = 0;
+  while (guard++ < 600 && journey.offset <= conversed.lock + 1e-3) {
+    for (let f = 0; f < 20; f++) {
+      stepDialogue(1 / 60);
+      for (let k = 0; k < hub.frames.length; k++) hub.frames[k].cb(fakeState, dt);
+      walked2++;
+      const swing = Math.abs(journey.orbitTheta);
+      thetaMax = Math.max(thetaMax, swing);
+      orbitCarry = Math.max(orbitCarry, cam.position.distanceTo(heldPose));
+      const early = dialogueView();
+      if (early && early.round === 0 && !early.chips.length) thetaGreet = Math.max(thetaGreet, swing);
+      if (walked2 % 5 === 0) crewLooksAtYou();
+    }
     view = dialogueView();
     if (!view) break;
     if (view.chips.length) {
@@ -147,20 +193,21 @@ export async function run() {
       if (view.phase === "line") bubbles++;
       advanceDialogue();
     }
-    for (let k = 0; k < hub.frames.length; k++) hub.frames[k].cb(fakeState, dt);
-    thetaMax = Math.max(thetaMax, Math.abs(journey.orbitTheta));
-    orbitCarry = Math.max(orbitCarry, cam.position.distanceTo(heldPose));
   }
-  out.notes.push("conversation at " + conversed.id + ": " + bubbles + " caption taps, " + asked + " questions asked, released after " + guard + " ticks");
-  out.notes.push("orbit at " + conversed.id + ": swung to " + thetaMax.toFixed(2) + "rad, carrying the camera " + orbitCarry.toFixed(2) + "m round the object while the scroll stayed pinned");
+  out.notes.push("conversation at " + conversed.id + ": " + bubbles + " caption taps, " + asked + " questions asked, released after " + (walked2 / 60).toFixed(1) + "s");
+  out.notes.push("orbit at " + conversed.id + ": swung to " + thetaMax.toFixed(2) + "rad, carrying the camera " + orbitCarry.toFixed(2) + "m round the object, " + thetaGreet.toFixed(2) + "rad of it before anybody was asked a question");
+  out.notes.push("crew: " + look.seen + " sightings of a mounted figure, worst " + look.worst.toFixed(1) + "deg off the visitor (" + look.who + " at " + (look.at * DEG).toFixed(0) + "deg of arc)");
+  if (!look.seen) out.errors.push("the harness never saw a crew member, so nobody was checked looking at the visitor");
+  if (look.worst > 3) out.errors.push(look.who + " was " + look.worst.toFixed(1) + "deg off the visitor while briefing them at " + (look.at * DEG).toFixed(0) + "deg round his machine");
   if (asked !== 4) out.errors.push("the visitor asked " + asked + " questions at " + conversed.id + "; a stop is four rounds of one question each");
   if (view && view.total !== 4) out.errors.push(conversed.id + " reports " + view.total + " questions for its progress line");
-  // The orbit is the whole feature: it has to actually happen (a stop with no movement is the old hold),
-  // it has to carry the camera a real distance round the object, and it has to be home by the time the
-  // scroll is released or the release jumps.
+  // The orbit is the whole feature: it has to actually happen (a stop with no movement is the old hold), it
+  // has to start on the greeting rather than on the first answer, it has to carry the camera a real distance
+  // round the object, and it has to be home by the time the scroll is released or the release jumps.
   if (thetaMax < 0.3) out.errors.push("the conversation orbit barely moved at " + conversed.id + ": peak " + thetaMax.toFixed(3) + "rad");
+  if (thetaGreet < 0.1) out.errors.push("the arc was still " + thetaGreet.toFixed(3) + "rad off the arrival pose all the way through the greeting at " + conversed.id + ": nobody has been asked anything yet and the picture should already be walking round the machine");
   if (orbitCarry < 1) out.errors.push("the orbit did not carry the camera round the object at " + conversed.id + ": " + orbitCarry.toFixed(2) + "m");
-  if (Math.abs(conversed.side) < 0.5) out.errors.push(conversed.id + " has no side to orbit by");
+  if (Math.abs(conversed.orbit) < 0.5) out.errors.push(conversed.id + " has no direction to orbit by");
   if (journey.offset <= conversed.lock + 1e-3) out.errors.push("answering every question did not release the scroll at " + conversed.id);
   if (heldPose && cam.position.distanceTo(heldPose) < 1e-3) out.errors.push("the scroll released but the camera stayed where it was");
   // And once released the orbit is zero: the walking rail has the pose back exactly, so sliding on is a walk.

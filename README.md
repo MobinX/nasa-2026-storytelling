@@ -69,27 +69,48 @@ A surface act is one leg of rail per screen of scroll: four to get down and stan
 hold leg for every object, then the ascent. The hold leg is six centimetres against a whole screen, which is
 the mechanism the whole walk runs on — the picture stops, so a man can talk to you about the thing in front of
 you. `CameraRig` clamps the offset to that leg's start while the conversation is unfinished and pins the
-scroller to the same number, so a flick cannot run ahead of the hold and the release cannot jump; the frame
-after `journey.done[id]` the offset is the visitor's again. The clamp only touches the input, and scrub-back
-purity is asserted for every offset that is not currently being argued about.
+scroller to the same number, so a flick cannot run ahead of the hold and the release cannot jump; the offset is
+the visitor's again once his conversation is answered *and* the arc has come back to the pose the rail handed
+over. The clamp only touches the input, and scrub-back purity is asserted for every offset that is not
+currently being argued about.
 
-While the hold is open the pair **walk around the machine**. Each caption and each answer carries a monotone
-0..1 out of the phase machine (`conversationProgress`), and `src/journey/orbit.js` turns that into a signed
-angle — a partial arc, widest in the middle and zero at both ends, so the arrival pose at the top of the
-conversation and the arrival pose again at the bottom are the same pose and the release hands the walking rail
-back exactly what it took. The rig rotates the arrival pose about the object's own vertical by that angle, the
-camera's position and its look target together, and `scene/Companion.jsx` carries the crew member round the
-same axis, stands his feet on the ground he is now over, and turns him to keep briefing you (the caption is
-re-projected from his moving head). Because the camera, the target and the crew member are all rotated rigidly
-about one axis, the subject stays dead centre and the two of them stay the same distance apart on screen for
-the whole arc — which is why the portrait-frame checks the stop was authored for still hold at every angle.
-The peak of the arc (`ORBIT_ARC`, ~74°) is a measured ceiling rather than a taste: `tools/check-journey.mjs`
-sweeps the real `orbitPose` at every stop and fails the build if any sample leaves the frame or the ground, and
-the binding stop is `mars-opportunity`, whose crew member is already framed at ndc 0.978 of the 0.98 edge when
-parked. This is the rig's second deviation from a pure function of the offset, and like the first it does not
-touch the rail: it rotates the pose, it never edits it, and outside a hold the angle is exactly zero.
-`tools/check-orbit.mjs` walks every conversation through the curve and `tools/render-smoke.mjs` talks to a crew
-member and asserts the camera really travels round the object and is home by the time the scroll is released.
+While the hold is open the pair **walk around the machine**: 270 degrees of bearing, out and back, starting on
+the first frame of the greeting rather than on the first answer. `src/journey/orbit.js` turns two things into
+one angle — the monotone 0..1 of the phase machine (`conversationProgress`, which counts the greeting and the
+wrap-up as units of the walk instead of parking the first twenty seconds of every stop at zero) and the wall
+clock of the hold — and takes whichever is further round, because the clock is what keeps the picture moving
+while somebody is reading a question and the conversation is what makes the sweep end with the talk rather than
+run ahead of it. The shape is widest halfway through the conversation and exactly zero at both ends, so the
+arrival pose at the top of the greeting and the arrival pose again at the bottom of the wrap-up are the same
+pose and the release hands the walking rail back what it took. The rig rotates the arrival pose about the
+object's own vertical by that angle, its position and its look target together, and `scene/Companion.jsx`
+carries the crew member round the same axis, stands his feet on the ground he is now over, and turns him to
+keep briefing you every frame (the caption is re-projected from his moving head). Because the camera, the
+target and the crew member are all rotated rigidly about one axis, the subject stays dead centre and the two of
+them stay the same distance apart on screen for the whole arc — which is why the portrait-frame checks a stop
+was authored for still hold at every angle, and why a man who was facing you at the park is still facing you
+three quarters of a lap later. `journey/orbit.js` owns both halves of that sentence: `siteLocal()` keeps every
+site's inverse orientation to itself (one scratch quaternion shared by all ten figures had the four lunar crew
+members reading the visitor's position through the *Martian* site frame, so four of them spent every
+conversation facing wherever Mars was while the Martian ones looked right, and the error grew the further the
+arc swung), and `crewStation()` is the one place the component and the checker together put a man on the arc
+and point him at the eye.
+
+The width of the arc is a measured ceiling, not a taste. `tools/check-journey.mjs` sweeps the real `orbitPose`
+at every stop and fails the build if a sample leaves the frame or goes behind the ground, or if the eye comes
+within 1.5 m of another stop's hardware — and the hardware is what binds, because three quarters of a lap of a
+machine standing 17 m off the walking line is a 34 m swing over a site where the next machine is already
+parked. So a stop authors which *way* round it goes (`orbit`, defaulting to `side`, which is the crew member's
+left or right): mars-sojourner is the one override, because its circle clears Opportunity by 3.8 m going one
+way and by 1.7 m going the other, and at 1.7 m the next stop's rover is the thing filling the frame instead of
+the one being described. Framing had to give a little too: the crew member's place across the portrait is now
+reserved against his own half-diagonal rather than his half-breadth, because the box the checker measures has
+corners and a 270° arc presents every one of them. `tools/check-orbit.mjs` walks the state machine as a reader,
+as a skimmer and as a visitor who scrolls away mid-arc; `tools/render-smoke.mjs` mounts a crew member, measures
+which way his chest actually points in world space, and asserts the camera travels round the object and is home
+before the scroll is released. This is the rig's second deviation from a pure function of the offset, and like
+the first it does not touch the rail: it rotates the pose, it never edits it, and outside a hold the angle is
+exactly zero.
 
 Where a stop's geometry lives is not arbitrary: `src/journey/stops.js` owns the route (where the camera
 parks, where the thing stands, where its crew member stands) and derives the two offsets from an *angle*

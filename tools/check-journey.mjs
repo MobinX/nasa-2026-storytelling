@@ -7,9 +7,9 @@ import { Euler, Matrix4, PerspectiveCamera, Quaternion, Vector3 } from "three";
 import { poseAt, scratchPose, SPACES, MOON_GROUND, MARS_GROUND, EVA_SPACE, legStartOf, walkDistance, walkRate } from "../src/journey/pose.js";
 import { apply } from "../src/data/objects.js";
 import { SURFACE_STOPS } from "../src/journey/timeline.js";
-import { MOON, MARS } from "../src/journey/worlds.js";
+import { MOON, MARS, MOON_SUN } from "../src/journey/worlds.js";
 import { groundPose, scratchGround } from "../src/journey/ground.js";
-import { orbitAngle, orbitPose, spinAboutY, ORBIT_ARC } from "../src/journey/orbit.js";
+import { ORBIT_ARC, orbitSwing, orbitPose, spinAboutY } from "../src/journey/orbit.js";
 import { buildTerrain, buildCraters, levelTerrain, flattenAlongCorridor, heightAt, NEAR_R } from "../src/lib/terrain.js";
 import { CORRIDOR_BY_WORLD, LEVEL_BAND_BY_WORLD } from "../src/journey/corridor.js";
 import { ROCK_N, ROCK_CLEARANCE, scatterRocks } from "../src/lib/rocks.js";
@@ -414,27 +414,28 @@ for (const planet of ["moon", "mars", "solar"]) {
   }
 
   // ---- the conversation orbit -------------------------------------------------------------------------
-  // While a stop holds the scroll the pair walk around the machine (journey/orbit.js). The offset is pinned
-  // for the whole of it, so nothing else moves the camera and this sweep is the entire motion. It runs the
-  // real orbitPose and measures the same framing the stop was authored for, at every sample: the subject has
-  // to stay in the portrait frame and clear of the ground for the whole arc, not just at the parked pose -
-  // otherwise the man walks round his own machine and off the side of the phone. Because the camera, the
-  // look target and the crew member all rotate about the object's own vertical, the picture should be
-  // invariant but for the terrain beneath the moving eye, which is exactly what this catches.
+  // While a stop holds the scroll the pair walk 270 degrees round the machine (journey/orbit.js), out and
+  // back again, and the offset is pinned for the whole of it - so this sweep is the entire motion. It runs
+  // the real orbitPose and measures the same framing the stop was authored for at every angle round: the
+  // subject has to stay in the portrait frame and clear of the ground for the whole arc, not just at the
+  // parked pose, otherwise the man walks round his own machine and off the side of the phone. Because the
+  // camera, the look target and the crew member all rotate about the object's own vertical, the picture is
+  // invariant but for the terrain under the moving eye - and but for whatever else stands on that ground,
+  // and but for where the sun ends up. Those last two are what a stop's direction is chosen against, so both
+  // directions are measured here and the authored one has to be the one that is not worse without a reason.
   const wrist = new Vector3();
-  for (const stop of SURFACE_STOPS[planet]) {
-    let worst = 0, at = 0, lo = 1e9, blocked = 0, moved = 0;
-    const arc = 2 * ORBIT_ARC * Math.hypot(stop.cam[0] - stop.obj[0], stop.cam[2] - stop.obj[2]) * 0.5;
-    for (let i = 0; i <= 24; i++) {
-      const prog = i / 24;
-      const theta = orbitAngle(prog, stop.side);
+  const sweepOf = (stop, dir) => {
+    const m = { worst: 0, at: 0, lo: 1e9, blocked: 0, moved: 0, near: 1e9, nearId: "nobody", why: "", minSun: 1e9, sunAt: 0, glare: 0 };
+    const n = 72;
+    for (let i = 0; i <= n; i++) {
+      const theta = ORBIT_ARC * orbitSwing(i / n) * dir;
       poseAt(stop.lock + 1e-4, p);
       const before = p.position.clone();
       orbitPose(p, stop, theta);
-      moved = Math.max(moved, p.position.distanceTo(before));
+      m.moved = Math.max(m.moved, p.position.distanceTo(before));
       const g = heights ? groundPose(stop.lock + 1e-4, heights, p, gp, 0) : null;
       const local = g ? g.local : localOf(p.position, world);
-      if (heights) lo = Math.min(lo, g.local.y - heightAt(heights, g.local.x, g.local.z));
+      if (heights) m.lo = Math.min(m.lo, g.local.y - heightAt(heights, g.local.x, g.local.z));
       // The crew member travels the same rigid arc, so his box is measured where he actually is.
       wrist.set(stop.crew[0], 0, stop.crew[2]);
       spinAboutY(wrist, stop.obj[0], stop.obj[2], theta);
@@ -446,17 +447,48 @@ for (const planet of ["moon", "mars", "solar"]) {
       eyeSlot.v.copy(local);
       const thing = subject(heights, stop.obj, { half: stop.half, deep: stop.deep, top: stop.top });
       const buddy = subject(heights, [wrist.x, stop.crew[1], wrist.z], { half: 0.45, deep: 0.45, top: 1.95 });
-      const m = Math.max(thing.ax, thing.ay, buddy.ax, buddy.ay);
-      if (m > worst) { worst = m; at = prog; }
-      blocked = Math.max(blocked, thing.blocked, buddy.blocked);
+      const parts = [["object across", thing.ax], ["object tall", thing.ay], ["crew across", buddy.ax], ["crew tall", buddy.ay]];
+      const ndc = Math.max(...parts.map(([, v]) => v));
+      if (ndc > m.worst) { m.worst = ndc; m.at = Math.abs(theta) * DEG; m.why = parts.find(([, v]) => v === ndc)[0]; }
+      m.blocked = Math.max(m.blocked, thing.blocked, buddy.blocked);
+      // The eye itself has to miss somebody else's hardware. Three quarters of a lap of a machine standing
+      // twelve to nineteen metres out is a thirty-eight metre swing, and on a scattered site that swing passes
+      // other machines: the visitor should be able to look past a neighbour, not through him.
+      for (const other of SURFACE_STOPS[planet]) {
+        if (other.index === stop.index) continue;
+        const d = Math.hypot(local.x - other.obj[0], local.z - other.obj[2]) - Math.max(other.half, other.deep);
+        if (d < m.near) { m.near = d; m.nearId = other.id; }
+      }
+      // And the sun: a 270 degree sweep takes the eye through three quarters of the sky round the machine, so
+      // it will end up looking along the sun at some bearing. Which bearing that is - the steep part of the
+      // journey, or the turning point where the arc slows and the visitor would sit in it - is what the stop's
+      // direction is for. Sampled uniformly in the conversation, so the fraction is the time it costs.
+      const sight = p.target.clone().sub(p.position).normalize();
+      const sun = Math.acos(Math.min(1, Math.max(-1, sight.dot(MOON_SUN)))) * DEG;
+      if (sun < m.minSun) { m.minSun = sun; m.sunAt = (theta * DEG + 720) % 360; }
+      if (sun < cornerOf(p.fov) * DEG) m.glare++;
+      m.glareFrac = m.glare / (n + 1);
     }
-    ok(moved > 3, `${planet} stop ${stop.index}: the conversation orbit barely moves the camera (${moved.toFixed(2)}m at the peak)`);
-    ok(worst <= 0.98, `${planet} stop ${stop.index}: the orbit carries the subject out of the portrait frame (ndc ${worst.toFixed(2)} at progress ${at.toFixed(2)})`);
+    return m;
+  };
+  for (const stop of SURFACE_STOPS[planet]) {
+    const dir = stop.orbit < 0 ? -1 : 1;
+    const mine = sweepOf(stop, dir);
+    const other = sweepOf(stop, -dir);
+    const radius = Math.hypot(stop.cam[0] - stop.obj[0], stop.cam[2] - stop.obj[2]);
+    ok(mine.moved > 3, `${planet} stop ${stop.index}: the conversation orbit barely moves the camera (${mine.moved.toFixed(2)}m at the peak)`);
+    ok(mine.worst <= 0.98, `${planet} stop ${stop.index}: the orbit carries the ${mine.why} out of the portrait frame (ndc ${mine.worst.toFixed(3)} at ${mine.at.toFixed(0)}deg)`);
+    ok(mine.near > 1.5, `${planet} stop ${stop.index}: the orbit passes ${mine.near.toFixed(1)}m from ${mine.nearId}, which is close enough to block the subject it is meant to be showing`);
     if (heights) {
-      ok(blocked === 0, `${planet} stop ${stop.index}: the orbit puts a subject behind the ground (${blocked} corners blocked somewhere in the arc)`);
-      ok(lo > 0.15 && lo < 9, `${planet} stop ${stop.index}: the orbiting eye height leaves the walk band (${lo.toFixed(2)}m)`);
+      ok(mine.blocked === 0, `${planet} stop ${stop.index}: the orbit puts a subject behind the ground (${mine.blocked} corners blocked somewhere in the arc)`);
+      ok(mine.lo > 0.15 && mine.lo < 9, `${planet} stop ${stop.index}: the orbiting eye height leaves the walk band (${mine.lo.toFixed(2)}m)`);
     }
-    console.log(`${planet} stop ${stop.index} ${stop.id}: orbit peak ${(ORBIT_ARC * DEG).toFixed(0)}deg, camera travels ${moved.toFixed(1)}m off the park (~${arc.toFixed(0)}m of arc), frame ndc <= ${worst.toFixed(2)} (at ${at.toFixed(2)})${heights ? `, eye >= ${lo.toFixed(2)}m` : ""}`);
+    ok(mine.glareFrac < 0.16, `${planet} stop ${stop.index}: the sun is inside the frame for ${(mine.glareFrac * 100).toFixed(0)}% of the conversation`);
+    // Going the other way is only allowed to cost light if it is buying ground: a machine silhouetted against
+    // its own sun is the price, and the other side of the circle has to be standing in the way to be worth it.
+    ok(other.glareFrac >= mine.glareFrac - 0.01 || other.near <= 1.5 || other.worst > 0.98 || other.blocked > 0,
+      `${planet} stop ${stop.index} sweeps the way that spends ${(mine.glareFrac * 100).toFixed(0)}% of the talk with the sun in the frame when ${(other.glareFrac * 100).toFixed(0)}% was available and the other way round is clear of everything else`);
+    console.log(`${planet} stop ${stop.index} ${stop.id}: orbit ${(ORBIT_ARC * DEG).toFixed(0)}deg ${dir < 0 ? "backwards" : "forwards"} round the machine (${(2 * ORBIT_ARC * radius).toFixed(0)}m of walk), ${mine.moved.toFixed(0)}m off the park at the far side, nearest other hardware ${mine.near.toFixed(1)}m (${mine.nearId}), frame ndc <= ${mine.worst.toFixed(2)} (${mine.why} at ${mine.at.toFixed(0)}deg round), sun never closer than ${mine.minSun.toFixed(0)}deg off the sight line${heights ? `, eye >= ${mine.lo.toFixed(2)}m` : ""}; the other way round it would be ${other.minSun.toFixed(0)}deg and ${other.near.toFixed(1)}m from ${other.nearId}`);
   }
   // Footprint clearance. Every stop parks the camera in front of its own vehicle, and the next stop's park
   // point must fall outside that vehicle's footprint - a 6.4 m lunar module on a 12 m route would otherwise

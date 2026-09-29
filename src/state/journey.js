@@ -18,8 +18,14 @@ export const journey = {
   lock: { engaged: false, offset: 0, id: null },
   yaw: 0,
   // How far the conversation orbit has swung the visitor around the object this frame, in radians. Read by
-  // the crew member so he travels with the same arc; zero except while a stop is holding the scroll.
+  // the crew member so he travels with the same arc; zero except from the moment a stop is reached.
   orbitTheta: 0,
+  // Which stop that angle belongs to - it is not always the one holding the scroll, because a visitor who
+  // scrolls away mid-arc takes the arc and its crew member home with them.
+  orbitStop: null,
+  // The arc is on its way back to the trail after the conversation ended, which is the one moment the scroll
+  // is still held with nobody left to talk to. The HUD says so rather than offering a caption to tap.
+  orbitClosing: false,
   camLocal: { x: 0, z: -20 },
   graphId: "solar",
   worldId: "moon",

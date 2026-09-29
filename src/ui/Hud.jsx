@@ -128,7 +128,7 @@ export default function Hud() {
       </div>
       {journey.lock.engaged ? (
         <div className='hint hint-hold' data-hidden={false}>
-          {talk && !talk.chips.length ? "tap the caption" : "answer him to go on"}
+          {journey.orbitClosing ? "coming round" : talk && !talk.chips.length ? "tap the caption" : "answer him to go on"}
         </div>
       ) : null}
       {DEBUG && (
