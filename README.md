@@ -26,7 +26,7 @@ node tools/build-surveyor.mjs && node tools/build-hardware.mjs   # regenerate th
 node tools/prepare-models.mjs .dl-scratch public/models   # re-reduces the NASA downloads; see the file header
 ```
 
-Add `?debug`-style params: `?plain` hides the diagnostics readout, `?tier=0..3` forces a quality tier (the budget is pinned to the top tier at boot and nothing degrades it live),
+Add `?debug`-style params: `?tier=0..3` forces a quality tier (the budget is pinned to the top tier at boot and nothing degrades it live),
 `?freeze=0.699` parks the camera on a seam frame so either side of a cut can be screenshotted, `?seam` adds a
 scrub thumb for finding a stop on a phone.
 

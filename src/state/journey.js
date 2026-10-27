@@ -4,9 +4,6 @@
 export const journey = {
   offset: 0,
   raw: 0,
-  flicks: 0,
-  fps: 0,
-  dpr: 1,
   tier: 3,
   walked: 0,
   walkActive: false,
@@ -31,11 +28,6 @@ export const journey = {
   worldId: "moon",
   companion: { x: 0.5, y: 0.5, on: false },
   actId: "system",
-  connected: false,
-  gl: { calls: 0, tris: 0, programs: 0, textures: 0 },
-  caps: { maxTextureSize: 0, maxAnisotropy: 0, renderer: "", webgl2: true },
-  bootMs: 0,
   software: false,
-  warmedMs: 0,
   scrollEl: null,
 };

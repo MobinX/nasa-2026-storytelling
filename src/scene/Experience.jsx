@@ -23,7 +23,6 @@ const ScrollGuard = () => {
   useFrame(() => {
     const connected = events.connected === scroll.el;
     if (!connected) events.connect?.(scroll.el);
-    journey.connected = connected;
     journey.scrollEl = scroll.el;
   });
   return null;
@@ -41,7 +40,6 @@ const ShaderWarmup = () => {
   useFrame(() => {
     if (done.current) return;
     done.current = true;
-    const t0 = performance.now();
     const hidden = [];
     scene.traverse((o) => {
       if (o.visible === false) {
@@ -54,27 +52,6 @@ const ShaderWarmup = () => {
     } finally {
       for (const o of hidden) o.visible = false;
     }
-    journey.warmedMs = performance.now() - t0;
-  });
-  return null;
-};
-
-const FrameMeter = () => {
-  const gl = useThree((s) => s.gl);
-  const acc = useRef({ t: 0, frames: 0 });
-  useFrame((_, delta) => {
-    const a = acc.current;
-    a.t += delta;
-    a.frames++;
-    if (a.t < 0.5) return;
-    journey.fps = a.frames / a.t;
-    a.t = 0;
-    a.frames = 0;
-    const info = gl.info;
-    journey.gl.calls = info.render.calls;
-    journey.gl.tris = info.render.triangles;
-    journey.gl.programs = info.programs ? info.programs.length : 0;
-    journey.gl.textures = info.memory.textures;
   });
   return null;
 };
@@ -110,7 +87,6 @@ export default function Experience({ terrains }) {
     <>
       <ScrollGuard />
       <ShaderWarmup />
-      <FrameMeter />
       <Snapshot />
       <ScrollFreeze />
       <CameraRig terrains={terrains} />

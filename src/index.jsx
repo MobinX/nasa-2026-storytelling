@@ -7,7 +7,6 @@ import { loadModels } from "./lib/models.js";
 import { buildTerrain, deriveNormalMap, levelTerrain, flattenAlongCorridor } from "./lib/terrain.js";
 import { MOON, MARS } from "./journey/worlds.js";
 import { CORRIDOR_BY_WORLD, LEVEL_BAND_BY_WORLD } from "./journey/corridor.js";
-import { journey } from "./state/journey.js";
 
 const boot = document.getElementById("boot");
 const say = (msg) => {
@@ -18,7 +17,6 @@ const say = (msg) => {
 // JIT the terrain build alone measures ~270ms, which is invisible at boot and a stall if it lands on the
 // orbit-to-surface cut.
 async function start() {
-  const t0 = performance.now();
   try {
     await preloadMaps(8, (p) => say("loading surface maps " + Math.round(p * 100) + "%"));
     const problems = apply(OBJECTS);
@@ -33,7 +31,6 @@ async function start() {
       t.normalMap = deriveNormalMap(t.heights, 512);
       terrains[world.id] = t;
     }
-    journey.bootMs = performance.now() - t0;
     if (boot) boot.remove();
     createRoot(document.getElementById("root")).render(<App terrains={terrains} />);
   } catch (err) {

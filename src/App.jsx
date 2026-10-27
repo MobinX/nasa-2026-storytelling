@@ -15,16 +15,9 @@ const CAM = { fov: 50, near: CAMERA.orbit.near, far: CAMERA.orbit.far, position:
 const RESIZE = { scroll: false, debounce: { scroll: 200, resize: 250 } };
 const SCROLL_STYLE = { overscrollBehavior: "contain", touchAction: "pan-y" };
 
-const onCreated = ({ gl, viewport, setDpr, setFrameloop }) => {
+const onCreated = ({ gl, setDpr, setFrameloop }) => {
   THREE.Cache.enabled = true;
   gl.toneMappingExposure = 0.95;
-  journey.dpr = viewport.dpr;
-  journey.caps.maxTextureSize = gl.capabilities.maxTextureSize;
-  journey.caps.maxAnisotropy = gl.capabilities.getMaxAnisotropy();
-  journey.caps.webgl2 = gl.capabilities.isWebGL2;
-  const ctx = gl.getContext();
-  const dbg = ctx.getExtension("WEBGL_debug_renderer_info");
-  if (dbg) journey.caps.renderer = String(ctx.getParameter(dbg.UNMASKED_RENDERER_WEBGL)).slice(0, 44);
   // The budget is set once here and never revisited: nothing degrades the picture mid-journey now, so a
   // hot phone keeps tier 3 and ?tier=0..2 is the only way down. A software GL takes it itself.
   const forced = new URLSearchParams(window.location.search).get("tier");

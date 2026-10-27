@@ -78,6 +78,9 @@ export function dialogueView() {
     asked: script.asked.length,
     total: questionTotal(stop.convo),
     x: (x * 100).toFixed(1) + "%",
+    // The same anchor as a 0..1 number, so the bubble can cap its own width to the room it has on the
+    // narrower side of the speaker without measuring anything after paint.
+    anchor: x,
     y: (y * 100).toFixed(1) + "%",
     card: script.phase === "end" ? { title: stop.name, hint: stop.convo.outro.beats.at(-1) } : null,
   };

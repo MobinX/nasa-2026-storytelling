@@ -42,37 +42,6 @@ body {
   font-family: ui-monospace, sfmono-regular, menlo, monospace;
 }
 
-.readout {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  font-size: 10px;
-  line-height: 1.5;
-  color: #6fe3c0;
-  text-shadow: 0 1px 0 #000;
-}
-
-.readout div {
-  display: flex;
-}
-
-.readout span {
-  min-width: 56px;
-  opacity: 0.5;
-}
-
-.readout b {
-  font-weight: 500;
-}
-
-.readout .fine {
-  opacity: 0.4;
-}
-
-.readout-dead {
-  color: #ff7a6b;
-}
-
 .hint {
   position: absolute;
   right: 0;
@@ -84,6 +53,99 @@ body {
   text-transform: uppercase;
   color: #7fd7bd;
   opacity: 0.7;
+}
+
+/* The opening scroll cue: a pointing hand that drifts upward and fades on a loop, gone the moment the
+   rail moves. Kept apart from the text hint so only the gesture vanishes once the visitor has understood. */
+.swipe-cue {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  width: 22px;
+  height: 24px;
+  margin-left: -11px;
+  color: #7fd7bd;
+  opacity: 0.9;
+  transition: opacity 0.3s;
+  filter: drop-shadow(0 1px 4px #000);
+}
+
+.swipe-cue[data-hidden="true"] {
+  opacity: 0;
+}
+
+.swipe-cue svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  animation: swipe-up 1.8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+@keyframes swipe-up {
+  0% {
+    transform: translateY(7px);
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.95;
+  }
+  70% {
+    transform: translateY(-7px);
+    opacity: 0.95;
+  }
+  100% {
+    transform: translateY(-13px);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swipe-cue svg {
+    animation: none;
+  }
+}
+
+/* The one-time tap coach, in the HUD's own palette rather than driver.js's white default. */
+.tap-guide.driver-popover {
+  max-width: min(300px, calc(100vw - 32px));
+  padding: 12px 14px;
+  color: #dff3ec;
+  background: rgba(6, 14, 13, 0.96);
+  border: 1px solid rgba(160, 230, 210, 0.42);
+  border-radius: 12px;
+  font-family: ui-monospace, sfmono-regular, menlo, monospace;
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.55);
+}
+
+.tap-guide .driver-popover-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #7fd7bd;
+}
+
+.tap-guide .driver-popover-description {
+  margin-top: 5px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #dff3ec;
+}
+
+.tap-guide .driver-popover-arrow-side-top {
+  border-top-color: rgba(6, 14, 13, 0.96);
+}
+
+.tap-guide .driver-popover-arrow-side-bottom {
+  border-bottom-color: rgba(6, 14, 13, 0.96);
+}
+
+.tap-guide .driver-popover-arrow-side-left {
+  border-left-color: rgba(6, 14, 13, 0.96);
+}
+
+.tap-guide .driver-popover-arrow-side-right {
+  border-right-color: rgba(6, 14, 13, 0.96);
 }
 
 .hud .caption {
@@ -168,7 +230,10 @@ body {
 .bubble {
   position: absolute;
   transform: translate(-50%, -100%);
-  max-width: 78vw;
+  /* A caption centred on a crew member close to the frame edge would otherwise run off-screen. Cap it to
+     the room on the narrower side of its anchor, so the tail keeps pointing at him and the words stay
+     whole; the variable is the 0..1 anchor from the project's own caption position. */
+  max-width: min(78vw, calc(2 * min(var(--anchor, 0.5), calc(1 - var(--anchor, 0.5))) * 100vw - 16px));
   padding: 8px 11px 9px;
   border: 1px solid rgba(160, 230, 210, 0.4);
   border-radius: 10px;
