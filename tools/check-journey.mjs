@@ -9,7 +9,7 @@ import { apply } from "../src/data/objects.js";
 import { SURFACE_STOPS } from "../src/journey/timeline.js";
 import { MOON, MARS, MOON_SUN } from "../src/journey/worlds.js";
 import { groundPose, scratchGround } from "../src/journey/ground.js";
-import { ORBIT_ARC, orbitSwing, orbitPose, spinAboutY } from "../src/journey/orbit.js";
+import { ORBIT_ARC, orbitOut, orbitPose, spinAboutY } from "../src/journey/orbit.js";
 import { buildTerrain, buildCraters, levelTerrain, flattenAlongCorridor, heightAt, NEAR_R } from "../src/lib/terrain.js";
 import { CORRIDOR_BY_WORLD, LEVEL_BAND_BY_WORLD } from "../src/journey/corridor.js";
 import { ROCK_N, ROCK_CLEARANCE, scatterRocks } from "../src/lib/rocks.js";
@@ -414,9 +414,10 @@ for (const planet of ["moon", "mars", "solar"]) {
   }
 
   // ---- the conversation orbit -------------------------------------------------------------------------
-  // While a stop holds the scroll the pair walk 270 degrees round the machine (journey/orbit.js), out and
-  // back again, and the offset is pinned for the whole of it - so this sweep is the entire motion. It runs
-  // the real orbitPose and measures the same framing the stop was authored for at every angle round: the
+  // While a stop holds the scroll the pair walk 270 degrees round the machine (journey/orbit.js) and stand
+  // on the far side for the questions; the offset is pinned for the whole of it - so this sweep is the
+  // entire motion. It runs the real orbitPose and measures the same framing the stop was authored for at
+  // every angle round: the
   // subject has to stay in the portrait frame and clear of the ground for the whole arc, not just at the
   // parked pose, otherwise the man walks round his own machine and off the side of the phone. Because the
   // camera, the look target and the crew member all rotate about the object's own vertical, the picture is
@@ -428,7 +429,7 @@ for (const planet of ["moon", "mars", "solar"]) {
     const m = { worst: 0, at: 0, lo: 1e9, blocked: 0, moved: 0, near: 1e9, nearId: "nobody", why: "", minSun: 1e9, sunAt: 0, glare: 0 };
     const n = 72;
     for (let i = 0; i <= n; i++) {
-      const theta = ORBIT_ARC * orbitSwing(i / n) * dir;
+      const theta = ORBIT_ARC * orbitOut(i / n) * dir;
       poseAt(stop.lock + 1e-4, p);
       const before = p.position.clone();
       orbitPose(p, stop, theta);

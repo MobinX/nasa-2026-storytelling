@@ -7,7 +7,6 @@ import { SURFACE_STOPS, clamp01, smoothstep } from "../journey/timeline.js";
 import { groundPose, scratchGround } from "../journey/ground.js";
 import { stepOrbit, orbitHolds, orbitPose } from "../journey/orbit.js";
 import { journey } from "../state/journey.js";
-import { dialogue } from "../state/dialogue.js";
 
 const UP = new Vector3(0, 1, 0);
 const _m = new Matrix4();
@@ -68,14 +67,15 @@ export default function CameraRig({ terrains }) {
     if (o !== raw) poseAt(o, pose);
 
     // The conversation orbit. The offset is pinned for the whole hold, so the picture could not move on its
-    // own; the arc is what moves it, opening on the first frame of the greeting, sweeping 270 degrees round
-    // the machine as he talks, and coming back along itself before the hold lets go (see journey/orbit.js).
-    // orbitPose rotates the arrival pose - camera, look target and standing position - about the object's own
-    // vertical by that angle; because the target is authored to sit on the axis the machine stays dead centre,
-    // and because the angle is only ever released at zero the walking rail is handed back the exact pose it
-    // arrived with. This is the rig's second deviation from a pure function of the offset, and like the first
-    // it stays out of the pose maths: it rotates the pose, it never edits the rail.
-    const orb = stepOrbit(stopRef, d, dialogue.progress, !!stopRef && !!journey.done[stopRef.id]);
+    // own; the arc is what moves it, opening on the first frame of the briefing, walking 270 degrees round
+    // the machine while the crew member talks, holding on the far side while the visitor asks questions, and
+    // coming home before the hold lets go (see journey/orbit.js). orbitPose rotates the arrival pose - camera,
+    // look target and standing position - about the object's own vertical by that angle; because the target is
+    // authored to sit on the axis the machine stays dead centre, and because the angle is only ever released
+    // at zero the walking rail is handed back the exact pose it arrived with. This is the rig's second
+    // deviation from a pure function of the offset, and like the first it stays out of the pose maths: it
+    // rotates the pose, it never edits the rail.
+    const orb = stepOrbit(stopRef, d, !!stopRef && !!journey.done[stopRef.id]);
     if (orb.theta) orbitPose(pose, orb.stop, orb.theta);
     journey.orbitTheta = orb.theta;
     journey.orbitStop = orb.stop ? orb.stop.id : null;

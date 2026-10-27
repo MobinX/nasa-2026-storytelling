@@ -6,8 +6,8 @@ scrolling flies the camera through the inner planets, into the Moon, and straigh
 the Moon, and the last eight metres of it happen in the surface graph, where the ground has relief and a
 horizon: contact throws the view into a rumble, the camera stands up, and only then does the scroll start
 carrying you forward. On the ground it keeps driving the same way along a route of four instruments, and at
-each one the scroll stops working: a crew member is standing there, and he talks until you have asked him
-your four questions. Then the ascent, a trans-Mars coast, the same landing played again at Jezero West
+each one the scroll stops working: a crew member is standing there, he gives you the briefing, and then you
+can ask him anything about the machine or move on. Then the ascent, a trans-Mars coast, the same landing played again at Jezero West
 against a butterscotch sky and a different gait, four more machines, and finally the two that nobody stands
 next to — an orbiter that mapped the planet, and a probe with a message bolted to its dish, met on a tether in the dark. The whole journey is 46 screens of
 scroll, which is long on purpose — at 10 a single flick swept a tenth of the story and blew past the landing.
@@ -35,11 +35,18 @@ way is authored rather than aimed. The gait bob is driven by scroll velocity, so
 glide and a deliberate one as a lope, and stopping stops the walking.
 
 Ten objects the visitor walks up to are content, not code: `src/data/objects.json` names each one, names the
-glTF that draws it, and gives the crew member beside it an opening line and four rounds of four questions
-with an answer for every option. It is bundled at build and validated before the first frame renders,
-because the rail is authored and the copy is not and they have to agree about the id list. The conversation
-asks one question per round — the other three options are questions you did not ask — so a stop is four
-answers, not sixteen, and reads in under a minute. Finishing it is the only way past it.
+glTF that draws it, gives the crew member beside it an introductory briefing, and carries a flat set of
+researched facts about the machine. It is bundled at build and validated before the first frame renders,
+because the rail is authored and the copy is not and they have to agree about the id list.
+
+After the briefing the visitor has two choices, not a quiz: ask the crew member a question in their own words,
+or move to the next objective. A question goes to `api/ask.js`; the browser never sees the model key. The
+function validates the stop id and the question, builds a system prompt from that object's introduction and
+briefing facts, and streams the reply from the **gpt-6-luna** deployment through the Vercel AI SDK. Locally
+the same handler runs behind a Vite middleware, using `OPENAI_API_KEY`, `OPENAI_MODEL`, and
+`OPENAI_BASE_URL` from the root `.env`; in production the same names are set on the Vercel project's
+Production environment. "Move to next objective" hands the scroll back and shows the crew member's own
+onward line as a scroll cue. Finishing the briefing and choosing to leave is the only way past a stop.
 
 ## How it is put together
 
@@ -74,15 +81,13 @@ the visitor's again once his conversation is answered *and* the arc has come bac
 over. The clamp only touches the input, and scrub-back purity is asserted for every offset that is not
 currently being argued about.
 
-While the hold is open the pair **walk around the machine**: 270 degrees of bearing, out and back, starting on
-the first frame of the greeting rather than on the first answer. `src/journey/orbit.js` turns two things into
-one angle — the monotone 0..1 of the phase machine (`conversationProgress`, which counts the greeting and the
-wrap-up as units of the walk instead of parking the first twenty seconds of every stop at zero) and the wall
-clock of the hold — and takes whichever is further round, because the clock is what keeps the picture moving
-while somebody is reading a question and the conversation is what makes the sweep end with the talk rather than
-run ahead of it. The shape is widest halfway through the conversation and exactly zero at both ends, so the
-arrival pose at the top of the greeting and the arrival pose again at the bottom of the wrap-up are the same
-pose and the release hands the walking rail back what it took. The rig rotates the arrival pose about the
+While the hold is open the pair **walk around the machine**: 270 degrees of bearing, out over the first
+twenty-two seconds of the briefing, held on the far side while the visitor considers the choice and asks
+questions, and home again the moment they choose to move on. `src/journey/orbit.js` is the only clock: a
+smoothstep outbound in `orbitOut()` and a brisker return that starts on the move-on frame. The far side is a
+place to stand, not a fly-by, so the two of them look across the machine at each other while the answer
+streams. The return finishes at exactly the arrival pose, so the release hands the walking rail back what it
+took. The rig rotates the arrival pose about the
 object's own vertical by that angle, its position and its look target together, and `scene/Companion.jsx`
 carries the crew member round the same axis, stands his feet on the ground he is now over, and turns him to
 keep briefing you every frame (the caption is re-projected from his moving head). Because the camera, the

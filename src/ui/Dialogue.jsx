@@ -1,17 +1,17 @@
 import { journey } from "../state/journey.js";
 import { dialogue } from "../state/dialogue.js";
-import { createScript, questionsOf, pick, advance, tapped, visibleText, isTalking, roundTitle, questionTotal, conversationProgress } from "../lib/dialogue.js";
+import { createScript, advance, tapped, finish, visibleText, isTalking } from "../lib/dialogue.js";
 import { STOPS } from "../journey/stops.js";
 
-// The caption and question chip of whichever crew member is currently holding the scroll. Lives in the HUD,
-// outside <Canvas>, on purpose: React state anywhere inside the Canvas is how ScrollControls loses its
+// The caption and the choice panel of whichever crew member is currently holding the scroll. Lives in the
+// HUD, outside <Canvas>, on purpose: React state anywhere inside the Canvas is how ScrollControls loses its
 // scroll listener and the journey freezes with no error. So this renders from a mutable snapshot on the
 // HUD's own repaint tick, and the only thing it hands back to the scene is "he is mid-sentence", through
 // state/dialogue.js.
 //
-// One script per stop, ten of them, created the first time that stop is reached and kept after that, so a
-// visitor who scrolls back over an instrument finds it already explained rather than being trapped by it
-// twice. Finishing a conversation is what releases the scroll: `done` is read by the rig on its next frame.
+// One intro per stop, created the first time that stop is reached and kept after that, so a visitor who
+// scrolls back over an instrument finds it already introduced rather than being trapped by it twice.
+// Finishing the intro opens the choice panel; choosing "move on" is what releases the scroll.
 //
 // Everything here sets touch-action: pan-y. Without it a fixed panel with pointer-events:auto swallows any
 // drag that starts on it, and the page cannot scroll - which is the one thing this app runs on.
@@ -22,39 +22,41 @@ for (const stop of Object.values(STOPS).flat()) BY_ID[stop.id] = stop;
 const scripts = {};
 const scriptFor = (id) => (scripts[id] ??= createScript(BY_ID[id].convo));
 
-const sync = (s, id) => {
+const sync = (s) => {
   dialogue.talking = isTalking(s) ? 1 : 0;
-  dialogue.progress = conversationProgress(s);
-  if (s.phase === "end") journey.done[id] = true;
 };
 
 export function stepDialogue(dt) {
   const id = journey.talkStop;
   if (!id) {
     dialogue.talking = 0;
-    dialogue.progress = 0;
     return false;
   }
   const s = scriptFor(id);
   advance(s, dt);
-  sync(s, id);
+  sync(s);
   return true;
 }
 
-function useActive(fn) {
+export function advanceDialogue() {
   const id = journey.talkStop;
   if (!id) return;
   const s = scriptFor(id);
-  fn(s);
-  sync(s, id);
+  tapped(s);
+  sync(s);
 }
 
-export function advanceDialogue() {
-  useActive((s) => tapped(s));
-}
-
-export function askDialogue(id) {
-  useActive((s) => pick(s, id));
+// The one way past a stop. The rig releases only after the arc is home, so setting `done` here is enough;
+// the panel disappears immediately because dialogueView reports the script as done.
+export function finishDialogue() {
+  const id = journey.talkStop;
+  if (!id) return false;
+  const s = scriptFor(id);
+  if (!finish(s)) return false;
+  journey.done[id] = true;
+  dialogue.talking = 0;
+  dialogue.generating = 0;
+  return true;
 }
 
 export function dialogueView() {
@@ -69,19 +71,14 @@ export function dialogueView() {
     stop,
     phase: script.phase,
     text: visibleText(script),
-    chips: script.phase === "ask" ? questionsOf(script) : [],
     // He can be projected off the edge if the visitor stops scrolling exactly at a stop; an unowned speech
     // bubble floating at the clamped edge of the screen is worse than no bubble.
     hidden: !pos.on,
-    title: roundTitle(script),
-    round: Math.min(script.round + 1, stop.convo.rounds.length),
-    asked: script.asked.length,
-    total: questionTotal(stop.convo),
     x: (x * 100).toFixed(1) + "%",
     // The same anchor as a 0..1 number, so the bubble can cap its own width to the room it has on the
     // narrower side of the speaker without measuring anything after paint.
     anchor: x,
     y: (y * 100).toFixed(1) + "%",
-    card: script.phase === "end" ? { title: stop.name, hint: stop.convo.outro.beats.at(-1) } : null,
+    onward: stop.convo.onward,
   };
 }

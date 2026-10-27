@@ -123,19 +123,20 @@ export async function run() {
     for (let k = 0; k < hub.frames.length; k++) hub.frames[k].cb(fakeState, dt);
     released = journey.offset > held.lock + 1e-4;
   }
-  if (!released) out.errors.push("finishing the conversation did not release the scroll, " + freeFrames + " frames after the end card");
+  if (!released) out.errors.push("finishing the conversation did not release the scroll, " + freeFrames + " frames after move-on");
   if (cam.position.distanceTo(escaped) < 1e-3) out.errors.push("the camera did not move when " + held.id + " let go of the scroll");
   out.notes.push("released at o=" + journey.offset.toFixed(4) + " " + freeFrames + " frames after the conversation was answered, arc home first");
 
-  // The same hold, but released the way a visitor releases it: tap the caption, choose a question, tap
-  // through the answer, four rounds, and the outro. Nothing below writes journey.done, so this is the whole
-  // loop - HUD callbacks, phase machine, rig and scroller pin - and it is the only place the piece is tested
-  // as the thing it actually is: a scroll that will not move until somebody has been talked to.
-  const { stepDialogue, advanceDialogue, askDialogue, dialogueView } = await import("../src/ui/Dialogue.jsx");
+  // The same hold, but released the way a visitor releases it: tap the caption through the briefing, arrive
+  // at the ask/move-on choice, and take the next objective. Nothing below writes journey.done by hand, so
+  // this is the whole loop - HUD callbacks, phase machine, rig and scroller pin - and it is the only place
+  // the piece is tested as the thing it actually is: a scroll that will not move until somebody has been
+  // talked to and has chosen to leave.
+  const { stepDialogue, advanceDialogue, finishDialogue, dialogueView } = await import("../src/ui/Dialogue.jsx");
   const conversed = SURFACE_STOPS.moon[0];
   journey.done = {};
   hub.setScroll(conversed.lock + conversed.spanSize * 0.5);
-  let asked = 0, bubbles = 0, guard = 0, view = null, heldPose = null;
+  let bubbles = 0, guard = 0, view = null, heldPose = null, movedOn = false;
   // One frame first, so the rig has had the flick and has already decided to hold: the loop below is
   // written against the offset the visitor is *allowed* to reach, not the one they asked for.
   for (let k = 0; k < hub.frames.length; k++) hub.frames[k].cb(fakeState, dt);
@@ -171,7 +172,7 @@ export async function run() {
   // already swinging while the man is still introducing the machine, and that it is home before the scroll
   // lets go. The shape of the arc is journey/orbit.js's own problem, checked in tools/check-orbit.mjs; this is
   // the one place it is checked through the mounted rig, the HUD and the scroller together.
-  let thetaMax = 0, orbitCarry = 0, thetaGreet = 0, walked2 = 0;
+  let thetaMax = 0, orbitCarry = 0, thetaBrief = 0, walked2 = 0;
   while (guard++ < 600 && journey.offset <= conversed.lock + 1e-3) {
     for (let f = 0; f < 20; f++) {
       stepDialogue(1 / 60);
@@ -181,34 +182,32 @@ export async function run() {
       thetaMax = Math.max(thetaMax, swing);
       orbitCarry = Math.max(orbitCarry, cam.position.distanceTo(heldPose));
       const early = dialogueView();
-      if (early && early.round === 0 && !early.chips.length) thetaGreet = Math.max(thetaGreet, swing);
+      if (early && early.phase === "line") thetaBrief = Math.max(thetaBrief, swing);
       if (walked2 % 5 === 0) crewLooksAtYou();
     }
     view = dialogueView();
     if (!view) break;
-    if (view.chips.length) {
-      askDialogue(view.chips[0].id);
-      asked++;
-    } else {
-      if (view.phase === "line") bubbles++;
+    if (view.phase === "choice") {
+      movedOn = finishDialogue() || movedOn;
+    } else if (view.phase === "line") {
+      bubbles++;
       advanceDialogue();
     }
   }
-  out.notes.push("conversation at " + conversed.id + ": " + bubbles + " caption taps, " + asked + " questions asked, released after " + (walked2 / 60).toFixed(1) + "s");
-  out.notes.push("orbit at " + conversed.id + ": swung to " + thetaMax.toFixed(2) + "rad, carrying the camera " + orbitCarry.toFixed(2) + "m round the object, " + thetaGreet.toFixed(2) + "rad of it before anybody was asked a question");
+  out.notes.push("conversation at " + conversed.id + ": " + bubbles + " caption taps, briefing handed to the choice panel, released after " + (walked2 / 60).toFixed(1) + "s");
+  out.notes.push("orbit at " + conversed.id + ": swung to " + thetaMax.toFixed(2) + "rad, carrying the camera " + orbitCarry.toFixed(2) + "m round the object, " + thetaBrief.toFixed(2) + "rad of it during the briefing");
   out.notes.push("crew: " + look.seen + " sightings of a mounted figure, worst " + look.worst.toFixed(1) + "deg off the visitor (" + look.who + " at " + (look.at * DEG).toFixed(0) + "deg of arc)");
   if (!look.seen) out.errors.push("the harness never saw a crew member, so nobody was checked looking at the visitor");
   if (look.worst > 3) out.errors.push(look.who + " was " + look.worst.toFixed(1) + "deg off the visitor while briefing them at " + (look.at * DEG).toFixed(0) + "deg round his machine");
-  if (asked !== 4) out.errors.push("the visitor asked " + asked + " questions at " + conversed.id + "; a stop is four rounds of one question each");
-  if (view && view.total !== 4) out.errors.push(conversed.id + " reports " + view.total + " questions for its progress line");
+  if (!movedOn) out.errors.push("the visitor never reached the choice panel at " + conversed.id);
   // The orbit is the whole feature: it has to actually happen (a stop with no movement is the old hold), it
-  // has to start on the greeting rather than on the first answer, it has to carry the camera a real distance
-  // round the object, and it has to be home by the time the scroll is released or the release jumps.
-  if (thetaMax < 0.3) out.errors.push("the conversation orbit barely moved at " + conversed.id + ": peak " + thetaMax.toFixed(3) + "rad");
-  if (thetaGreet < 0.1) out.errors.push("the arc was still " + thetaGreet.toFixed(3) + "rad off the arrival pose all the way through the greeting at " + conversed.id + ": nobody has been asked anything yet and the picture should already be walking round the machine");
+  // has to start with the briefing rather than waiting for a question, it has to carry the camera a real
+  // distance round the object, and it has to be home by the time the scroll is released or the release jumps.
+  if (thetaMax < 0.05) out.errors.push("the conversation orbit barely moved at " + conversed.id + ": peak " + thetaMax.toFixed(3) + "rad");
+  if (thetaBrief < 0.05) out.errors.push("the arc was still " + thetaBrief.toFixed(3) + "rad off the arrival pose all the way through the briefing at " + conversed.id);
   if (orbitCarry < 1) out.errors.push("the orbit did not carry the camera round the object at " + conversed.id + ": " + orbitCarry.toFixed(2) + "m");
   if (Math.abs(conversed.orbit) < 0.5) out.errors.push(conversed.id + " has no direction to orbit by");
-  if (journey.offset <= conversed.lock + 1e-3) out.errors.push("answering every question did not release the scroll at " + conversed.id);
+  if (journey.offset <= conversed.lock + 1e-3) out.errors.push("moving on did not release the scroll at " + conversed.id);
   if (heldPose && cam.position.distanceTo(heldPose) < 1e-3) out.errors.push("the scroll released but the camera stayed where it was");
   // And once released the orbit is zero: the walking rail has the pose back exactly, so sliding on is a walk.
   for (let k = 0; k < hub.frames.length; k++) hub.frames[k].cb(fakeState, dt);
@@ -328,14 +327,14 @@ export async function run() {
   // with pointer-events:auto and no touch-action swallows any drag starting on it, and the journey IS a
   // drag. That is only checkable in the source, so check it there.
   const css = await import("node:fs").then((fs) => fs.readFileSync(new URL("../src/styles.css", import.meta.url), "utf8"));
-  const talkBlocks = [...css.matchAll(/\.(bubble|chips|chips button)\s*\{([\s\S]*?)\}/g)];
-  const wanted = { bubble: true, chips: true, "chips button": true };
+  const talkBlocks = [...css.matchAll(/\.(bubble|ask|ask-input)\s*\{([\s\S]*?)\}/g)];
+  const wanted = { bubble: true, ask: true, "ask-input": true };
   out.notes.push(talkBlocks.length + " dialogue surfaces found in styles.css");
   if (talkBlocks.length !== Object.keys(wanted).length) out.errors.push("expected 3 dialogue surfaces in styles.css, found " + talkBlocks.length);
   for (const [, cls, body] of talkBlocks) {
-    if (!/touch-action:\s*pan-y/.test(body)) out.errors.push("." + cls.trim() + " has no touch-action: pan-y, so a drag starting on it cannot scroll the journey");
-    const interactive = /pointer-events:\s*auto/.test(body) || (cls.trim() === "chips button" && true);
-    if (interactive && !/touch-action:\s*pan-y/.test(body)) out.errors.push("." + cls.trim() + " claims pointer-events without opting into pan-y");
+    if (!/touch-action:\s*(pan-y|manipulation)/.test(body)) out.errors.push("." + cls.trim() + " has no touch-action, so a drag starting on it cannot scroll the journey");
+    const interactive = /pointer-events:\s*auto/.test(body) || cls.trim() === "ask-input";
+    if (interactive && !/touch-action:\s*(pan-y|manipulation)/.test(body)) out.errors.push("." + cls.trim() + " claims pointer-events without opting into a touch-action");
   }
 
   const used = new Set();

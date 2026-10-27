@@ -10,10 +10,10 @@
 // lets go (a hold that released mid-sweep cuts the camera sideways off the machine), and the crew member has
 // to be looking at the visitor all the way round.
 import { Quaternion, Vector3 } from "three";
-import { apply, OBJECTS, conversationFor } from "../src/data/objects.js";
-import { createScript, questionsOf, pick, advance, tapped, conversationProgress, questionTotal } from "../src/lib/dialogue.js";
+import { apply, OBJECTS } from "../src/data/objects.js";
+import { createScript, advance, tapped, finish } from "../src/lib/dialogue.js";
 import {
-  ORBIT_ARC, orbitSwing, stepOrbit, orbitHolds, resetOrbit,
+  ORBIT_ARC, orbitOut, stepOrbit, orbitHolds, resetOrbit,
   spinAboutY, spinAboutAxis, facingToward, siteLocal, crewStation,
 } from "../src/journey/orbit.js";
 import { SURFACE_STOPS } from "../src/journey/timeline.js";
@@ -30,80 +30,65 @@ const bearing = (x, z, ox, oz) => Math.atan2(x - ox, z - oz);
 const sign = (stop) => (stop.orbit < 0 ? -1 : 1);
 
 // ---- the shape ---------------------------------------------------------------------------------------
-ok(Math.abs(orbitSwing(0)) < 1e-12, "the orbit is not at the arrival pose at the start of a conversation");
-ok(Math.abs(orbitSwing(1)) < 1e-12, "the orbit does not return to the arrival pose at the end of one");
-ok(Math.abs(orbitSwing(0.5) - 1) < 1e-12, "the orbit does not reach its full sweep halfway through");
-let before = orbitSwing(0);
-for (let i = 1; i <= 50; i++) {
-  const v = orbitSwing(i / 100);
-  ok(v >= before - 1e-12, `the sweep out is not monotone at w=${(i / 100).toFixed(2)}`);
+ok(orbitOut(0) === 0, "the orbit is not at the arrival pose at the start of a stop");
+ok(orbitOut(1) === 1, "the orbit never reaches the far side");
+let before = orbitOut(0);
+for (let i = 1; i <= 100; i++) {
+  const v = orbitOut(i / 100);
+  ok(v >= before - 1e-12, `the outward walk is not monotone at w=${(i / 100).toFixed(2)}`);
   before = v;
 }
-ok(Math.abs(before - 1) < 1e-12, "halfway along the conversation does not carry the arc to its full sweep");
-before = orbitSwing(0.5);
-for (let i = 51; i <= 100; i++) {
-  const v = orbitSwing(i / 100);
-  ok(v <= before + 1e-12, `the return is not monotone at w=${(i / 100).toFixed(2)}`);
-  before = v;
-}
-console.log(`orbit: ${(ORBIT_ARC * DEG).toFixed(0)}deg of bearing, out and back, still at the arrival pose and at the far side`);
+console.log(`orbit: ${(ORBIT_ARC * DEG).toFixed(0)}deg outbound over the briefing, held on the far side for the questions, home on the frame the visitor moves on`);
 
 // ---- the hold: what a held stop actually does --------------------------------------------------------
-// One hold, walked the way the rig walks it: a frame of the rig is a delta and a conversation, and the arc is
-// the only answer to both. `dwell` is how long the visitor takes over each question before tapping a chip and
-// `tapEvery` how many frames pass between the taps that move him on, which together are the difference between
-// somebody reading a stop and somebody hammering the screen. Infinity means he waits for each caption to
-// finish typing - which is what a visitor who has actually read it does.
+// One hold, walked the way the rig walks it: a frame of the rig is a delta and a conversation, and the arc
+// is the only answer to both. `dwell` is how long the visitor spends on the choice panel before pressing
+// move on; `tapEvery` how many frames pass between the taps that skip the intro. Infinity means he waits for
+// each caption to finish typing - which is what a visitor who has actually read it does.
 function walkAHold(stop, { seconds = 1 / 30, dwell = 0, tapEvery = Infinity, frames = 40000 } = {}) {
   resetOrbit();
   const s = createScript(stop.convo);
   const rows = [];
   let dwellLeft = 0, sinceTap = 0;
   for (let i = 0; i < frames; i++) {
-    advance(s, seconds);
-    sinceTap++;
-    if (s.phase === "ask") {
-      dwellLeft += seconds;
-      if (dwellLeft >= dwell) {
-        const q = questionsOf(s)[0];
-        if (!q) break;
-        pick(s, q.id);
-        dwellLeft = 0;
-        sinceTap = 0;
+    if (s.phase === "line") {
+      advance(s, seconds);
+      sinceTap++;
+      if (sinceTap >= tapEvery || (s.beats[s.beat] ?? "").length <= s.chars) {
+        if (tapped(s)) sinceTap = 0;
       }
-    } else if (s.phase === "line" && (sinceTap >= tapEvery || (s.beats[s.beat] ?? "").length <= s.chars)) {
-      if (tapped(s)) sinceTap = 0;
+    } else if (s.phase === "choice") {
+      dwellLeft += seconds;
+      if (dwellLeft >= dwell) finish(s);
     }
-    const finished = s.phase === "end";
-    const orb = stepOrbit(stop, seconds, conversationProgress(s), finished);
-    rows.push({ dt: seconds, theta: Math.abs(orb.theta), content: conversationProgress(s), id: orb.stop?.id });
+    const orb = stepOrbit(stop, seconds, s.phase === "done");
+    rows.push({ dt: seconds, theta: Math.abs(orb.theta), at: i * seconds, finished: s.phase === "done", id: orb.stop?.id });
     if (!orbitHolds(stop.id)) break;
   }
   // The frame the rig hands the stop back to the walking rail, with nothing holding it.
-  const off = stepOrbit(null, seconds, 0, false);
+  const off = stepOrbit(null, seconds, false);
   return { rows, off };
 }
 
 const eagle = SURFACE_STOPS.moon[0];
 const viking = SURFACE_STOPS.mars[3];
 
-// A reader: the greeting typed out, four questions chosen three seconds apart, one answer each, the wrap-up.
-// This is the shape of the piece as it is actually used, and the arc is supposed to fill it.
+// A reader: the briefing typed out, then long enough on the choice panel to let the pair settle on the far
+// side before moving on. The outbound is the whole 270; the questions are asked from there; the return is
+// the walk off.
 {
-  const { rows, off } = walkAHold(eagle, { seconds: 1 / 30, dwell: 3 });
+  const { rows, off } = walkAHold(eagle, { seconds: 1 / 30, dwell: 24 });
   const peak = Math.max(...rows.map((r) => r.theta));
-  const at = rows.findIndex((r) => r.theta === peak);
-  // The complaint this exists to fix: the man arrives, starts talking, and nothing moves until somebody is
-  // asked a question. The greeting is the first third of a minute of every stop, and the arc belongs to it.
-  const greeting = rows.filter((r) => r.content < 1 / 6);
-  ok(greeting.length > 20, "the reader's walk never spent time in the greeting");
-  ok(greeting[1].theta > 0, "the arc was still at the arrival pose two frames into the greeting");
-  ok(greeting.at(-1).theta * DEG > 15, `the arc had swung only ${(greeting.at(-1).theta * DEG).toFixed(1)}deg by the end of the greeting`);
-  ok(Math.abs(peak - ORBIT_ARC) < 0.03, `the sweep peaked at ${(peak * DEG).toFixed(1)}deg, ${((ORBIT_ARC - peak) * DEG).toFixed(1)}deg short of the ${(ORBIT_ARC * DEG).toFixed(0)}deg it is authored for`);
+  const early = rows.find((r) => r.at >= 4);
+  const mid = rows.find((r) => r.at >= 8);
+  ok(rows[1].theta > 0, "the arc was still at the arrival pose two frames into the briefing");
+  ok(early && early.theta > 0.2, "the arc had barely moved four seconds into the briefing");
+  ok(mid && mid.theta > 1, "the arc was still within a few degrees of the arrival pose eight seconds in");
+  ok(Math.abs(peak - ORBIT_ARC) < 1e-6, `the sweep peaked at ${(peak * DEG).toFixed(1)}deg instead of the ${(ORBIT_ARC * DEG).toFixed(0)}deg far side`);
   ok(rows.at(-1).theta < 1e-9, `the scroll was released with the arc at ${(rows.at(-1).theta * DEG).toFixed(2)}deg off the arrival pose`);
   ok(off.theta === 0 && !off.stop, "the stop the rail got back was not the arrival pose");
   ok(rows.at(-1).id === eagle.id, "the arc was swinging about somebody else's machine when the scroll let go");
-  // Out and back, once: no stutter and no second lap.
+  // Out once and home once: no stutter and no second lap.
   let dir = 0, flips = 0;
   for (let i = 1; i < rows.length; i++) {
     const d = rows[i].theta - rows[i - 1].theta;
@@ -113,37 +98,39 @@ const viking = SURFACE_STOPS.mars[3];
     else if (s !== dir) { flips++; dir = s; }
   }
   ok(flips <= 1, `the sweep turned back on itself ${flips + 1} times: the pair are pacing, not walking round the machine`);
-  // And nothing moves so fast it reads as a cut rather than a stride.
+  // The outward walk is smooth. The exit turn is deliberately brisker, so it is measured separately and
+  // only its landing at the arrival pose matters.
   let fast = 0;
-  for (let i = 1; i < rows.length; i++) fast = Math.max(fast, Math.abs(rows[i].theta - rows[i - 1].theta) / rows[i].dt);
-  ok(fast * DEG < 26, `the arc moved ${(fast * DEG).toFixed(1)}deg in a second of wall clock`);
-  console.log(`reader at ${eagle.id}: ${(peak * DEG).toFixed(0)}deg round the machine over ${(rows.length / 30).toFixed(0)}s of talk - ${(at / 30).toFixed(0)}s out, ${((rows.length - at) / 30).toFixed(0)}s back, ${(greeting.length / 30) | 0}s of it inside the greeting, home at release`);
+  for (let i = 1; i < rows.length; i++) if (!rows[i].finished) fast = Math.max(fast, Math.abs(rows[i].theta - rows[i - 1].theta) / rows[i].dt);
+  ok(fast * DEG < 26, `the outward arc moved ${(fast * DEG).toFixed(1)}deg in a second of wall clock`);
+  const far = rows.filter((r) => Math.abs(r.theta - ORBIT_ARC) < 1e-6).length / 30;
+  console.log(`reader at ${eagle.id}: ${(peak * DEG).toFixed(0)}deg round the machine, ${far.toFixed(1)}s on the far side, home at release (${(rows.length / 30).toFixed(0)}s)`);
 }
 
-// A skimmer: four taps a second and never once looking at a chip. The arc cannot wait for a conversation that
-// has already ended, so it is rate-capped rather than outrun - but however little of it there is, it has to
-// finish where it started, and it still has to be a sweep rather than a twitch.
+// A skimmer: taps the briefing away and moves on at once. The arc cannot wait for a conversation that has
+// already ended - but whatever part of it there is, it has to finish where it started. This is the release
+// path the "move on" button uses.
 {
-  const { rows, off } = walkAHold(viking, { seconds: 1 / 60, dwell: 0, tapEvery: 15 });
+  const { rows, off } = walkAHold(viking, { seconds: 1 / 60, tapEvery: 15, dwell: 0 });
   const peak = Math.max(...rows.map((r) => r.theta));
   ok(rows[1].theta > 0, "the skimmer's arc was still parked two frames in");
-  ok(peak > 0.3, `the skimmer only ever saw ${(peak * DEG).toFixed(0)}deg of the machine`);
+  ok(peak > 0.01, `the skimmer never saw the arc open at all (${(peak * DEG).toFixed(1)}deg)`);
   ok(rows.at(-1).theta < 1e-9, `the skimmer released at ${(rows.at(-1).theta * DEG).toFixed(2)}deg off the arrival pose`);
   ok(off.theta === 0 && !off.stop, "the skimmer came off the arc somewhere other than the arrival pose");
   ok(rows.length / 60 < 40, `a skimmer's stop took ${(rows.length / 60).toFixed(0)}s to let go of the scroll`);
   console.log(`skimmer at ${viking.id}: ${(peak * DEG).toFixed(0)}deg in ${(rows.length / 60).toFixed(1)}s, home at release`);
 }
 
-// Scrolled away from mid-arc: the visitor went back up the page while the pair were round the far side of the
-// machine. The scroll is not held any more, but the pose still has to rejoin the rail instead of jumping.
+// Scrolled away from mid-arc: the visitor went back up the page while the pair were round the far side of
+// the machine. The scroll is not held any more, but the pose still has to rejoin the rail instead of jumping.
 {
   resetOrbit();
-  for (let i = 0; i < 400; i++) stepOrbit(eagle, 1 / 30, 0.32, false); // a conversation nobody finishes
-  const away = Math.abs(stepOrbit(eagle, 1 / 30, 0.32, false).theta);
+  for (let i = 0; i < 400; i++) stepOrbit(eagle, 1 / 30, false); // a visitor who never makes the choice
+  const away = Math.abs(stepOrbit(eagle, 1 / 30, false).theta);
   ok(away > 0.5, `leaving a stop from ${(away * DEG).toFixed(0)}deg is not a test of coming off it`);
   let t = 0, orb;
   do {
-    orb = stepOrbit(null, 1 / 30, 0, false);
+    orb = stepOrbit(null, 1 / 30, false);
     t += 1 / 30;
   } while (orb.stop && t < 10);
   ok(t <= 5.5, `coming off the arc took ${t.toFixed(1)}s, which is the visitor waiting on a camera they did not ask for`);
@@ -211,7 +198,7 @@ for (const [planet, world] of [["moon", MOON], ["mars", MARS], ["solar", EVA]]) 
     const crewLocal = new Vector3(), crewWorld = new Vector3();
     let worst = 0, worstAt = 0;
     for (let i = 0; i <= 90; i++) {
-      const theta = ORBIT_ARC * orbitSwing(i / 90) * sign(stop);
+      const theta = ORBIT_ARC * orbitOut(i / 90) * sign(stop);
       eyeLocal.set(stop.cam[0], 0, stop.cam[2]);
       spinAboutY(eyeLocal, stop.obj[0], stop.obj[2], theta);
       eyeWorld.copy(eyeLocal).applyQuaternion(world.site.quaternion).add(world.site.pos);
@@ -231,51 +218,32 @@ for (const [planet, world] of [["moon", MOON], ["mars", MARS], ["solar", EVA]]) 
 }
 console.log("crew: every figure faces the visitor all the way round his own machine, in his own site frame");
 
-// ---- the progress number the HUD feeds it ------------------------------------------------------------
-// Walk every conversation the way the HUD does and hold the progress to a monotone 0..1 that starts moving on
-// the first character of the greeting and ends pinned at 1. A curve that stepped backwards would swing the
-// pair the wrong way mid-answer, and one that ended below 1 would leave the sweep unfinished at the end card.
+// ---- every stop can make the turn ----------------------------------------------------------------
+// The arc is no longer a function of a conversation script, so this walks it directly at every stop: out to
+// the far side, held there while finished stays false, and home before the hold is allowed to drop. The
+// reader above exercises the same path with the HUD's own tap timing; this one makes sure no authored stop
+// has a direction or geometry that can strand the scroller.
 let walked = 0;
-for (const convo of OBJECTS.map(conversationFor)) {
-  const s = createScript(convo);
-  const at = (m) => `${convo.id}: ${m}`;
-  let last = -1;
-  const tick = (label) => {
-    const p = conversationProgress(s);
-    ok(p >= 0 && p <= 1, at(`${label}: progress ${p} is off 0..1`));
-    ok(p >= last - 1e-9, at(`${label}: progress went backwards, ${p.toFixed(3)} after ${last.toFixed(3)}`));
-    last = p;
-  };
-  ok(Math.abs(conversationProgress(s)) < 1e-12, at("a fresh script is not parked at the greeting"));
-  // Type the intro, tap through it, then type each answer and take one chip per round, exactly as the HUD
-  // drives it, sampling progress every frame.
-  let guard = 0, movedInGreeting = false;
-  while (s.phase !== "end" && guard++ < 6000) {
-    if (s.phase === "line") advance(s, 1 / 30);
-    tick("walk");
-    if (s.round < 0 && conversationProgress(s) > 0) movedInGreeting = true;
-    if (s.phase === "ask") {
-      const q = questionsOf(s)[0];
-      if (!q) { ok(false, at("the walk stalled with no question to ask")); break; }
-      pick(s, q.id);
-      tick("after pick");
-      continue;
-    }
-    if (s.phase === "line") {
-      const beat = s.beats[s.beat];
-      if (beat !== undefined && s.chars >= beat.length) tapped(s);
-    }
-    if (s.phase === "line" && s.pendingEnd) tapped(s);
+for (const planet of ["moon", "mars", "solar"]) {
+  for (const stop of SURFACE_STOPS[planet]) {
+    resetOrbit();
+    let peak = 0;
+    for (let i = 0; i < 30 * 30; i++) peak = Math.max(peak, Math.abs(stepOrbit(stop, 1 / 30, false).theta));
+    ok(Math.abs(peak - ORBIT_ARC) < 1e-6, `${planet} ${stop.id}: the arc only reached ${(peak * DEG).toFixed(1)}deg`);
+    const held = Math.abs(stepOrbit(stop, 1 / 30, false).theta);
+    ok(Math.abs(held - ORBIT_ARC) < 1e-6, `${planet} ${stop.id}: the arc did not hold on the far side (${(held * DEG).toFixed(1)}deg)`);
+    let t = 0, orb;
+    do {
+      orb = stepOrbit(stop, 1 / 30, true);
+      t += 1 / 30;
+    } while (orbitHolds(stop.id) && t < 10);
+    ok(!orbitHolds(stop.id) && Math.abs(orb.theta) < 1e-9, `${planet} ${stop.id}: moving on did not bring the arc home`);
+    ok(t < 4, `${planet} ${stop.id}: the way home took ${t.toFixed(1)}s`);
+    resetOrbit();
+    walked++;
   }
-  ok(s.phase === "end", at("the walk never reached the end card"));
-  ok(Math.abs(conversationProgress(s) - 1) < 1e-12, at("progress does not end pinned at 1"));
-  ok(Math.abs(last - 1) < 1e-12, at("the last sampled progress was not 1"));
-  ok(movedInGreeting, at("the greeting is still a dead spot in the walk round the machine"));
-  const total = questionTotal(convo);
-  ok(total === 4, at(`${total} rounds, expected four`));
-  walked++;
 }
-ok(walked === 10, `walked ${walked} conversations, expected ten`);
+ok(walked === 10, `walked ${walked} stops, expected ten`);
 
-console.log(fails.length ? "\nFAIL\n" + fails.map((f) => " - " + f).join("\n") : "\nthe arc opens on the greeting, walks 270deg round every stop and hands the rail back the pose it took");
+console.log(fails.length ? "\nFAIL\n" + fails.map((f) => " - " + f).join("\n") : "\nthe arc walks 270deg out while the briefing runs, holds for the questions and hands the rail back the pose it took");
 process.exit(fails.length ? 1 : 0);

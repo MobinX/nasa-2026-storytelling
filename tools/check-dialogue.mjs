@@ -1,11 +1,14 @@
-// Shape and flow of every conversation the visitor can have on the walk, without mounting anything:
-// src/lib/dialogue.js is a phase machine and src/data/objects.json is its content, so the two together can
-// be walked here. This exists because the content is the part most likely to be edited by someone who never
-// reads the render path - a fifth option in a round, a missing answer, a four hundred character beat - and
-// each of those passes every other suite and shows up as a stuck conversation or an overflowed caption
-// bubble on a phone nobody has plugged in.
-import { apply, OBJECTS, conversationFor, OPTIONS_PER_ROUND, ROUNDS_PER_OBJECT } from "../src/data/objects.js";
-import { MAX_BEAT_CHARS, createScript, questionsOf, pick, advance, tapped, visibleText, isTalking, roundTitle, questionTotal } from "../src/lib/dialogue.js";
+// Shape and flow of every stop's spoken introduction, without mounting anything: src/lib/dialogue.js is a
+// phase machine and src/data/objects.json is its content, so the two together can be walked here. This
+// exists because the content is the part most likely to be edited by someone who never reads the render
+// path - a missing beat, a four hundred character caption - and each of those passes every other suite and
+// shows up as an overflowed bubble on a phone nobody has plugged in.
+//
+// The four-round quiz this used to walk is gone. What is checked now is the intro that hands over to the
+// ask/move-on choice, and the briefing the answer service reads for questions asked in the visitor's own
+// words.
+import { apply, OBJECTS, conversationFor, MIN_BRIEFING_FACTS, MAX_TOPIC_CHARS, MAX_QUESTION_CHARS, MAX_ANSWER_CHARS } from "../src/data/objects.js";
+import { MAX_BEAT_CHARS, createScript, advance, tapped, finish, visibleText, isTalking } from "../src/lib/dialogue.js";
 
 const fails = [];
 const ok = (c, m) => { if (!c) fails.push(m); };
@@ -29,95 +32,68 @@ const drain = (s) => {
 for (const m of apply(OBJECTS)) fails.push("objects.json: " + m);
 const conversations = OBJECTS.map(conversationFor);
 ok(conversations.length === 10, `expected ten conversations (four lunar, four Martian, two in deep space), found ${conversations.length}`);
-const allIds = new Set();
 
 let reading = 0;
+let facts = 0;
 for (const convo of conversations) {
   const at = (m) => `${convo.id}: ${m}`;
-  ok(convo.rounds.length === ROUNDS_PER_OBJECT, at(`${convo.rounds.length} rounds, expected ${ROUNDS_PER_OBJECT}`));
+  const object = OBJECTS.find((o) => o.id === convo.id);
+  ok(!!object, at("no object in objects.json"));
+  if (!object) continue;
 
-  for (const [r, round] of convo.rounds.entries()) {
-    ok(round.questions.length === OPTIONS_PER_ROUND, at(`round ${r + 1} offers ${round.questions.length} questions, expected ${OPTIONS_PER_ROUND}`));
-    ok(typeof round.title === "string" && round.title.length > 2, at(`round ${r + 1} has no title`));
-    for (const q of round.questions) {
-      ok(!allIds.has(q.id), at(`question id "${q.id}" is used twice across the piece - pick() would answer the wrong one`));
-      allIds.add(q.id);
-      ok(q.q.length > 6 && q.q.length <= 46, at(`${q.id}: question is ${q.q.length} chars; a chip has to fit across a phone`));
-      ok(Array.isArray(q.a) && q.a.length >= 1 && q.a.length <= 3, at(`${q.id}: ${q.a?.length} beats, expected 1-3`));
-      ok(q.a[q.a.length - 1].endsWith("."), at(`${q.id}: the last beat should end a sentence, not trail off`));
-      for (const b of q.a) ok(b.length <= MAX_BEAT_CHARS, at(`${q.id}: a ${b.length}-char beat overflows the bubble (limit ${MAX_BEAT_CHARS})`));
-    }
-  }
-  for (const [where, beats] of [["intro", convo.intro.beats], ["outro", convo.outro.beats]]) {
-    ok(beats.length >= 1 && beats.length <= 3, at(`${where} has ${beats.length} beats`));
-    for (const b of beats) ok(b.length <= MAX_BEAT_CHARS, at(`${where}: a ${b.length}-char beat overflows the bubble`));
+  ok(convo.intro.beats.length >= 1 && convo.intro.beats.length <= 3, at(`${convo.intro.beats.length} intro beats, expected 1-3`));
+  for (const b of convo.intro.beats) ok(b.length <= MAX_BEAT_CHARS, at(`a ${b.length}-char intro beat overflows the bubble (limit ${MAX_BEAT_CHARS})`));
+  ok(!/four rounds|one question each|round [1-4] of/i.test(convo.intro.beats.join(" ")), at("the introduction still advertises the removed round system"));
+
+  ok(Array.isArray(object.QA.briefing) && object.QA.briefing.length >= MIN_BRIEFING_FACTS, at(`${object.QA.briefing?.length ?? 0} briefing facts, expected at least ${MIN_BRIEFING_FACTS}`));
+  const seen = new Set();
+  for (const [i, f] of object.QA.briefing.entries()) {
+    ok(typeof f.topic === "string" && f.topic.length > 0 && f.topic.length <= MAX_TOPIC_CHARS, at(`briefing fact ${i + 1} has a bad topic`));
+    ok(typeof f.q === "string" && f.q.length >= 6 && f.q.length <= MAX_QUESTION_CHARS, at(`briefing fact ${i + 1} has a ${f.q?.length ?? 0}-char question`));
+    ok(typeof f.a === "string" && f.a.trim().length > 0 && f.a.length <= MAX_ANSWER_CHARS, at(`briefing fact ${i + 1} has a bad answer`));
+    ok(!seen.has(f.q), at(`briefing repeats "${f.q}"`));
+    seen.add(f.q);
+    facts++;
   }
 
-  // Walk it, choosing the first chip each round, and check the machine terminates in "end".
+  // Walk the intro exactly as the HUD does: type each beat, tap to skip/finish it, and hand over to the
+  // choice panel on the last one.
   const s = createScript(convo);
-  ok(s.phase === "line" && s.round < 0, at("a fresh script should open on the intro line"));
+  ok(s.phase === "line" && s.beat === 0, at("a fresh script should open on the intro line"));
+  ok(finish(s) === false && s.phase === "line", at("finish() released the scroll before the introduction was over"));
   let taps = drain(s);
-  ok(s.phase === "ask" && s.round === 0, at(`intro did not hand to round 1 (phase=${s.phase}, round=${s.round})`));
-  let seen = 0, expectedRound = 0;
-  while (s.phase !== "end") {
-    const qs = questionsOf(s);
-    ok(qs.length === OPTIONS_PER_ROUND, at(`round ${expectedRound + 1} offered ${qs.length} chips, expected ${OPTIONS_PER_ROUND}`));
-    if (!qs.length) break;
-    const q = qs[0];
-    ok(roundTitle(s) === convo.rounds[expectedRound].title, at(`round title drifted at ${q.id}`));
-    ok(pick(s, q.id), at(`pick refused ${q.id} in phase ${s.phase}`));
-    ok(s.phase === "line", at("a picked question must start speaking immediately"));
-    type(s);
-    seen++;
-    taps += drain(s);
-    // One answer is a whole round: the other three options were questions the visitor did not ask.
-    ok(s.round === expectedRound + 1 || s.phase === "end", at(`round ${expectedRound + 1} did not close after one answer (round=${s.round}, phase=${s.phase})`));
-    expectedRound = s.round;
-    ok(pick(s, q.id) === false, at(`re-picking the answered question ${q.id} must be refused`));
-  }
-  ok(seen === questionTotal(convo), at(`walked ${seen} answers, expected ${questionTotal(convo)}`));
-  ok(s.asked.length === questionTotal(convo), at(`asked ${s.asked.length} of ${questionTotal(convo)}`));
-  ok(s.phase === "end" && s.pendingEnd, at(`ended in phase ${s.phase}`));
-  // The outro branch fires on the last answer, so the round index stops on the final round rather than
-  // running one past it - which is what keeps the HUD's "round 4 of 4" honest during the wrap-up.
-  ok(s.round === convo.rounds.length - 1, at(`ended on round ${s.round + 1} of ${convo.rounds.length}`));
+  ok(s.phase === "choice", at(`the intro did not hand to the choice panel (phase=${s.phase})`));
+  ok(visibleText(s) === "", at("the choice phase still owns visible caption text"));
+  ok(tapped(s) === false, at("a caption tap after the intro tried to move the phase machine"));
+  ok(advance(s, 1) === false, at("time kept typing in the choice phase"));
+  ok(finish(s) === true && s.phase === "done", at("finish() did not move the choice to done"));
+  ok(finish(s) === false, at("finish() can be called twice"));
+  ok(tapped(s) === false, at("a caption tap after moving on tried to start the intro again"));
 
-  // Interrupting must be allowed: a tap on a chip mid-sentence is the common case on a phone. The HUD only
-  // shows chips in the ask phase, so the other three options of a round are unreachable once one is answered
-  // - which is what the round counter above proves as the walk moves on.
-  const t = createScript(convo);
-  t.round = 0;
-  t.phase = "ask";
-  t.beats = [];
-  ok(pick(t, convo.rounds[0].questions[3].id), at("last-chip pick failed"));
-  advance(t, 1);
-  ok(visibleText(t).length > 0 && isTalking(t), at("typing should have started"));
-  ok(pick(t, convo.rounds[0].questions[0].id), at("a chip tapped while he is still talking must be heard"));
-  ok(t.lastQuestion === convo.rounds[0].questions[0].id && t.beats === convo.rounds[0].questions[0].a, at("the interrupting pick did not take over the line"));
+  // A tap mid-sentence completes that beat and stays in the line: it must never jump the visitor past the
+  // briefing, and a skipped beat must still be readable in full.
+  const mid = createScript(convo);
+  advance(mid, 0.05);
+  ok(isTalking(mid), at("typing did not start on the first advance"));
+  const shown = visibleText(mid);
+  tapped(mid);
+  ok(mid.phase === "line" && visibleText(mid).length > shown.length, at("a mid-sentence tap did not finish the beat in place"));
 
-  // Reading time with nobody tapping to skip, which is the only honest way to size a stop: a visitor who
-  // never touches the screen still has to be able to get past this astronaut and on to the next. One step
-  // per quarter second - looping advance() until the beat fills would type it instantly and report the
-  // whole conversation as a few seconds.
+  // Reading time with nobody tapping to skip: a visitor who never touches the screen still has to be able
+  // to get past the astronaut. One step per quarter second is deliberately slower than the renderer.
   const timed = createScript(convo);
   let seconds = 0;
-  while (timed.phase !== "end" && seconds < 6000) {
+  while (timed.phase === "line" && seconds < 300) {
     seconds += 0.25;
     advance(timed, 0.25);
-    if (timed.phase === "ask") {
-      const q = questionsOf(timed)[0];
-      if (!q) { ok(false, at("the timed walk stalled with no question to ask")); break; }
-      pick(timed, q.id);
-      continue;
-    }
     if (!isTalking(timed)) tapped(timed);
   }
-  ok(timed.phase === "end", at("the timed walk never reached the end card"));
-  ok(seconds > 20 && seconds < 300, at(`the conversation reads in ${(seconds / 60).toFixed(1)} min; a stop should cost under five`));
+  ok(timed.phase === "choice", at("the timed walk never reached the choice panel"));
+  ok(seconds > 5 && seconds < 120, at(`the introduction reads in ${(seconds / 60).toFixed(1)} min; it should cost under two`));
   reading += seconds;
-  console.log(`${convo.id}: ${convo.rounds.length} rounds x ${OPTIONS_PER_ROUND} options, ${(seconds / 60).toFixed(1)} min of reading, ${taps} taps walked`);
+  console.log(`${convo.id}: ${convo.intro.beats.length} intro beats, ${object.QA.briefing.length} briefing facts, ${(seconds / 60).toFixed(1)} min of reading, ${taps} taps walked`);
 }
 
-console.log(`the whole walk costs ${(reading / 60).toFixed(0)} min of reading across ${conversations.length} crew members`);
+console.log(`the whole walk costs ${(reading / 60).toFixed(1)} min of spoken reading across ${conversations.length} crew members, with ${facts} briefing facts behind the questions`);
 console.log(fails.length ? "\nFAIL\n" + fails.map((f) => " - " + f).join("\n") : "\nall dialogue checks passed");
 process.exit(fails.length ? 1 : 0);

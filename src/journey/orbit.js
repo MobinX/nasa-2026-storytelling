@@ -1,18 +1,15 @@
 import { Quaternion, Vector3 } from "three";
 
 // The conversation orbit: while a stop holds the scroll, the crew member and the visitor circle the object
-// instead of standing still and talking across it. It opens on the first frame of the greeting, sweeps 270
-// degrees of bearing round the machine as the conversation runs, and is back on the trail by the last
-// sentence - so the thing the visitor sees when they scroll on is the exact pose the thing saw when they
-// arrived. See scene/CameraRig.jsx for where it is applied and scene/Companion.jsx for the figure that
-// travels with it.
+// instead of standing still and talking across it. The clock opens the arc whenever the stop is held, walks
+// them out to the far side over the first twenty-two seconds, keeps them there while the briefing and any
+// questions run, and brings them home on the frame the visitor chooses to move on. The pose handed back to
+// the walking rail is exactly the pose it gave up, so sliding away is a walk rather than a cut.
 //
-// It is a function of the conversation *and* of the clock, which is the whole reason it is a state machine
-// rather than a curve. A curve of the conversation alone is what this used to be: it sat at zero through the
-// greeting, because nobody had been asked anything yet, so the arrival, the machine and the man talking about
-// it were all perfectly still for the first twenty seconds of every stop. The clock is the floor - the arc
-// keeps going while the visitor reads a question - and the conversation is the accelerator, so the sweep ends
-// with the talk rather than running ahead of it.
+// It used to be a function of a four-round conversation's progress. The rounds are gone; what is left is the
+// hold itself, which is a clock and a direction. The actor on the far side is the right picture for the new
+// questions: the visitor and the crew member look across the machine at each other while the answer streams,
+// and the return happens only after the visitor has decided to leave.
 //
 // The angle is never allowed to stop anywhere but the arrival pose, and the rig will not let a finished
 // conversation go until it has come back to it. That is the one promise the walking rail is owed: a hold that
@@ -24,38 +21,23 @@ import { Quaternion, Vector3 } from "three";
 // vertical, so nothing inside the frame moves - the subject, the crew member and the portrait all keep the
 // size and place the stop was authored for, and only the machine itself turns to show a different side. That
 // rigidity is what makes a wide arc affordable; what limits it is whatever else stands on the same ground,
-// which is why a stop chooses which way round it goes (see journey/stops.js). tools/check-journey.mjs sweeps
+// which is why a stop chooses which way round it goes (see journey/stops.js). tools/check-orbit.mjs sweeps
 // the whole 270 at every stop and refuses the build if any sample leaves the frame, is hidden by the ground,
 // or comes too near somebody else's hardware.
 export const ORBIT_ARC = (270 * Math.PI) / 180;
 
 const DEG = Math.PI / 180;
-const clamp01 = (x) => (x < 0 ? 0 : x > 1 ? 1 : x);
 
-// The shape of the sweep: none at all at the start and the end of the conversation, and widest exactly
-// halfway through it, with zero derivative at all three - so the hold neither begins with a jerk, nor has to
-// be stopped when it is over, and the quarter of a lap it does not travel is the quarter it never sees. The
-// ends are returned as an exact zero rather than as sin(pi)^2, which is a float and not nothing: the rig
-// releases the scroll the moment the arc is home, and "home" has to mean home.
-export const orbitSwing = (w) => {
-  const x = clamp01(w);
-  if (x <= 0 || x >= 1) return 0;
-  const s = Math.sin(Math.PI * x);
-  return s * s;
-};
+// How long the pair take to reach the far side. The outbound is a smoothstep, so neither the first frame nor
+// the arrival at the far side has a velocity pop; twenty-two seconds is a stroll round the hardware rather
+// than a turntable, and leaves the visitor looking across the machine while they read the options and ask.
+const OUT_SECONDS = 22;
+const OUT_RATE = 22 * DEG;
 
-// The clock floor: on this much wall clock alone the pair have been all the way round the machine and back,
-// which is longer than a stop takes to read out. A visitor who has the page open on one crew member for two
-// and a half minutes gets the whole sweep anyway rather than a photograph.
-const SWEEP_SECONDS = 150;
-
-// Two rate ceilings. Outward, because a visitor hammering the caption taps cannot make the arc jump a
-// distance the talk has already covered; inward, because the way back is the walk off and it is allowed to be
-// brisker than the look round. A stop read at its own pace never touches either: a minute and a half of
-// conversation carries the arc at ten degrees a second at its fastest, and the caps are set above that so the
-// motion is the conversation's, not the throttle's.
-const OUT_RATE = 12 * DEG;
-const HOME_RATE = 24 * DEG;
+// The way back after the visitor has chosen to leave. It is deliberately brisker than the outbound: they have
+// already made the decision, and the hold is still pinning the scroller while it happens, so this is the one
+// turn in the piece that owes the visitor speed rather than ceremony. The `coming round` hint covers it.
+const HOME_RATE = 90 * DEG;
 
 // And off the arc entirely, for a visitor who scrolled away mid-sweep: the scroll is not held any more, so
 // the picture has to rejoin the walking rail quickly without a cut.
@@ -70,12 +52,18 @@ const clear = () => {
   state.released = false;
 };
 
+// The shape of the outward walk: none at all on the first frame, and settled on the far side with no
+// velocity pop. It is monotone, which is all the rig's promise needs.
+export const orbitOut = (w) => {
+  const x = w < 0 ? 0 : w > 1 ? 1 : w;
+  return x * x * (3 - 2 * x);
+};
+
 // The one writer of the arc. `stop` is the stop currently holding the scroll, or null when nothing is;
-// `content` is the monotone 0..1 of the whole conversation, greeting included; `finished` is that the
-// visitor has answered it. Returns the signed angle to swing the pair by and whose object to swing them
-// about - the two can differ for a moment, because leaving a stop mid-arc has to keep turning the pose it is
-// leaving until it is home.
-export function stepOrbit(stop, delta, content = 0, finished = false) {
+// `finished` is that the visitor has chosen to move on. Returns the signed angle to swing the pair by and
+// whose object to swing them about - the two can differ for a moment, because leaving a stop mid-arc has to
+// keep turning the pose it is leaving until it is home.
+export function stepOrbit(stop, delta, finished = false) {
   if (stop !== state.stop) {
     if (stop) {
       state.stop = stop;
@@ -90,25 +78,23 @@ export function stepOrbit(stop, delta, content = 0, finished = false) {
   const held = state.stop;
   if (!held) return { theta: 0, stop: null, closing: false };
 
-  // Away from the stop, the conversation no longer matters: the target is home and the only question is how
-  // fast the picture gets back to the rail it came off.
+  // Away from the stop, the visitor is walking; the only question is how fast the picture gets back to the
+  // rail it came off.
   if (!stop) {
-    state.w = 1;
     state.u = follow(state.u, 0, LEAVE_RATE, delta);
     if (state.u === 0) clear();
     return { theta: state.u * dir(held), stop: held, closing: true };
   }
 
   if (!state.released) {
-    // Answered means answered: whatever the conversation clock had got to, the sweep's remaining job is to
-    // get home. Leaving the target where a slow reader had left it would hold the scroll for the rest of the
-    // floor's minutes.
-    if (finished) state.w = 1;
-    else state.w = Math.max(state.w + delta / SWEEP_SECONDS, clamp01(content));
-    const target = ORBIT_ARC * orbitSwing(state.w);
-    state.u = follow(state.u, target, target > state.u ? OUT_RATE : HOME_RATE, delta);
-    // Home, and nothing left to say. One frame later the rig drops the hold and the rail has its pose back.
-    if (finished && state.u === 0) state.released = true;
+    if (finished) {
+      state.u = follow(state.u, 0, HOME_RATE, delta);
+      // Home, and nothing left to say. One frame later the rig drops the hold and the rail has its pose back.
+      if (state.u === 0) state.released = true;
+    } else {
+      state.w = Math.min(1, state.w + delta / OUT_SECONDS);
+      state.u = follow(state.u, ORBIT_ARC * orbitOut(state.w), OUT_RATE, delta);
+    }
   }
   return { theta: state.u * dir(held), stop: held, closing: finished && !state.released };
 }

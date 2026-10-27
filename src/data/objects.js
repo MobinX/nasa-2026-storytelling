@@ -1,7 +1,7 @@
 // objects.json, read and made load-bearing.
 //
 // The file is the content: what each thing is called, which glTF draws it, what the crew member beside it
-// says when you arrive, and the four rounds of four questions he can be asked about it. This module is the
+// says when you arrive, and the briefing that answers whatever the visitor asks next. This module is the
 // contract: it validates the shape, refuses to let the file and the authored route disagree, and hands each
 // stop its conversation.
 //
@@ -15,9 +15,10 @@ import { MAX_BEATS, MAX_BEAT_CHARS } from "../lib/dialogue.js";
 export const OBJECTS = payload.objects;
 
 export const PLANETS = ["moon", "mars", "solar"];
-export const MAX_OPTION_CHARS = 46;   // one chip, across a 400 px phone
-export const ROUNDS_PER_OBJECT = 4;
-export const OPTIONS_PER_ROUND = 4;
+export const MIN_BRIEFING_FACTS = 8;
+export const MAX_TOPIC_CHARS = 60;
+export const MAX_QUESTION_CHARS = 160;
+export const MAX_ANSWER_CHARS = 900;
 
 // The one line every conversation ends on, and the one thing it has to get right: where the visitor goes
 // next. Four objects a world, then a departure, then a way home - so the last crew member of a world cannot
@@ -33,21 +34,17 @@ export function onwardLine(object) {
   return route.at(-1).id === object.id ? LAST_WORD[object.QA.planet] : "Scroll on. The next one is that way.";
 }
 
-// The conversation shape lib/dialogue.js runs: intro beats, four rounds of four options with one answer
-// each, then a wrap-up. Question ids are namespaced by object, because one phase machine keeps a list of
-// what has been asked and two instruments must not collide over a bare "how".
+// The spoken shape lib/dialogue.js runs: the introduction, then the visitor chooses between asking the
+// crew member a free-form question and moving on. The briefing lives in the file and is read by the answer
+// service, never by the HUD - it is the crew member's knowledge, not another list of buttons.
 export function conversationFor(object) {
-  const rounds = object.QA.rounds.map((round, i) => ({
-    title: round.title ?? "Round " + (i + 1),
-    questions: round.questionOptionsForUser.map((q, j) => ({ id: `${object.id}:${i}:${j}`, q, a: round.answerForEachOption[j] })),
-  }));
   return {
     id: object.id,
     name: object.name,
+    location: object.QA.location,
+    planet: object.QA.planet,
     intro: { id: "intro", beats: object.introductoryTalk },
-    rounds,
-    outro: { id: "outro", beats: [`That is ${object.name}, then.`, onwardLine(object)] },
-    endCard: null,
+    onward: onwardLine(object),
   };
 }
 
@@ -64,17 +61,14 @@ function validate(objects) {
     for (const b of o.introductoryTalk ?? []) if (b.length > MAX_BEAT_CHARS) problems.push(at(`intro beat of ${b.length} chars overflows the bubble (limit ${MAX_BEAT_CHARS})`));
     if (!PLANETS.includes(o.QA?.planet)) problems.push(at(`QA.planet "${o.QA?.planet}" is not ${PLANETS.join("/")}`));
     if (typeof o.QA?.location !== "string" || o.QA.location.length < 8) problems.push(at("QA.location must say where this really is"));
-    if (o.QA?.rounds?.length !== ROUNDS_PER_OBJECT) problems.push(at(`${o.QA?.rounds?.length} rounds, expected ${ROUNDS_PER_OBJECT}`));
-    for (const [i, round] of (o.QA?.rounds ?? []).entries()) {
-      const q = round.questionOptionsForUser ?? [], a = round.answerForEachOption ?? [];
-      if (q.length !== OPTIONS_PER_ROUND || a.length !== OPTIONS_PER_ROUND) problems.push(at(`round ${i + 1} has ${q.length} options and ${a.length} answers, expected ${OPTIONS_PER_ROUND} each`));
-      if (new Set(q).size !== q.length) problems.push(at(`round ${i + 1} repeats a question`));
-      for (const s of q) if (s.length > MAX_OPTION_CHARS) problems.push(at(`round ${i + 1}: a ${s.length}-char option will not fit a chip`));
-      for (const [j, beats] of a.entries()) {
-        if (!Array.isArray(beats) || beats.length < 1 || beats.length > MAX_BEATS) problems.push(at(`round ${i + 1} option ${j + 1}: ${beats?.length} beats, expected 1-${MAX_BEATS}`));
-        for (const b of beats ?? []) if (b.length > MAX_BEAT_CHARS) problems.push(at(`round ${i + 1} option ${j + 1}: beat of ${b.length} chars overflows the bubble`));
-        if (beats?.length && !beats[beats.length - 1].trim().endsWith(".")) problems.push(at(`round ${i + 1} option ${j + 1}: the last beat should end the sentence`));
-      }
+    if (!Array.isArray(o.QA?.briefing) || o.QA.briefing.length < MIN_BRIEFING_FACTS) problems.push(at(`${o.QA?.briefing?.length ?? 0} briefing facts, expected at least ${MIN_BRIEFING_FACTS}`));
+    const asked = new Set();
+    for (const [i, f] of (o.QA?.briefing ?? []).entries()) {
+      if (typeof f.topic !== "string" || !f.topic.trim() || f.topic.length > MAX_TOPIC_CHARS) problems.push(at(`briefing fact ${i + 1}: topic must be 1-${MAX_TOPIC_CHARS} chars`));
+      if (typeof f.q !== "string" || f.q.length < 6 || f.q.length > MAX_QUESTION_CHARS) problems.push(at(`briefing fact ${i + 1}: question must be 6-${MAX_QUESTION_CHARS} chars`));
+      if (typeof f.a !== "string" || !f.a.trim() || f.a.length > MAX_ANSWER_CHARS) problems.push(at(`briefing fact ${i + 1}: answer must be 1-${MAX_ANSWER_CHARS} chars`));
+      if (asked.has(f.q)) problems.push(at(`briefing repeats the question "${f.q}"`));
+      asked.add(f.q);
     }
   }
   return problems;

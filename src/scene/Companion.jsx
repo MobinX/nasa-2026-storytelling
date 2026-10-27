@@ -79,7 +79,7 @@ export default function Companion({ stop, site, heights, graph, ground }) {
     // Gestures only come alive while he is the one talking, and only mid-sentence. Eased rather than
     // switched: a raised hand popping up on the first caption character reads as a jump cut. This is not
     // the camera path, so a local ease is allowed where the scroll budget forbids one.
-    soft.current.talk = ease(soft.current.talk, dialogue.talking && mine ? journey.talk : 0, 3.5, d);
+    soft.current.talk = ease(soft.current.talk, (dialogue.talking || dialogue.generating) && mine ? journey.talk : 0, 3.5, d);
     soft.current.float = ease(soft.current.float, heights ? 0 : 1, 1.6, d);
     const talk = soft.current.talk;
     const floater = soft.current.float;

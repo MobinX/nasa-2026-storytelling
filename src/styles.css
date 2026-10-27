@@ -270,69 +270,432 @@ body {
   transform: rotate(45deg);
 }
 
-.chips {
+/* The post-briefing choice and the open channel to the crew member. The tilt is small on purpose: enough
+   perspective to sit in the scene, not so much that the type looks like a poster. The scroll is held, so a
+   drag that starts on the panel cannot run the rail; touch-action is still declared so a phone never treats
+   the panel as a horizontal pan surface. */
+.ask {
   position: absolute;
-  right: 10px;
-  bottom: 30px;
-  left: 10px;
+  left: 50%;
+  bottom: max(14px, env(safe-area-inset-bottom));
   display: grid;
-  /* Four questions are offered for every one the visitor asks, so the grid has to carry four chips without
-     turning the bottom of the screen into a wall of buttons: two by two, in reading order. */
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
+  gap: 10px;
+  width: min(620px, calc(100vw - 22px));
+  padding: 13px 14px 12px;
+  transform: translateX(-50%) perspective(900px) rotateX(3.5deg);
+  transform-origin: 50% 100%;
+  border: 1px solid rgba(130, 235, 205, 0.36);
+  border-radius: 18px;
+  background:
+    radial-gradient(120% 140% at 15% 0%, rgba(70, 220, 180, 0.12), transparent 55%),
+    linear-gradient(150deg, rgba(12, 28, 25, 0.94), rgba(3, 9, 8, 0.97));
+  box-shadow:
+    0 26px 80px rgba(0, 0, 0, 0.65),
+    0 8px 24px rgba(0, 0, 0, 0.5),
+    0 0 40px rgba(70, 220, 180, 0.08),
+    inset 0 1px 0 rgba(200, 255, 235, 0.14);
+  backdrop-filter: blur(14px);
+  color: #dff3ec;
+  font-family: ui-monospace, sfmono-regular, menlo, monospace;
   pointer-events: auto;
   touch-action: pan-y;
+  animation: ask-in 0.32s cubic-bezier(0.2, 0.7, 0.3, 1);
 }
 
-.chips em {
-  grid-column: 1 / -1;
+.ask::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  right: 16px;
+  left: 16px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(140, 255, 225, 0.8), transparent);
+  opacity: 0.6;
+}
+
+@keyframes ask-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) perspective(900px) rotateX(9deg) translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) perspective(900px) rotateX(3.5deg) translateY(0);
+  }
+}
+
+.ask-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 9px;
-  font-style: normal;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: rgba(190, 235, 220, 0.5);
-  text-align: center;
+  color: rgba(185, 235, 215, 0.7);
 }
 
-.chips button {
-  min-height: 44px;
-  padding: 7px 9px;
-  border: 1px solid rgba(160, 230, 210, 0.34);
-  border-radius: 8px;
-  background: rgba(6, 14, 13, 0.78);
-  color: #b9e9d5;
-  font: inherit;
+.ask-head b {
+  color: #7fd7bd;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+}
+
+.ask-led {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #7fd7bd;
+  box-shadow: 0 0 10px rgba(127, 215, 189, 0.8);
+}
+
+.ask-led-live {
+  background: #a9ffe0;
+  animation: ask-pulse 1s ease-in-out infinite;
+}
+
+.ask-led-bad {
+  background: #ff8b7a;
+  box-shadow: 0 0 10px rgba(255, 110, 90, 0.8);
+}
+
+@keyframes ask-pulse {
+  50% {
+    opacity: 0.35;
+    transform: scale(0.7);
+  }
+}
+
+.ask-id {
+  margin-left: auto;
+  overflow: hidden;
+  color: rgba(185, 235, 215, 0.42);
+  letter-spacing: 0.08em;
+  text-overflow: ellipsis;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+.ask-choice-copy {
+  display: grid;
+  gap: 5px;
+  padding: 2px 2px 4px;
+}
+
+.ask-choice-copy b {
+  color: #e7fbf3;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.ask-choice-copy span {
+  color: rgba(207, 240, 228, 0.66);
   font-size: 11px;
-  line-height: 1.3;
-  text-align: left;
+  line-height: 1.5;
+}
+
+.ask-choice-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.ask-cta,
+.ask-secondary,
+.ask-move {
+  font: inherit;
   cursor: pointer;
-  touch-action: pan-y;
+  touch-action: manipulation;
+}
+
+.ask-cta,
+.ask-secondary {
+  min-height: 46px;
+  padding: 0 14px;
+  border-radius: 12px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+
+.ask-cta {
+  border: 1px solid rgba(150, 255, 220, 0.6);
+  background: linear-gradient(180deg, #a9f6da, #6fd9b8);
+  color: #03120e;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  box-shadow: 0 8px 22px rgba(70, 220, 180, 0.22), inset 0 -2px 0 rgba(0, 0, 0, 0.18);
+}
+
+.ask-cta:hover {
+  filter: brightness(1.06);
+}
+
+.ask-cta:active {
+  transform: translateY(1px);
+}
+
+.ask-secondary,
+.ask-move {
+  border: 1px solid rgba(160, 230, 210, 0.3);
+  background: rgba(6, 18, 15, 0.6);
+  color: #b9e9d5;
+}
+
+.ask-secondary:hover,
+.ask-move:hover {
+  border-color: rgba(160, 230, 210, 0.55);
+  background: rgba(10, 26, 22, 0.8);
+}
+
+.ask-body {
+  max-height: min(30vh, 260px);
+  overflow-y: auto;
+  padding: 10px 12px;
+  border: 1px solid rgba(130, 235, 205, 0.16);
+  border-radius: 12px;
+  background: rgba(2, 8, 7, 0.45);
+  scrollbar-color: rgba(127, 215, 189, 0.35) transparent;
+  scrollbar-width: thin;
+}
+
+.ask-q {
+  margin: 0 0 8px;
+  color: rgba(207, 240, 228, 0.55);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.ask-q span {
+  display: inline-block;
+  margin-right: 7px;
+  color: #7fd7bd;
+  font-size: 8px;
+  letter-spacing: 0.18em;
+}
+
+.ask-answer {
+  margin: 0;
+  color: #e2f8ef;
+  font-size: 13px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.ask-caret {
+  display: inline-block;
+  width: 7px;
+  height: 13px;
+  margin-left: 3px;
+  background: #7fd7bd;
+  vertical-align: -2px;
+  animation: ask-blink 0.8s steps(1) infinite;
+}
+
+@keyframes ask-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.ask-thinking {
+  margin: 0;
+  color: rgba(207, 240, 228, 0.6);
+  font-size: 12px;
+}
+
+.ask-thinking i {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  margin-left: 4px;
+  border-radius: 50%;
+  background: #7fd7bd;
+  vertical-align: 1px;
+  animation: ask-dot 1.1s ease-in-out infinite;
+}
+
+.ask-thinking i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.ask-thinking i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes ask-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.2;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+
+.ask-error {
+  margin: 0;
+  color: #ffb4a8;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.ask-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ask-glyph {
+  color: rgba(127, 215, 189, 0.5);
+  font-size: 12px;
+}
+
+.ask-input {
+  flex: 1;
+  min-width: 0;
+  height: 46px;
+  padding: 0 13px;
+  border: 1px solid rgba(160, 230, 210, 0.28);
+  border-radius: 12px;
+  outline: none;
+  background: rgba(3, 12, 10, 0.7);
+  color: #e7fbf3;
+  font: inherit;
+  font-size: 16px;
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+
+.ask-input::placeholder {
+  color: rgba(185, 235, 215, 0.38);
+}
+
+.ask-input:focus {
+  border-color: rgba(150, 255, 220, 0.6);
+  box-shadow: 0 0 0 3px rgba(80, 230, 190, 0.1);
+}
+
+.ask-input:disabled {
+  opacity: 0.55;
+}
+
+.ask-send {
+  display: grid;
+  flex: none;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border: 1px solid rgba(150, 255, 220, 0.55);
+  border-radius: 12px;
+  background: linear-gradient(180deg, #a9f6da, #6fd9b8);
+  color: #03120e;
+  cursor: pointer;
+  touch-action: manipulation;
+  box-shadow: 0 8px 18px rgba(70, 220, 180, 0.18);
+}
+
+.ask-send svg {
+  width: 18px;
+  height: 18px;
+}
+
+.ask-send:disabled {
+  opacity: 0.35;
+  cursor: default;
+  box-shadow: none;
+}
+
+.ask-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(185, 235, 215, 0.36);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+}
+
+.ask-foot > span {
+  flex: 1;
+}
+
+.ask-move {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 10px;
+  border-radius: 9px;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+
+.ask-move svg {
+  width: 13px;
+  height: 13px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ask,
+  .ask-led-live,
+  .ask-thinking i,
+  .ask-caret {
+    animation: none;
+  }
 }
 
 /* The stop is held: the scroll has stopped working and the visitor needs to be told why, not left pushing
-   against a locked picture. It sits under the question grid because the grid is what they are looking for. */
+   against a locked picture. The choice panel above is what they are looking for once the intro is done. */
 .hint-hold {
   bottom: 4px;
   color: #ffcf7a;
   opacity: 0.86;
 }
 
-.endcard {
-  position: absolute;
-  right: 22px;
-  bottom: 22%;
-  left: 22px;
-  display: grid;
-  gap: 8px;
-  text-align: center;
-  color: #dff3ec;
-  font-size: 12px;
+/* After "move on", the crew member hands the visitor back the scroll. The line is his own onward line;
+   the pill is a short instruction, not another control. */
+.hint-go {
+  right: auto;
+  bottom: max(18px, calc(env(safe-area-inset-bottom) + 12px));
+  left: 50%;
+  width: max-content;
+  max-width: min(620px, calc(100vw - 40px));
+  padding: 8px 14px;
+  transform: translateX(-50%);
+  border: 1px solid rgba(255, 207, 122, 0.35);
+  border-radius: 999px;
+  background: rgba(18, 14, 6, 0.78);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.45);
+  color: #ffd89a;
+  font-size: 11px;
+  line-height: 1.45;
   letter-spacing: 0.08em;
+  text-transform: none;
+  opacity: 0.95;
+  animation: hint-in 0.35s ease-out;
 }
 
-.endcard span {
-  opacity: 0.55;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  font-size: 9px;
+@keyframes hint-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 6px);
+  }
+  to {
+    opacity: 0.95;
+    transform: translate(-50%, 0);
+  }
+}
+
+@media (max-width: 520px) {
+  .ask-choice-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .ask-foot > span {
+    display: none;
+  }
 }

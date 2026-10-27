@@ -3,7 +3,8 @@ import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
 import { journey } from "../state/journey.js";
 import { ACTS } from "../journey/timeline.js";
-import { dialogueView, stepDialogue, advanceDialogue, askDialogue } from "./Dialogue.jsx";
+import { dialogueView, stepDialogue, advanceDialogue, finishDialogue } from "./Dialogue.jsx";
+import Ask from "./Ask.jsx";
 
 const PAINT_MS = 100;
 const TALK_MS = 45;
@@ -35,6 +36,8 @@ function SeamSlider() {
 export default function Hud() {
   const [, setTick] = useState(0);
   const edge = useRef({ paint: 0 });
+  const goTimer = useRef(0);
+  const [goHint, setGoHint] = useState("");
 
   useEffect(() => {
     let raf = 0;
@@ -51,7 +54,10 @@ export default function Hud() {
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.clearTimeout(goTimer.current);
+    };
   }, []);
 
   const act = ACTS.find((a) => a.id === journey.actId) || ACTS[0];
@@ -121,6 +127,32 @@ export default function Hud() {
     advanceDialogue();
   };
 
+  // "Move on" is a release, not a jump. The rig needs the arc home before it lets go of the scroller, so
+  // wait for the hold to actually drop, then nudge the rail a few dozen pixels and put the crew member's own
+  // onward line on screen. The visitor does the rest; the scroll is theirs again.
+  const moveOn = () => {
+    const onward = dialogueView()?.onward || "Scroll on when you're ready.";
+    finishDialogue();
+    let tries = 0;
+    const reveal = () => {
+      const el = journey.scrollEl;
+      if (!el) {
+        setGoHint(onward);
+        return;
+      }
+      if (journey.lock.engaged && tries++ < 40) {
+        window.setTimeout(reveal, 50);
+        return;
+      }
+      setGoHint(onward);
+      window.clearTimeout(goTimer.current);
+      goTimer.current = window.setTimeout(() => setGoHint(""), 7000);
+      const max = el.scrollHeight - el.clientHeight;
+      el.scrollTop = Math.min(max, el.scrollTop + Math.max(36, el.clientHeight * 0.05));
+    };
+    window.setTimeout(reveal, 60);
+  };
+
   // The caption is the act's own string; the site coordinates live in the text rather than being
   // appended here, because the two landings have different ones and neither belongs in the renderer.
   const caption = act.caption;
@@ -130,30 +162,13 @@ export default function Hud() {
       <div className={"caption" + (walk ? " caption-up" : "")}>
         <span>{caption}</span>
       </div>
-      {talk && talk.card ? (
-        <div className='endcard'>
-          <b>{talk.card.title}</b>
-          <span>{talk.card.hint}</span>
-        </div>
-      ) : null}
       {talk && !talk.hidden && talk.phase === "line" ? (
         <button ref={bubbleRef} type='button' className='bubble' style={{ left: talk.x, top: talk.y, "--anchor": talk.anchor }} onClick={tapBubble}>
           {talk.text}
           <i />
         </button>
       ) : null}
-      {talk && talk.chips.length ? (
-        <div className='chips'>
-          <em>
-            round {talk.round} · {talk.title} · {talk.asked}/{talk.total} answered
-          </em>
-          {talk.chips.map((q) => (
-            <button key={q.id} type='button' onClick={() => askDialogue(q.id)}>
-              {q.q}
-            </button>
-          ))}
-        </div>
-      ) : null}
+      {talk && talk.phase === "choice" ? <Ask stop={talk.stop} onMoveOn={moveOn} /> : null}
       <div className='credit'>textures by Solar System Scope (CC BY 4.0)</div>
       {journey.software && (
         <div className='poster'>
@@ -171,11 +186,12 @@ export default function Hud() {
         </svg>
         <span>Scroll to travel</span>
       </div>
-      {journey.lock.engaged ? (
+      {journey.lock.engaged && (journey.orbitClosing || (talk && talk.phase === "line")) ? (
         <div className='hint hint-hold' data-hidden={false}>
-          {journey.orbitClosing ? "coming round" : talk && !talk.chips.length ? "tap the caption" : "answer him to go on"}
+          {journey.orbitClosing ? "coming round" : "tap the caption"}
         </div>
       ) : null}
+      {goHint ? <div className='hint hint-go'>{goHint}</div> : null}
     </div>
   );
 }

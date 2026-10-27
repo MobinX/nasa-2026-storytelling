@@ -18,8 +18,8 @@ for (const planet of PLANETS) {
   if (!n) problems.push(`${planet}: no objects at all`);
   console.log(`${planet}: ${n} objects`);
 }
-const answers = OBJECTS.reduce((n, o) => n + o.QA.rounds.length * o.QA.rounds[0].questionOptionsForUser.length, 0);
-const chars = OBJECTS.reduce((n, o) => n + o.introductoryTalk.join("").length + o.QA.rounds.reduce((m, r) => m + r.questionOptionsForUser.join("").length + r.answerForEachOption.flat().join("").length, 0), 0);
-console.log(`objects.json: ${OBJECTS.length} objects, ${answers} questions offered and answered, ${(chars / 1000).toFixed(1)}k chars of copy`);
+const facts = OBJECTS.reduce((n, o) => n + o.QA.briefing.length, 0);
+const chars = OBJECTS.reduce((n, o) => n + o.introductoryTalk.join("").length + o.QA.briefing.reduce((m, f) => m + f.q.length + f.a.length, 0), 0);
+console.log(`objects.json: ${OBJECTS.length} objects, ${facts} briefing facts, ${(chars / 1000).toFixed(1)}k chars of copy`);
 console.log(problems.length ? "\nFAIL\n" + problems.map((m) => " - " + m).join("\n") : "\nobjects.json verified against the walk");
 process.exit(problems.length ? 1 : 0);
