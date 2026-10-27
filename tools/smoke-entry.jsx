@@ -327,10 +327,10 @@ export async function run() {
   // with pointer-events:auto and no touch-action swallows any drag starting on it, and the journey IS a
   // drag. That is only checkable in the source, so check it there.
   const css = await import("node:fs").then((fs) => fs.readFileSync(new URL("../src/styles.css", import.meta.url), "utf8"));
-  const talkBlocks = [...css.matchAll(/\.(bubble|ask|ask-input)\s*\{([\s\S]*?)\}/g)];
-  const wanted = { bubble: true, ask: true, "ask-input": true };
+  const talkBlocks = [...css.matchAll(/^\.(bubble|ask|ask-input|leave)\s*\{([\s\S]*?)\}/gm)];
+  const wanted = { bubble: true, ask: true, "ask-input": true, leave: true };
   out.notes.push(talkBlocks.length + " dialogue surfaces found in styles.css");
-  if (talkBlocks.length !== Object.keys(wanted).length) out.errors.push("expected 3 dialogue surfaces in styles.css, found " + talkBlocks.length);
+  if (talkBlocks.length !== Object.keys(wanted).length) out.errors.push("expected 4 dialogue surfaces in styles.css, found " + talkBlocks.length);
   for (const [, cls, body] of talkBlocks) {
     if (!/touch-action:\s*(pan-y|manipulation)/.test(body)) out.errors.push("." + cls.trim() + " has no touch-action, so a drag starting on it cannot scroll the journey");
     const interactive = /pointer-events:\s*auto/.test(body) || cls.trim() === "ask-input";

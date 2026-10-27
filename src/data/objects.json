@@ -4,6 +4,7 @@
       "id": "moon-eagle",
       "name": "Apollo 11 Lunar Module Eagle",
       "3dmodel": "models/apollo-lunar-module.glb",
+      "source": "https://www.nasa.gov/mission/apollo-11/",
       "introductoryTalk": [
         "Apollo 11's descent stage. Two men rode it down on 20 July 1969.",
         "The ascent stage took them back to Collins and burned up in Earth's air. This half stayed.",
@@ -100,6 +101,7 @@
       "id": "moon-lrv",
       "name": "Apollo 15 Lunar Roving Vehicle, Rover 1",
       "3dmodel": "models/lunar-rover.gltf",
+      "source": "https://www.nasa.gov/mission/apollo-15/",
       "introductoryTalk": [
         "Rover 1. 210 kg of aluminium tubing and four wire-mesh wheels: the first vehicle anybody drove on another world.",
         "Scott and Irwin drove it 27.8 km in three hours and two minutes, then parked it 160 m from the lander and walked away.",
@@ -196,6 +198,7 @@
       "id": "moon-surveyor3",
       "name": "Surveyor 3",
       "3dmodel": "models/surveyor-3.gltf",
+      "source": "https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=1967-035A",
       "introductoryTalk": [
         "Surveyor 3. Robotic, twelve years before the first human boot, and the only probe a human being has ever walked up to.",
         "It landed in April 1967 and died of night. Apollo 12 came for it in 1969.",
@@ -292,6 +295,7 @@
       "id": "moon-alsep",
       "name": "Apollo 16 ALSEP",
       "3dmodel": "models/alsep.gltf",
+      "source": "https://www.nasa.gov/mission/apollo-16/",
       "introductoryTalk": [
         "Not a vehicle. A seismometer, a magnetometer, a solar-wind collector and a plutonium battery, left running for five years.",
         "Apollo 16 turned it on at 19:38 UT on 21 April 1972. On 30 September 1977 Mission Control set it to standby and never woke it.",
@@ -388,6 +392,7 @@
       "id": "mars-sojourner",
       "name": "Sojourner, at the Carl Sagan Memorial Station",
       "3dmodel": "models/pathfinder-sojourner.gltf",
+      "source": "https://science.nasa.gov/mission/mars-pathfinder/",
       "introductoryTalk": [
         "Eleven and a half kilograms, the size of a milk crate, beside the lander it came down in. The smallest thing NASA ever drove.",
         "It landed on 4 July 1997, rolled off a ramp on the second sol, and worked for eighty-three sols against a plan of eight.",
@@ -484,6 +489,7 @@
       "id": "mars-opportunity",
       "name": "Opportunity",
       "3dmodel": "models/mer-rover.glb",
+      "source": "https://science.nasa.gov/mission/mer-opportunity/",
       "introductoryTalk": [
         "Opportunity. The other one, and the one that is still out there with its wheels in the sand of Jezero's neighbourhood.",
         "It was certified for 90 sols. It drove 45.16 kilometres in nearly fifteen years and died of a dust storm.",
@@ -580,6 +586,7 @@
       "id": "mars-insight",
       "name": "InSight",
       "3dmodel": "models/insight-lander.glb",
+      "source": "https://science.nasa.gov/mission/insight/",
       "introductoryTalk": [
         "InSight. Not a rover - it never moved after it landed, and that was the design.",
         "It listened to the inside of Mars for four years with a seismometer it had to set down by arm, and a mole that would not dig.",
@@ -676,6 +683,7 @@
       "id": "mars-viking1",
       "name": "Viking 1",
       "3dmodel": "models/viking-lander.glb",
+      "source": "https://science.nasa.gov/mission/viking/",
       "introductoryTalk": [
         "Viking 1. The first machine that landed on Mars and kept talking, on 20 July 1976 - the country's bicentennial.",
         "It lasted six years and died because of something we sent it.",
@@ -772,6 +780,7 @@
       "id": "solar-mgs",
       "name": "Mars Global Surveyor",
       "3dmodel": "models/mars-global-surveyor.glb",
+      "source": "https://science.nasa.gov/mission/mars-global-surveyor/",
       "introductoryTalk": [
         "Mars Global Surveyor. An orbiter, so there is no ground here - it is still going round Mars, behind you and above.",
         "It mapped the entire planet for ten years and then went silent in 2006 after a command from Earth.",
@@ -868,6 +877,7 @@
       "id": "solar-pioneer10",
       "name": "Pioneer 10",
       "3dmodel": "models/pioneer-10.glb",
+      "source": "https://science.nasa.gov/mission/pioneer-10/",
       "introductoryTalk": [
         "Pioneer 10. It went out, and it is still going, and it has been silent since 2003.",
         "There is a gold plate bolted to its side with a man and a woman on it, and nobody is coming to read it.",

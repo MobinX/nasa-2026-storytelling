@@ -5,9 +5,18 @@ import { journey } from "../state/journey.js";
 import { ACTS } from "../journey/timeline.js";
 import { dialogueView, stepDialogue, advanceDialogue, finishDialogue } from "./Dialogue.jsx";
 import Ask from "./Ask.jsx";
+import NasaLink from "./NasaLink.jsx";
 
 const PAINT_MS = 100;
 const TALK_MS = 45;
+
+const hostOf = (url) => {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return "nasa.gov";
+  }
+};
 
 // A fixed DOM sibling of <Canvas>: the HUD must never re-render the Canvas, so pointer-events stays off
 // everywhere except the one control that is genuinely a control.
@@ -38,6 +47,7 @@ export default function Hud() {
   const edge = useRef({ paint: 0 });
   const goTimer = useRef(0);
   const [goHint, setGoHint] = useState("");
+  const [leaving, setLeaving] = useState(null);
 
   useEffect(() => {
     let raf = 0;
@@ -115,6 +125,19 @@ export default function Hud() {
     };
   }, [bubbleUp, talkId, onMoon]);
 
+  const askLeave = (url, name) => setLeaving({ url, name });
+
+  // The leave dialog is the only thing in the HUD that claims the keyboard; Escape is the polite way out
+  // of a decision the visitor did not ask to make.
+  useEffect(() => {
+    if (!leaving) return;
+    const onKey = (e) => {
+      if (e.key === "Escape") setLeaving(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [leaving]);
+
   const tapBubble = () => {
     if (!tapDone.current) {
       tapDone.current = true;
@@ -158,40 +181,82 @@ export default function Hud() {
   const caption = act.caption;
 
   return (
-    <div className='hud'>
-      <div className={"caption" + (walk ? " caption-up" : "")}>
-        <span>{caption}</span>
-      </div>
-      {talk && !talk.hidden && talk.phase === "line" ? (
-        <button ref={bubbleRef} type='button' className='bubble' style={{ left: talk.x, top: talk.y, "--anchor": talk.anchor }} onClick={tapBubble}>
-          {talk.text}
-          <i />
-        </button>
-      ) : null}
-      {talk && talk.phase === "choice" ? <Ask stop={talk.stop} onMoveOn={moveOn} /> : null}
-      <div className='credit'>textures by Solar System Scope (CC BY 4.0)</div>
-      {journey.software && (
-        <div className='poster'>
-          <b>This browser is rendering in software.</b>
-          <span>Scroll still moves the camera, but the scene is paused so the phone does not overheat. Try Chrome with hardware acceleration enabled.</span>
+    <>
+      <div className='hud'>
+        <div className={"caption" + (walk ? " caption-up" : "")}>
+          <span>{caption}</span>
         </div>
-      )}
-      {SEAM_SLIDER && <SeamSlider />}
-      <div className='swipe-cue' data-hidden={journey.raw > 0.0002}>
-        <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='1.4' strokeLinecap='round' strokeLinejoin='round' aria-hidden='true'>
-          <path d='M8 13V4.5a1.5 1.5 0 0 1 3 0V11' />
-          <path d='M11 10.5v-1a1.5 1.5 0 0 1 3 0v1.5' />
-          <path d='M14 10v-.5a1.5 1.5 0 0 1 3 0V11' />
-          <path d='M17 11a1.5 1.5 0 0 1 3 0v4.5a6 6 0 0 1-6 6h-1.5a5 5 0 0 1-4.2-2.35l-2.3-3.4a1.5 1.5 0 0 1 2.4-1.8L9 15' />
-        </svg>
-        <span>Scroll to travel</span>
+        {talk && !talk.hidden && talk.phase === "line" ? (
+          <div
+            ref={bubbleRef}
+            role='button'
+            tabIndex={0}
+            className='bubble'
+            style={{ left: talk.x, top: talk.y, "--anchor": talk.anchor }}
+            onClick={tapBubble}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                tapBubble();
+              }
+            }}
+          >
+            {talk.text}
+            <NasaLink source={talk.source} name={talk.stop.name} onLeave={askLeave} />
+            <i />
+          </div>
+        ) : null}
+        {talk && talk.phase === "choice" ? <Ask stop={talk.stop} onMoveOn={moveOn} onLeave={askLeave} /> : null}
+        <div className='credit'>textures by Solar System Scope (CC BY 4.0)</div>
+        {journey.software && (
+          <div className='poster'>
+            <b>This browser is rendering in software.</b>
+            <span>Scroll still moves the camera, but the scene is paused so the phone does not overheat. Try Chrome with hardware acceleration enabled.</span>
+          </div>
+        )}
+        {SEAM_SLIDER && <SeamSlider />}
+        <div className='swipe-cue' data-hidden={journey.raw > 0.0002}>
+          <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='1.4' strokeLinecap='round' strokeLinejoin='round' aria-hidden='true'>
+            <path d='M8 13V4.5a1.5 1.5 0 0 1 3 0V11' />
+            <path d='M11 10.5v-1a1.5 1.5 0 0 1 3 0v1.5' />
+            <path d='M14 10v-.5a1.5 1.5 0 0 1 3 0V11' />
+            <path d='M17 11a1.5 1.5 0 0 1 3 0v4.5a6 6 0 0 1-6 6h-1.5a5 5 0 0 1-4.2-2.35l-2.3-3.4a1.5 1.5 0 0 1 2.4-1.8L9 15' />
+          </svg>
+          <span>Scroll to travel</span>
+        </div>
+        {journey.lock.engaged && (journey.orbitClosing || (talk && talk.phase === "line")) ? (
+          <div className='hint hint-hold' data-hidden={false}>
+            {journey.orbitClosing ? "coming round" : "tap the caption"}
+          </div>
+        ) : null}
+        {goHint ? <div className='hint hint-go'>{goHint}</div> : null}
       </div>
-      {journey.lock.engaged && (journey.orbitClosing || (talk && talk.phase === "line")) ? (
-        <div className='hint hint-hold' data-hidden={false}>
-          {journey.orbitClosing ? "coming round" : "tap the caption"}
+      {/* The dialog sits outside .hud on purpose: .hud's own stacking context would trap it under the
+          driver.js overlay, and the first NASA mark a visitor ever taps is inside that overlay. */}
+      {leaving ? (
+        <div className='leave' onClick={(e) => e.target === e.currentTarget && setLeaving(null)}>
+          <div className='leave-card' role='dialog' aria-modal='true' aria-labelledby='leave-title'>
+            <b id='leave-title'>You're leaving this web site</b>
+            <span>
+              {leaving.name} — this mark links to {hostOf(leaving.url)}, NASA's own page for this machine, so you can check what you have been
+              told.
+            </span>
+            <div className='leave-actions'>
+              <button type='button' className='ask-secondary' onClick={() => setLeaving(null)}>Stay here</button>
+              <button
+                type='button'
+                className='ask-cta'
+                onClick={() => {
+                  window.open(leaving.url, "_blank", "noopener,noreferrer");
+                  setLeaving(null);
+                }}
+              >
+                Continue to {hostOf(leaving.url)}
+              </button>
+            </div>
+          </div>
         </div>
       ) : null}
-      {goHint ? <div className='hint hint-go'>{goHint}</div> : null}
-    </div>
+    </>
   );
 }

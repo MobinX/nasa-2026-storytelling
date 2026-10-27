@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { dialogue } from "../state/dialogue.js";
+import NasaLink from "./NasaLink.jsx";
 
 // The conversation after the briefing: two decisions and one open channel. The panel is DOM and lives in the
 // HUD, because a React state change inside <Canvas> is what unhooks ScrollControls. `dialogue.generating` is
@@ -13,7 +14,7 @@ const Arrow = () => (
   </svg>
 );
 
-export default function Ask({ stop, onMoveOn }) {
+export default function Ask({ stop, onMoveOn, onLeave }) {
   const [mode, setMode] = useState("choice");
   const [question, setQuestion] = useState("");
   const [asked, setAsked] = useState("");
@@ -24,8 +25,31 @@ export default function Ask({ stop, onMoveOn }) {
   const abort = useRef(null);
   const input = useRef(null);
   const body = useRef(null);
+  const panel = useRef(null);
 
   const busy = status === "thinking" || status === "streaming";
+
+  // On a phone the keyboard covers the bottom of the layout viewport, and a fixed panel parked there sits
+  // behind it. The visual viewport is the only thing that knows how tall the keyboard is, so the panel
+  // rides on top of it while it is up and drops back when it is gone. Coarse pointers only - a desktop
+  // keyboard never resizes the viewport, and a hardware one should not move anything either.
+  useEffect(() => {
+    const el = panel.current;
+    const vv = window.visualViewport;
+    if (!el || !vv || !window.matchMedia("(pointer: coarse)").matches) return;
+    const fit = () => {
+      const open = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+      const room = Math.max(0, window.innerHeight - el.offsetHeight - 24);
+      el.style.setProperty("--kb", Math.min(open > 80 ? open : 0, room) + "px");
+    };
+    fit();
+    vv.addEventListener("resize", fit);
+    vv.addEventListener("scroll", fit);
+    return () => {
+      vv.removeEventListener("resize", fit);
+      vv.removeEventListener("scroll", fit);
+    };
+  }, []);
 
   useEffect(() => {
     if (mode === "ask" && status === "idle") input.current?.focus({ preventScroll: true });
@@ -111,7 +135,7 @@ export default function Ask({ stop, onMoveOn }) {
 
   if (mode === "choice") {
     return (
-      <section className='ask ask-choice' aria-label='Conversation options'>
+      <section ref={panel} className='ask ask-choice' aria-label='Conversation options'>
         <header className='ask-head'>
           <span className='ask-led' />
           <b>CREW LINK</b>
@@ -136,7 +160,7 @@ export default function Ask({ stop, onMoveOn }) {
   const stateLabel = status === "thinking" ? "THINKING" : status === "streaming" ? "RECEIVING" : status === "error" ? "SIGNAL LOST" : "CHANNEL OPEN";
 
   return (
-    <section className='ask' aria-label='Ask the crew member'>
+    <section ref={panel} className='ask' aria-label='Ask the crew member'>
       <header className='ask-head'>
         <span className={"ask-led" + (busy ? " ask-led-live" : "") + (status === "error" ? " ask-led-bad" : "")} />
         <b>{stateLabel}</b>
@@ -163,6 +187,7 @@ export default function Ask({ stop, onMoveOn }) {
             <p className='ask-answer'>
               {answer}
               {status === "streaming" ? <span className='ask-caret' /> : null}
+              <NasaLink source={stop.convo.source} name={stop.name} onLeave={onLeave} />
             </p>
           ) : null}
           {error ? <p className='ask-error'>{error}</p> : null}

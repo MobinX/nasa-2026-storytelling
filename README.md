@@ -37,7 +37,10 @@ glide and a deliberate one as a lope, and stopping stops the walking.
 Ten objects the visitor walks up to are content, not code: `src/data/objects.json` names each one, names the
 glTF that draws it, gives the crew member beside it an introductory briefing, and carries a flat set of
 researched facts about the machine. It is bundled at build and validated before the first frame renders,
-because the rail is authored and the copy is not and they have to agree about the id list.
+because the rail is authored and the copy is not and they have to agree about the id list. Every spoken line
+and every streamed answer ends with a (NASA) mark — the word underlined, linking to that machine's official
+NASA page behind a "you're leaving this web site" confirmation, so the provenance of the piece is one tap
+away.
 
 After the briefing the visitor has two choices, not a quiz: ask the crew member a question in their own words,
 or move to the next objective. A question goes to `api/ask.js`; the browser never sees the model key. The

@@ -277,7 +277,7 @@ body {
 .ask {
   position: absolute;
   left: 50%;
-  bottom: max(14px, env(safe-area-inset-bottom));
+  bottom: calc(max(14px, env(safe-area-inset-bottom)) + var(--kb, 0px));
   display: grid;
   gap: 10px;
   width: min(620px, calc(100vw - 22px));
@@ -697,5 +697,106 @@ body {
 
   .ask-foot > span {
     display: none;
+  }
+}
+
+/* The provenance mark. The parentheses belong to the sentence; only the word NASA is underlined, because
+   the link is the promise, not the copy. */
+.nasa-link {
+  margin-left: 4px;
+  color: #7fd7bd;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.nasa-link span {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.nasa-link:hover span,
+.nasa-link:focus-visible span {
+  color: #a9ffe0;
+}
+
+/* The leave-site dialog. It is rendered outside .hud on purpose: .hud's own stacking context would trap it
+   under the driver.js overlay, and the first NASA mark a visitor ever taps sits inside that overlay. */
+.leave {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(2, 8, 7, 0.72);
+  backdrop-filter: blur(6px);
+  pointer-events: auto;
+  touch-action: manipulation;
+  animation: leave-in 0.2s ease-out;
+}
+
+/* driver.js sets `pointer-events: none` on every element while the tutorial is open, and the first NASA
+   mark a visitor ever taps sits inside that tutorial - so the dialog opts its whole subtree back in. */
+.leave,
+.leave * {
+  pointer-events: auto;
+}
+
+@keyframes leave-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.leave-card {
+  display: grid;
+  gap: 12px;
+  width: min(360px, 100%);
+  padding: 18px;
+  border: 1px solid rgba(130, 235, 205, 0.4);
+  border-radius: 16px;
+  background: linear-gradient(150deg, rgba(12, 28, 25, 0.97), rgba(3, 9, 8, 0.98));
+  box-shadow: 0 26px 80px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(200, 255, 235, 0.12);
+  color: #dff3ec;
+  font-family: ui-monospace, sfmono-regular, menlo, monospace;
+  text-align: center;
+}
+
+.leave-card b {
+  color: #e7fbf3;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+}
+
+.leave-card > span {
+  color: rgba(207, 240, 228, 0.7);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.leave-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.leave-actions .ask-cta,
+.leave-actions .ask-secondary {
+  min-height: 44px;
+}
+
+@media (max-width: 420px) {
+  .leave-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .leave {
+    animation: none;
   }
 }

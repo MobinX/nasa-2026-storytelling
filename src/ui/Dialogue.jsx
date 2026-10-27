@@ -71,6 +71,7 @@ export function dialogueView() {
     stop,
     phase: script.phase,
     text: visibleText(script),
+    source: stop.convo.source,
     // He can be projected off the edge if the visitor stops scrolling exactly at a stop; an unowned speech
     // bubble floating at the clamped edge of the screen is worse than no bubble.
     hidden: !pos.on,

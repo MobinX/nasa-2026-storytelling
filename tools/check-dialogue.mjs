@@ -43,6 +43,7 @@ for (const convo of conversations) {
 
   ok(convo.intro.beats.length >= 1 && convo.intro.beats.length <= 3, at(`${convo.intro.beats.length} intro beats, expected 1-3`));
   for (const b of convo.intro.beats) ok(b.length <= MAX_BEAT_CHARS, at(`a ${b.length}-char intro beat overflows the bubble (limit ${MAX_BEAT_CHARS})`));
+  ok(/^https:\/\/([a-z0-9-]+\.)*nasa\.gov\//.test(convo.source), at("no official NASA source page for the (NASA) mark"));
   ok(!/four rounds|one question each|round [1-4] of/i.test(convo.intro.beats.join(" ")), at("the introduction still advertises the removed round system"));
 
   ok(Array.isArray(object.QA.briefing) && object.QA.briefing.length >= MIN_BRIEFING_FACTS, at(`${object.QA.briefing?.length ?? 0} briefing facts, expected at least ${MIN_BRIEFING_FACTS}`));

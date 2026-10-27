@@ -43,6 +43,7 @@ export function conversationFor(object) {
     name: object.name,
     location: object.QA.location,
     planet: object.QA.planet,
+    source: object.source,
     intro: { id: "intro", beats: object.introductoryTalk },
     onward: onwardLine(object),
   };
@@ -56,6 +57,7 @@ function validate(objects) {
     if (ids.has(o.id)) problems.push(at("id used twice"));
     ids.add(o.id);
     if (!/\.(gltf|glb)$/.test(o["3dmodel"] ?? "")) problems.push(at("3dmodel is not a .gltf or .glb"));
+    if (!/^https:\/\/([a-z0-9-]+\.)*nasa\.gov\/\S+$/.test(o.source ?? "")) problems.push(at("source must be an https nasa.gov page for this machine"));
     if (!/^[a-z0-9-]+$/.test(o.id)) problems.push(at("id must be a filename-safe slug"));
     if (!Array.isArray(o.introductoryTalk) || o.introductoryTalk.length < 1 || o.introductoryTalk.length > MAX_BEATS) problems.push(at(`${o.introductoryTalk?.length} intro beats, expected 1-${MAX_BEATS}`));
     for (const b of o.introductoryTalk ?? []) if (b.length > MAX_BEAT_CHARS) problems.push(at(`intro beat of ${b.length} chars overflows the bubble (limit ${MAX_BEAT_CHARS})`));
