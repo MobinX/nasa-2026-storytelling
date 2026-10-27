@@ -68,3 +68,7 @@ export function finish(s) {
 
 export const visibleText = (s) => (s.beats[s.beat] ?? "").slice(0, Math.floor(s.chars));
 export const isTalking = (s) => s.phase === "line" && (s.beats[s.beat] ?? "").length > Math.floor(s.chars);
+
+// True only once the current line has finished typing - the point at which the provenance mark belongs,
+// not the moment the bubble first appears with half a sentence.
+export const isComplete = (s) => s.phase === "line" && !isTalking(s) && (s.beats[s.beat] ?? "").length > 0;

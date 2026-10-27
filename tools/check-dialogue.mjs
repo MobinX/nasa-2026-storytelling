@@ -8,7 +8,7 @@
 // ask/move-on choice, and the briefing the answer service reads for questions asked in the visitor's own
 // words.
 import { apply, OBJECTS, conversationFor, MIN_BRIEFING_FACTS, MAX_TOPIC_CHARS, MAX_QUESTION_CHARS, MAX_ANSWER_CHARS } from "../src/data/objects.js";
-import { MAX_BEAT_CHARS, createScript, advance, tapped, finish, visibleText, isTalking } from "../src/lib/dialogue.js";
+import { MAX_BEAT_CHARS, createScript, advance, tapped, finish, visibleText, isTalking, isComplete } from "../src/lib/dialogue.js";
 
 const fails = [];
 const ok = (c, m) => { if (!c) fails.push(m); };
@@ -42,6 +42,16 @@ for (const convo of conversations) {
   if (!object) continue;
 
   ok(convo.intro.beats.length >= 1 && convo.intro.beats.length <= 3, at(`${convo.intro.beats.length} intro beats, expected 1-3`));
+
+  // The (NASA) mark belongs to a finished line, not to an empty bubble. Each beat is a separate line, so it
+  // must be absent while typing, present when the line lands, and absent again when the next one starts.
+  const typed = createScript(convo);
+  ok(!isComplete(typed), at("the NASA mark would show before any text"));
+  for (let i = 0; i < 20000 && advance(typed, 1 / 60); i++);
+  ok(isComplete(typed), at("the first beat never finishes typing"));
+  ok(visibleText(typed) === convo.intro.beats[0], at("the typed line does not match its beat"));
+  tapped(typed);
+  ok(typed.phase === "line" && !isComplete(typed), at("the next line starts with the NASA mark already visible"));
   for (const b of convo.intro.beats) ok(b.length <= MAX_BEAT_CHARS, at(`a ${b.length}-char intro beat overflows the bubble (limit ${MAX_BEAT_CHARS})`));
   ok(/^https:\/\/([a-z0-9-]+\.)*nasa\.gov\//.test(convo.source), at("no official NASA source page for the (NASA) mark"));
   ok(!/four rounds|one question each|round [1-4] of/i.test(convo.intro.beats.join(" ")), at("the introduction still advertises the removed round system"));

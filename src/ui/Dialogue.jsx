@@ -1,6 +1,6 @@
 import { journey } from "../state/journey.js";
 import { dialogue } from "../state/dialogue.js";
-import { createScript, advance, tapped, finish, visibleText, isTalking } from "../lib/dialogue.js";
+import { createScript, advance, tapped, finish, visibleText, isTalking, isComplete } from "../lib/dialogue.js";
 import { STOPS } from "../journey/stops.js";
 
 // The caption and the choice panel of whichever crew member is currently holding the scroll. Lives in the
@@ -71,6 +71,9 @@ export function dialogueView() {
     stop,
     phase: script.phase,
     text: visibleText(script),
+    // The NASA mark waits for the typewriter to land. Every beat is its own line, so it comes and goes with
+    // each one rather than sitting at the end of an empty bubble.
+    typed: isComplete(script),
     source: stop.convo.source,
     // He can be projected off the edge if the visitor stops scrolling exactly at a stop; an unowned speech
     // bubble floating at the clamped edge of the screen is worse than no bubble.

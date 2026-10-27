@@ -202,7 +202,7 @@ export default function Hud() {
             }}
           >
             {talk.text}
-            <NasaLink source={talk.source} name={talk.stop.name} onLeave={askLeave} />
+            {talk.typed ? <NasaLink source={talk.source} name={talk.stop.name} onLeave={askLeave} /> : null}
             <i />
           </div>
         ) : null}

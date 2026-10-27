@@ -187,7 +187,7 @@ export default function Ask({ stop, onMoveOn, onLeave }) {
             <p className='ask-answer'>
               {answer}
               {status === "streaming" ? <span className='ask-caret' /> : null}
-              <NasaLink source={stop.convo.source} name={stop.name} onLeave={onLeave} />
+              {status === "done" ? <NasaLink source={stop.convo.source} name={stop.name} onLeave={onLeave} /> : null}
             </p>
           ) : null}
           {error ? <p className='ask-error'>{error}</p> : null}
