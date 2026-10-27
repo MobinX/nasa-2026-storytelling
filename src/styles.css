@@ -700,17 +700,18 @@ body {
   }
 }
 
-/* The provenance mark. The parentheses belong to the sentence; only the word NASA is underlined, because
-   the link is the promise, not the copy. */
+/* The provenance mark. The parentheses belong to the sentence and stay quiet; only the word NASA is
+   underlined and bright, so the eye finds the link rather than reading it as more copy. */
 .nasa-link {
-  margin-left: 4px;
-  color: #7fd7bd;
+  margin-left: 5px;
+  color: rgba(190, 235, 220, 0.5);
   text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
 }
 
 .nasa-link span {
+  color: #7fd7bd;
   text-decoration: underline;
   text-underline-offset: 2px;
 }
