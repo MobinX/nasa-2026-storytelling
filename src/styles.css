@@ -55,19 +55,27 @@ body {
   opacity: 0.7;
 }
 
-/* The opening scroll cue: a pointing hand that drifts upward and fades on a loop, gone the moment the
-   rail moves. Kept apart from the text hint so only the gesture vanishes once the visitor has understood. */
+/* The opening scroll cue: a pointing hand that drifts upward and fades on a loop, with the instruction
+   under it. Centred so it reads as the one thing to do on the first screen, and gone the moment the rail
+   moves. */
 .swipe-cue {
   position: absolute;
-  bottom: 30px;
+  top: 50%;
   left: 50%;
-  width: 22px;
-  height: 24px;
-  margin-left: -11px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  transform: translate(-50%, -50%);
   color: #7fd7bd;
-  opacity: 0.9;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.26em;
+  text-align: center;
+  text-transform: uppercase;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.85);
+  opacity: 0.95;
   transition: opacity 0.3s;
-  filter: drop-shadow(0 1px 4px #000);
 }
 
 .swipe-cue[data-hidden="true"] {
@@ -76,25 +84,26 @@ body {
 
 .swipe-cue svg {
   display: block;
-  width: 100%;
-  height: 100%;
+  width: 40px;
+  height: 44px;
+  filter: drop-shadow(0 2px 8px #000);
   animation: swipe-up 1.8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
 }
 
 @keyframes swipe-up {
   0% {
-    transform: translateY(7px);
+    transform: translateY(10px);
     opacity: 0;
   }
   25% {
     opacity: 0.95;
   }
   70% {
-    transform: translateY(-7px);
+    transform: translateY(-10px);
     opacity: 0.95;
   }
   100% {
-    transform: translateY(-13px);
+    transform: translateY(-18px);
     opacity: 0;
   }
 }

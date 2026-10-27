@@ -162,16 +162,14 @@ export default function Hud() {
         </div>
       )}
       {SEAM_SLIDER && <SeamSlider />}
-      <div className='swipe-cue' data-hidden={journey.raw > 0.0002} aria-hidden='true'>
-        <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='1.4' strokeLinecap='round' strokeLinejoin='round'>
+      <div className='swipe-cue' data-hidden={journey.raw > 0.0002}>
+        <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='1.4' strokeLinecap='round' strokeLinejoin='round' aria-hidden='true'>
           <path d='M8 13V4.5a1.5 1.5 0 0 1 3 0V11' />
           <path d='M11 10.5v-1a1.5 1.5 0 0 1 3 0v1.5' />
           <path d='M14 10v-.5a1.5 1.5 0 0 1 3 0V11' />
           <path d='M17 11a1.5 1.5 0 0 1 3 0v4.5a6 6 0 0 1-6 6h-1.5a5 5 0 0 1-4.2-2.35l-2.3-3.4a1.5 1.5 0 0 1 2.4-1.8L9 15' />
         </svg>
-      </div>
-      <div className='hint' data-hidden={journey.offset > 0.02}>
-        scroll to travel
+        <span>Scroll to travel</span>
       </div>
       {journey.lock.engaged ? (
         <div className='hint hint-hold' data-hidden={false}>
