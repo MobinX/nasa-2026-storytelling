@@ -15,6 +15,14 @@ const CAM = { fov: 50, near: CAMERA.orbit.near, far: CAMERA.orbit.far, position:
 const RESIZE = { scroll: false, debounce: { scroll: 200, resize: 250 } };
 const SCROLL_STYLE = { overscrollBehavior: "contain", touchAction: "pan-y" };
 
+// A 46-screen rail under a laptop wheel moves much faster per gesture than under a phone swipe. Lengthen the
+// desktop scroll only - the authored offsets stay the same and a wheel notch travels about 30% less of the
+// journey. Any device with a mouse or trackpad (including a touchscreen laptop) gets the longer rail; a
+// touch-only phone or tablet keeps its own scroll distance.
+const SLOW_SCROLL =
+  typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(any-pointer: fine)").matches;
+const SCROLL_DISTANCE = DISTANCE * (SLOW_SCROLL ? 1.45 : 1);
+
 const onCreated = ({ gl, setDpr, setFrameloop }) => {
   THREE.Cache.enabled = true;
   gl.toneMappingExposure = 0.95;
@@ -35,7 +43,7 @@ export default function App({ terrains }) {
     <>
       <Canvas dpr={DPR} gl={GL} camera={CAM} resize={RESIZE} shadows={false} frameloop='always' onCreated={onCreated}>
         <color attach='background' args={["#000000"]} />
-        <ScrollControls pages={PAGES} distance={DISTANCE} damping={DAMPING} style={SCROLL_STYLE}>
+        <ScrollControls pages={PAGES} distance={SCROLL_DISTANCE} damping={DAMPING} style={SCROLL_STYLE}>
           <Experience terrains={terrains} />
         </ScrollControls>
       </Canvas>
